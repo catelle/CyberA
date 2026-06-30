@@ -1,0 +1,17 @@
+.env
+.env.local
+.env.*.local
+
+.agents/
+.codex/
+
+node_modules/
+.next/
+out/
+dist/
+
+tsconfig.tsbuildinfo
+*.log
+.yarn/install-state.gz
+
+.DS_Store
