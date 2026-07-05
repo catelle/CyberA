@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/auth/supabase-server";
 import { studentRegistrationSchema } from "@/lib/auth/validation";
 import { connectToMongo } from "@/lib/db/mongodb";
+import { ensureSupabaseProfileForAuthUser } from "@/lib/db/supabase-users";
 import { getUserByEmail, serializeUser } from "@/lib/db/users";
 import { UserModel } from "@/models/User";
 
@@ -50,8 +51,8 @@ export async function POST(request: Request) {
         password: student.password,
         email_confirm: true,
         user_metadata: {
-          role: "student",
           fullName: student.fullName,
+          city: student.city,
           language: student.language
         }
       });
@@ -61,6 +62,7 @@ export async function POST(request: Request) {
     }
 
     createdSupabaseIds.push(studentAuth.user.id);
+    await ensureSupabaseProfileForAuthUser(studentAuth.user, { role: "ambassador" });
 
     const { data: parentAuth, error: parentError } =
       await supabase.auth.admin.createUser({
@@ -68,7 +70,6 @@ export async function POST(request: Request) {
         password: parent.password,
         email_confirm: true,
         user_metadata: {
-          role: "parent",
           fullName: parent.fullName,
           language: student.language
         }
@@ -79,6 +80,7 @@ export async function POST(request: Request) {
     }
 
     createdSupabaseIds.push(parentAuth.user.id);
+    await ensureSupabaseProfileForAuthUser(parentAuth.user, { role: "parent" });
 
     const consentDate = new Date();
     const parentUser = await UserModel.create({

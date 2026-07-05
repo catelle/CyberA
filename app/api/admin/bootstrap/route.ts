@@ -4,6 +4,7 @@ import { createSupabaseAdminClient } from "@/lib/auth/supabase-server";
 import { adminBootstrapSchema } from "@/lib/auth/validation";
 import { getServerEnv } from "@/lib/env";
 import { connectToMongo } from "@/lib/db/mongodb";
+import { ensureSupabaseProfileForAuthUser } from "@/lib/db/supabase-users";
 import { getUserByEmail, serializeUser } from "@/lib/db/users";
 import { UserModel } from "@/models/User";
 
@@ -39,7 +40,6 @@ export async function POST(request: Request) {
     password: parsed.data.password,
     email_confirm: true,
     user_metadata: {
-      role: "admin",
       fullName: parsed.data.fullName,
       language: parsed.data.language
     }
@@ -53,6 +53,8 @@ export async function POST(request: Request) {
   }
 
   try {
+    await ensureSupabaseProfileForAuthUser(data.user, { role: "admin" });
+
     const adminUser = await UserModel.create({
       supabaseUserId: data.user.id,
       email: parsed.data.email,

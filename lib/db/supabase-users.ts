@@ -28,6 +28,26 @@ type FamilyLinkRow = {
   family_code: string;
 };
 
+type ProfileBootstrapOptions = {
+  role?: SupabaseProfileRole;
+};
+
+function normalizeSupabaseProfileRole(
+  role: string | null | undefined
+): SupabaseProfileRole {
+  if (role === "parent" || role === "admin") {
+    return role;
+  }
+
+  return "ambassador";
+}
+
+function authUserMetadataString(authUser: User, key: string): string | null {
+  const value = authUser.user_metadata?.[key];
+
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
 function serializeLinkedAccounts(
   userId: string,
   profileRole: SupabaseProfileRole,
@@ -173,28 +193,41 @@ function generateFamilyCode() {
   return Math.random().toString(36).slice(2, 8).toUpperCase();
 }
 
-export async function ensureSupabaseProfileForAuthUser(authUser: User) {
+export async function ensureSupabaseProfileForAuthUser(
+  authUser: User,
+  options: ProfileBootstrapOptions = {}
+) {
   const admin = createSupabaseAdminClient();
   const phone = authUser.phone ?? null;
   const fullName =
-    typeof authUser.user_metadata.fullName === "string"
-      ? authUser.user_metadata.fullName
-      : phone ?? authUser.email ?? "CyberAmbassadeur";
-  const requestedRole =
-    authUser.user_metadata.role === "parent" || authUser.user_metadata.role === "admin"
-      ? authUser.user_metadata.role
-      : "ambassador";
+    authUserMetadataString(authUser, "fullName") ??
+    authUserMetadataString(authUser, "full_name") ??
+    phone ??
+    authUser.email ??
+    "CyberAmbassadeur";
+  const city = authUserMetadataString(authUser, "city");
+
+  const { data: existingProfile, error: existingProfileError } = await admin
+    .from("users")
+    .select("role")
+    .eq("id", authUser.id)
+    .maybeSingle<{ role: string | null }>();
+
+  if (existingProfileError) {
+    throw existingProfileError;
+  }
+
+  const profileRole = normalizeSupabaseProfileRole(
+    existingProfile?.role ?? options.role
+  );
 
   const { error: userError } = await admin.from("users").upsert(
     {
       id: authUser.id,
       phone,
       full_name: fullName,
-      role: requestedRole,
-      city:
-        typeof authUser.user_metadata.city === "string"
-          ? authUser.user_metadata.city
-          : null
+      role: profileRole,
+      city
     },
     { onConflict: "id" }
   );
@@ -203,19 +236,28 @@ export async function ensureSupabaseProfileForAuthUser(authUser: User) {
     throw userError;
   }
 
-  if (requestedRole === "ambassador") {
-    const { error: profileError } = await admin
+  if (profileRole === "ambassador") {
+    const { data: existingAmbassadorProfile, error: profileReadError } = await admin
       .from("ambassador_profiles")
-      .upsert(
-        {
+      .select("id")
+      .eq("user_id", authUser.id)
+      .maybeSingle<{ id: string }>();
+
+    if (profileReadError) {
+      throw profileReadError;
+    }
+
+    if (!existingAmbassadorProfile) {
+      const { error: profileError } = await admin
+        .from("ambassador_profiles")
+        .insert({
           user_id: authUser.id,
           parental_consent_given: false
-        },
-        { onConflict: "user_id" }
-      );
+        });
 
-    if (profileError) {
-      throw profileError;
+      if (profileError) {
+        throw profileError;
+      }
     }
 
     const { data: existingCode, error: codeReadError } = await admin
@@ -239,4 +281,6 @@ export async function ensureSupabaseProfileForAuthUser(authUser: User) {
       }
     }
   }
+
+  return { role: profileRole };
 }

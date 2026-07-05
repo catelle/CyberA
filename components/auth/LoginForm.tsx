@@ -7,29 +7,37 @@ import { FormEvent, useEffect, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/auth/supabase-client";
 import { dashboardForRole } from "@/lib/auth/roles";
 import { getDictionary } from "@/lib/i18n/dictionary";
-import type { Language, UserRole } from "@/types/auth";
-
-function dashboardFor(role: string | UserRole | undefined) {
-  if (role === "parent") {
-    return "/parent/dashboard";
-  }
-
-  if (role === "admin") {
-    return "/admin/dashboard";
-  }
-
-  return "/student/dashboard";
-}
+import type { Language } from "@/types/auth";
 
 type LoginMode = "phone" | "email";
+
+const demoAccounts = [
+  {
+    label: "Parent",
+    email: "parent.cybera@example.com",
+    password: "CyberA123!"
+  },
+  {
+    label: "Ambassadeur",
+    email: "amina.ambassador@example.com",
+    password: "CyberA123!"
+  },
+  {
+    label: "Admin",
+    email: "admin.cybera@example.com",
+    password: "CyberA123!"
+  }
+];
 
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [language, setLanguage] = useState<Language>("fr");
-  const [mode, setMode] = useState<LoginMode>("phone");
+  const [mode, setMode] = useState<LoginMode>("email");
   const [status, setStatus] = useState<string | null>(null);
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const t = getDictionary(language);
@@ -41,7 +49,7 @@ export function LoginForm() {
     }
   }, []);
 
-  function goToDashboard(role: string | UserRole | undefined) {
+  function goToDashboard(role: string | undefined) {
     const requestedNext = searchParams.get("next");
     router.push(requestedNext ?? dashboardForRole(role));
     router.refresh();
@@ -52,10 +60,16 @@ export function LoginForm() {
       method: "POST"
     });
 
+    const body = (await response.json().catch(() => null)) as {
+      message?: string;
+      role?: string;
+    } | null;
+
     if (!response.ok) {
-      const body = await response.json().catch(() => null);
       throw new Error(body?.message ?? "Impossible d'initialiser le profil.");
     }
+
+    return body;
   }
 
   async function handleEmailSubmit(event: FormEvent<HTMLFormElement>) {
@@ -81,8 +95,28 @@ export function LoginForm() {
       return;
     }
 
-    await bootstrapProfile().catch(() => undefined);
-    goToDashboard(data.user.user_metadata.role);
+    let profile;
+
+    try {
+      profile = await bootstrapProfile();
+    } catch (bootstrapError) {
+      setStatus(
+        bootstrapError instanceof Error
+          ? bootstrapError.message
+          : "Impossible d'initialiser le profil."
+      );
+      return;
+    }
+
+    goToDashboard(profile?.role);
+  }
+
+  function selectDemoAccount(account: (typeof demoAccounts)[number]) {
+    setMode("email");
+    setOtpSent(false);
+    setStatus(null);
+    setEmail(account.email);
+    setPassword(account.password);
   }
 
   async function handlePhoneSubmit(event: FormEvent<HTMLFormElement>) {
@@ -99,7 +133,6 @@ export function LoginForm() {
         phone: nextPhone,
         options: {
           data: {
-            role: "ambassador",
             language
           }
         }
@@ -140,7 +173,8 @@ export function LoginForm() {
     }
 
     try {
-      await bootstrapProfile();
+      const profile = await bootstrapProfile();
+      goToDashboard(profile?.role);
     } catch (bootstrapError) {
       setStatus(
         bootstrapError instanceof Error
@@ -149,8 +183,6 @@ export function LoginForm() {
       );
       return;
     }
-
-    goToDashboard(data.user.user_metadata.role);
   }
 
   async function handleGoogleLogin() {
@@ -194,15 +226,16 @@ export function LoginForm() {
         </select>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 rounded-lg bg-slate-100 p-1">
+      <div className="grid grid-cols-2 gap-2 rounded-lg bg-brand-rose p-1">
         <button
           className={
             mode === "phone"
               ? "min-h-12 rounded-md bg-white px-3 text-sm font-black text-brand-blue shadow-sm"
-              : "min-h-12 rounded-md px-3 text-sm font-black text-slate-500"
+              : "min-h-12 rounded-md px-3 text-sm font-black text-brand-graphite"
           }
           onClick={() => {
             setMode("phone");
+            setOtpSent(false);
             setStatus(null);
           }}
           type="button"
@@ -213,10 +246,11 @@ export function LoginForm() {
           className={
             mode === "email"
               ? "min-h-12 rounded-md bg-white px-3 text-sm font-black text-brand-blue shadow-sm"
-              : "min-h-12 rounded-md px-3 text-sm font-black text-slate-500"
+              : "min-h-12 rounded-md px-3 text-sm font-black text-brand-graphite"
           }
           onClick={() => {
             setMode("email");
+            setOtpSent(false);
             setStatus(null);
           }}
           type="button"
@@ -257,24 +291,57 @@ export function LoginForm() {
         <>
           <div className="field">
             <label htmlFor="email">{t.email}</label>
-            <input id="email" name="email" required type="email" />
+            <input
+              id="email"
+              name="email"
+              required
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+            />
           </div>
 
           <div className="field">
             <label htmlFor="password">{t.password}</label>
-            <input id="password" name="password" required type="password" />
+            <input
+              id="password"
+              name="password"
+              required
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+            />
           </div>
         </>
       )}
 
+      <div className="rounded-lg border border-rose-100 bg-brand-sky p-3">
+        <p className="text-xs font-black uppercase tracking-wide text-brand-blue">
+          Comptes demo
+        </p>
+        <div className="mt-3 grid gap-2 sm:grid-cols-3">
+          {demoAccounts.map((account) => (
+            <button
+              className="min-h-11 rounded-md border border-rose-100 bg-white px-3 text-sm font-black text-brand-blue transition hover:border-brand-gold hover:bg-brand-rose"
+              disabled={isSubmitting}
+              key={account.email}
+              onClick={() => selectDemoAccount(account)}
+              type="button"
+            >
+              {account.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {status ? (
-        <p className="rounded-md bg-brand-sky px-3 py-2 text-sm font-semibold text-brand-blue">
+        <p className="rounded-md border border-rose-100 bg-brand-sky px-3 py-2 text-sm font-bold text-brand-blue">
           {status}
         </p>
       ) : null}
 
       <button
-        className="rounded-lg bg-brand-blue px-5 py-3 font-black text-white transition hover:bg-brand-ink disabled:cursor-not-allowed disabled:opacity-60"
+        className="min-h-12 rounded-lg bg-brand-blue px-5 py-3 font-black text-white shadow-glow transition hover:bg-brand-ink disabled:cursor-not-allowed disabled:opacity-60"
         disabled={isSubmitting}
         type="submit"
       >
@@ -288,7 +355,7 @@ export function LoginForm() {
       </button>
 
       <button
-        className="min-h-12 rounded-lg border border-slate-200 px-5 font-black text-brand-blue transition hover:bg-brand-sky disabled:cursor-not-allowed disabled:opacity-60"
+        className="min-h-12 rounded-lg border border-rose-100 bg-white px-5 font-black text-brand-blue transition hover:bg-brand-sky disabled:cursor-not-allowed disabled:opacity-60"
         disabled={isSubmitting}
         onClick={handleGoogleLogin}
         type="button"

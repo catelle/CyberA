@@ -3,6 +3,22 @@ import { NextResponse } from "next/server";
 import { ensureSupabaseProfileForAuthUser } from "@/lib/db/supabase-users";
 import { createSupabaseServerClient } from "@/lib/auth/supabase-server";
 
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (error && typeof error === "object" && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+
+    if (typeof message === "string" && message.trim()) {
+      return message;
+    }
+  }
+
+  return fallback;
+}
+
 export async function POST() {
   const supabase = createSupabaseServerClient();
   let userResponse;
@@ -30,15 +46,18 @@ export async function POST() {
   }
 
   try {
-    await ensureSupabaseProfileForAuthUser(user);
-    return NextResponse.json({ message: "Profil initialise." });
+    const profile = await ensureSupabaseProfileForAuthUser(user);
+    return NextResponse.json({
+      message: "Profil initialise.",
+      role: profile.role
+    });
   } catch (bootstrapError) {
     return NextResponse.json(
       {
-        message:
-          bootstrapError instanceof Error
-            ? bootstrapError.message
-            : "Impossible d'initialiser le profil."
+        message: getErrorMessage(
+          bootstrapError,
+          "Impossible d'initialiser le profil."
+        )
       },
       { status: 500 }
     );

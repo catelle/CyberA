@@ -13,6 +13,20 @@ export type ModuleRow = {
   is_published: boolean;
 };
 
+export type LessonRow = {
+  id: string;
+  module_id: string;
+  order_index: number;
+  title: string;
+  content: unknown;
+  estimated_mins: number | null;
+  created_at: string | null;
+};
+
+export type ModuleWithLessons = ModuleRow & {
+  lessons: LessonRow[];
+};
+
 export type ParentChildSummary = {
   id: string;
   fullName: string;
@@ -151,7 +165,7 @@ export async function listActiveChallenges(limit = 3): Promise<ActiveChallengeRo
   return data;
 }
 
-export async function listModulesWithFallback() {
+export async function listModulesFromDatabase() {
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase
     .from("modules")
@@ -159,7 +173,17 @@ export async function listModulesWithFallback() {
     .order("order_index", { ascending: true })
     .returns<ModuleRow[]>();
 
-  if (error || !data || data.length === 0) {
+  if (error || !data) {
+    return [];
+  }
+
+  return data;
+}
+
+export async function listModulesWithFallback() {
+  const data = await listModulesFromDatabase();
+
+  if (data.length === 0) {
     return programModules.map((module) => ({
       id: module.id,
       order_index: module.week,
@@ -174,6 +198,38 @@ export async function listModulesWithFallback() {
   }
 
   return data;
+}
+
+export async function listModulesWithLessons() {
+  const modules = await listModulesFromDatabase();
+
+  if (modules.length === 0) {
+    return [];
+  }
+
+  const supabase = createSupabaseAdminClient();
+  const { data: lessons } = await supabase
+    .from("lessons")
+    .select("id, module_id, order_index, title, content, estimated_mins, created_at")
+    .in(
+      "module_id",
+      modules.map((module) => module.id)
+    )
+    .order("order_index", { ascending: true })
+    .returns<LessonRow[]>();
+
+  const lessonsByModule = new Map<string, LessonRow[]>();
+
+  (lessons ?? []).forEach((lesson) => {
+    const currentLessons = lessonsByModule.get(lesson.module_id) ?? [];
+    currentLessons.push(lesson);
+    lessonsByModule.set(lesson.module_id, currentLessons);
+  });
+
+  return modules.map((module) => ({
+    ...module,
+    lessons: lessonsByModule.get(module.id) ?? []
+  }));
 }
 
 export async function listChallengeSubmissionsWithFallback() {
