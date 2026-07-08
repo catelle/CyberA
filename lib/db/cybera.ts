@@ -1,5 +1,12 @@
 import { createSupabaseAdminClient } from "@/lib/auth/supabase-server";
-import { leaderboardEntries, notifications, programModules, weeklyChallenges } from "@/lib/program";
+import {
+  leaderboardEntries,
+  notifications,
+  programModules,
+  type ProgramModule,
+  weeklyChallenges,
+  type WeeklyChallenge
+} from "@/lib/program";
 
 export type ModuleRow = {
   id: string;
@@ -71,6 +78,81 @@ type AmbassadorProfileSummaryRow = {
 type ApprovedChallengeSubmissionRow = {
   user_id: string | null;
 };
+
+type ModuleProgressRow = {
+  module_id: string;
+  status: "not_started" | "in_progress" | "completed" | null;
+  lessons_done: number | null;
+  quiz_score: number | null;
+  modules: { order_index: number | null } | { order_index: number | null }[] | null;
+};
+
+function clampPercent(value: number) {
+  return Math.max(0, Math.min(100, Math.round(value)));
+}
+
+function getJoinedModuleOrder(row: ModuleProgressRow) {
+  if (Array.isArray(row.modules)) {
+    return row.modules[0]?.order_index ?? null;
+  }
+
+  return row.modules?.order_index ?? null;
+}
+
+function calculateModuleProgressPercent(
+  row: ModuleProgressRow | undefined,
+  totalLessons: number
+) {
+  if (!row || row.status === "not_started") {
+    return 0;
+  }
+
+  if (row.status === "completed") {
+    return 100;
+  }
+
+  const lessonCount = Math.max(totalLessons, 1);
+  const lessonsDone = Math.max(row.lessons_done ?? 0, 0);
+  const lessonProgress = clampPercent((lessonsDone / lessonCount) * 80);
+  const quizProgress =
+    typeof row.quiz_score === "number" ? clampPercent((row.quiz_score / 100) * 19) : 0;
+
+  return Math.min(99, lessonProgress + quizProgress);
+}
+
+export async function listProgramModulesForStudent(
+  userId: string
+): Promise<ProgramModule[]> {
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("module_progress")
+    .select("module_id, status, lessons_done, quiz_score, modules(order_index)")
+    .eq("user_id", userId)
+    .returns<ModuleProgressRow[]>();
+
+  if (error || !data) {
+    return programModules;
+  }
+
+  const progressByModuleId = new Map(data.map((row) => [row.module_id, row]));
+  const progressByOrder = new Map<number, ModuleProgressRow>();
+
+  data.forEach((row) => {
+    const order = getJoinedModuleOrder(row);
+    if (typeof order === "number") {
+      progressByOrder.set(order, row);
+    }
+  });
+
+  return programModules.map((module) => {
+    const row = progressByModuleId.get(module.id) ?? progressByOrder.get(module.week);
+
+    return {
+      ...module,
+      progressPercent: calculateModuleProgressPercent(row, module.lessons.length)
+    };
+  });
+}
 
 export async function listParentChildren(parentId: string): Promise<ParentChildSummary[]> {
   const supabase = createSupabaseAdminClient();
@@ -165,6 +247,42 @@ export async function listActiveChallenges(limit = 3): Promise<ActiveChallengeRo
   return data;
 }
 
+function parseChallengeInstructions(value: string) {
+  return value
+    .split(/\r?\n/)
+    .map((item) => item.replace(/^[-*\d.)\s]+/, "").trim())
+    .filter(Boolean);
+}
+
+function addDays(dateValue: string, days: number) {
+  const date = new Date(`${dateValue}T00:00:00.000Z`);
+  if (Number.isNaN(date.getTime())) {
+    return dateValue;
+  }
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+export async function listActiveChallengesWithFallback(limit = 3): Promise<WeeklyChallenge[]> {
+  const data = await listActiveChallenges(limit);
+
+  if (data.length === 0) {
+    return weeklyChallenges.slice(0, limit);
+  }
+
+  return data.map((challenge) => ({
+    id: challenge.id,
+    title: challenge.title,
+    description: challenge.description,
+    instructions: parseChallengeInstructions(challenge.instructions),
+    points: challenge.points,
+    weekStart: challenge.week_start,
+    deadline: addDays(challenge.week_start, 6),
+    requiresPhoto: challenge.requires_photo,
+    status: "open"
+  }));
+}
+
 export async function listModulesFromDatabase() {
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase
@@ -230,6 +348,31 @@ export async function listModulesWithLessons() {
     ...module,
     lessons: lessonsByModule.get(module.id) ?? []
   }));
+}
+
+export async function getModuleWithLessonsById(moduleId: string) {
+  const supabase = createSupabaseAdminClient();
+  const { data: module, error: moduleError } = await supabase
+    .from("modules")
+    .select("*")
+    .eq("id", moduleId)
+    .maybeSingle<ModuleRow>();
+
+  if (moduleError || !module) {
+    return null;
+  }
+
+  const { data: lessons } = await supabase
+    .from("lessons")
+    .select("id, module_id, order_index, title, content, estimated_mins, created_at")
+    .eq("module_id", moduleId)
+    .order("order_index", { ascending: true })
+    .returns<LessonRow[]>();
+
+  return {
+    ...module,
+    lessons: lessons ?? []
+  };
 }
 
 export async function listChallengeSubmissionsWithFallback() {

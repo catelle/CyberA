@@ -1,7 +1,7 @@
 "use client";
 
 import imageCompression from "browser-image-compression";
-import { Camera, Save } from "lucide-react";
+import { AlertTriangle, Camera, CheckCircle2, Save, WifiOff } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -19,11 +19,21 @@ type ChallengeSubmissionFormValues = z.infer<typeof challengeSubmissionSchema>;
 
 type ChallengeSubmissionFormProps = {
   challenge: WeeklyChallenge;
+  onlineSubmissionsEnabled?: boolean;
   userId: string;
 };
 
-export function ChallengeSubmissionForm({ challenge, userId }: ChallengeSubmissionFormProps) {
-  const [status, setStatus] = useState<string | null>(null);
+type SubmissionStatus = {
+  tone: "success" | "error" | "offline";
+  message: string;
+};
+
+export function ChallengeSubmissionForm({
+  challenge,
+  onlineSubmissionsEnabled = true,
+  userId
+}: ChallengeSubmissionFormProps) {
+  const [status, setStatus] = useState<SubmissionStatus | null>(null);
   const [photo, setPhoto] = useState<File | null>(null);
   const [compressedSize, setCompressedSize] = useState<number | null>(null);
   const {
@@ -68,6 +78,15 @@ export function ChallengeSubmissionForm({ challenge, userId }: ChallengeSubmissi
       submittedAt: new Date().toISOString()
     };
 
+    if (!onlineSubmissionsEnabled) {
+      setStatus({
+        tone: "error",
+        message:
+          "Ce defi vient du mode demo local. Cree ou active un defi Supabase pour envoyer une vraie soumission en ligne."
+      });
+      return;
+    }
+
     if (navigator.onLine) {
       const apiFormData = new FormData();
       apiFormData.set("challengeId", challenge.id);
@@ -75,15 +94,44 @@ export function ChallengeSubmissionForm({ challenge, userId }: ChallengeSubmissi
       apiFormData.set("city", values.city);
       if (compressedPhoto) apiFormData.set("photo", compressedPhoto);
 
-      const response = await fetch("/api/student/challenge-submissions", {
-        method: "POST",
-        body: apiFormData
-      });
+      try {
+        const response = await fetch("/api/student/challenge-submissions", {
+          method: "POST",
+          body: apiFormData
+        });
 
-      if (response.ok) {
+        const result = (await response.json().catch(() => null)) as {
+          message?: string;
+        } | null;
+
+        if (response.ok) {
+          reset();
+          setPhoto(null);
+          setStatus({
+            tone: "success",
+            message: "Soumission envoyee et en attente de revision."
+          });
+          return;
+        }
+
+        setStatus({
+          tone: "error",
+          message:
+            result?.message ??
+            "La soumission n'a pas ete envoyee. Verifie le defi actif et reessaie."
+        });
+        return;
+      } catch {
+        await queuePendingSync("challenge_submission", payload);
+
+        window.dispatchEvent(new CustomEvent("cybera:pending-sync-changed"));
         reset();
         setPhoto(null);
-        setStatus("Soumission envoyee et en attente de revision.");
+        setStatus({
+          tone: "offline",
+          message:
+            "Connexion instable: soumission enregistree localement et ajoutee a la file de synchronisation."
+        });
         return;
       }
     }
@@ -93,18 +141,31 @@ export function ChallengeSubmissionForm({ challenge, userId }: ChallengeSubmissi
     window.dispatchEvent(new CustomEvent("cybera:pending-sync-changed"));
     reset();
     setPhoto(null);
-    setStatus("Soumission enregistree localement et ajoutee a la file de synchronisation.");
+    setStatus({
+      tone: "offline",
+      message: "Mode hors ligne: soumission ajoutee a la file de synchronisation."
+    });
   }
 
   return (
-    <form className="grid gap-5 rounded-lg bg-white p-5 shadow-sm" onSubmit={handleSubmit(onSubmit)}>
+    <form
+      className="grid gap-5 rounded-lg border-2 border-secondary bg-white p-4 shadow-[0_4px_0_0_rgba(88,96,98,1)] sm:p-5"
+      onSubmit={handleSubmit(onSubmit)}
+    >
       <div>
-        <p className="text-sm font-black uppercase text-brand-gold">{challenge.title}</p>
-        <h2 className="mt-2 text-2xl font-black text-brand-ink">Rapport et preuve</h2>
-        <p className="mt-3 leading-7 text-slate-600">
+        <p className="text-sm font-black uppercase text-primary">{challenge.title}</p>
+        <h2 className="mt-2 break-words font-display text-2xl font-black leading-tight text-brand-ink sm:text-3xl">
+          Rapport et preuve
+        </h2>
+        <p className="mt-3 text-sm font-semibold leading-7 text-slate-600 sm:text-base">
           Le rapport doit faire au moins 100 caracteres. Les photos sont compressees
           cote client avant d&apos;etre ajoutees a la file hors ligne.
         </p>
+        {!onlineSubmissionsEnabled ? (
+          <p className="mt-4 rounded-lg border-2 border-secondary bg-[#fff4c2] p-3 text-sm font-black text-amber-900 shadow-[0_3px_0_0_rgba(88,96,98,1)]">
+            Mode demo local: cette soumission ne peut pas etre envoyee a Supabase.
+          </p>
+        ) : null}
       </div>
 
       <div className="field">
@@ -144,13 +205,30 @@ export function ChallengeSubmissionForm({ challenge, userId }: ChallengeSubmissi
       </div>
 
       {status ? (
-        <p className="rounded-lg bg-brand-sky p-4 text-sm font-bold text-brand-blue">
-          {status}
+        <p
+          className={
+            status.tone === "success"
+              ? "grid grid-cols-[auto_1fr] gap-2 rounded-lg border-2 border-secondary bg-[#d9fbe8] p-4 text-sm font-bold text-[#075f3f] shadow-[0_4px_0_0_rgba(88,96,98,1)]"
+              : status.tone === "offline"
+                ? "grid grid-cols-[auto_1fr] gap-2 rounded-lg border-2 border-secondary bg-[#fff4c2] p-4 text-sm font-bold text-amber-900 shadow-[0_4px_0_0_rgba(88,96,98,1)]"
+                : "grid grid-cols-[auto_1fr] gap-2 rounded-lg border-2 border-secondary bg-red-50 p-4 text-sm font-bold text-red-800 shadow-[0_4px_0_0_rgba(88,96,98,1)]"
+          }
+        >
+          {status.tone === "success" ? (
+            <CheckCircle2 aria-hidden className="mt-0.5 h-5 w-5" />
+          ) : status.tone === "offline" ? (
+            <WifiOff aria-hidden className="mt-0.5 h-5 w-5" />
+          ) : (
+            <AlertTriangle aria-hidden className="mt-0.5 h-5 w-5" />
+          )}
+          <span>
+            {status.message}
+          </span>
         </p>
       ) : null}
 
       <button
-        className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-brand-blue px-5 font-black text-white transition hover:bg-brand-ink disabled:cursor-not-allowed disabled:opacity-60"
+        className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border-2 border-secondary bg-brand-blue px-5 font-black text-white shadow-[0_4px_0_0_rgba(88,96,98,1)] transition hover:bg-brand-ink disabled:cursor-not-allowed disabled:opacity-60"
         disabled={isSubmitting}
         type="submit"
       >

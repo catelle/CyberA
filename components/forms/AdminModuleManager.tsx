@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Plus, Save } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -294,6 +295,12 @@ export function AdminModuleManager({ modules }: AdminModuleManagerProps) {
               </p>
             )}
             <div className="mt-4 flex flex-wrap gap-3">
+              <Link
+                className="inline-flex min-h-12 items-center rounded-lg border border-slate-200 px-4 font-black text-brand-blue"
+                href={`/student/modules/${module.id}`}
+              >
+                Ouvrir
+              </Link>
               <button
                 className="min-h-12 rounded-lg border border-slate-200 px-4 font-black text-brand-blue"
                 onClick={() => toggleModule(module)}

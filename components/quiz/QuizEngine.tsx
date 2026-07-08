@@ -4,6 +4,7 @@ import Link from "next/link";
 import { CheckCircle2, RotateCcw, XCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
+import { CyberMascot, MascotCoach } from "@/components/gamified/CyberMascot";
 import { cacheModuleForOffline, saveQuizProgress } from "@/lib/offline/db";
 import type { ProgramModule } from "@/lib/program";
 
@@ -94,29 +95,32 @@ export function QuizEngine({ module, userId }: QuizEngineProps) {
 
   if (isComplete) {
     return (
-      <section className="grid gap-5 rounded-lg bg-white p-5 shadow-sm">
-        <div>
-          <p className="text-sm font-black uppercase text-brand-gold">Resultat</p>
-          <h2 className="mt-2 text-3xl font-black text-brand-ink">
-            {scorePercent}% - {passed ? "Module reussi" : "Encore un effort"}
-          </h2>
-          <p className="mt-3 leading-7 text-slate-600">
-            {correctAnswers}/{module.quiz.length} bonnes reponses.{" "}
-            {passed
-              ? `${pointsEarned} points sont prets a etre synchronises.`
-              : "Relis les explications et retente le quiz."}
-          </p>
+      <section className="grid gap-5 rounded-lg border-2 border-secondary bg-white p-4 shadow-[0_4px_0_0_rgba(88,96,98,1)] sm:p-5">
+        <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
+          <div className="min-w-0">
+            <p className="text-sm font-black uppercase text-tertiary">Resultat</p>
+            <h2 className="mt-2 break-words font-display text-3xl font-black leading-tight text-brand-ink">
+              {scorePercent}% - {passed ? "Module reussi" : "Encore un effort"}
+            </h2>
+            <p className="mt-3 font-semibold leading-7 text-slate-600">
+              {correctAnswers}/{module.quiz.length} bonnes reponses.{" "}
+              {passed
+                ? `${pointsEarned} points sont prets a etre synchronises.`
+                : "Relis les explications et retente le quiz."}
+            </p>
+          </div>
+          <CyberMascot mood={passed ? "celebrate" : "focus"} size="lg" />
         </div>
 
         {status ? (
-          <p className="rounded-lg bg-brand-sky p-4 text-sm font-bold text-brand-blue">
+          <p className="rounded-lg border-2 border-secondary bg-brand-sky p-4 text-sm font-bold text-brand-blue shadow-[0_4px_0_0_rgba(88,96,98,1)]">
             {status}
           </p>
         ) : null}
 
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
           <button
-            className="inline-flex min-h-12 items-center gap-2 rounded-lg border border-slate-200 px-4 font-black text-brand-blue transition hover:bg-brand-sky"
+            className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border-2 border-secondary bg-white px-4 font-black text-brand-blue shadow-[0_4px_0_0_rgba(88,96,98,1)] transition hover:bg-brand-sky sm:w-fit"
             onClick={resetQuiz}
             type="button"
           >
@@ -124,7 +128,7 @@ export function QuizEngine({ module, userId }: QuizEngineProps) {
             Recommencer
           </button>
           <Link
-            className="inline-flex min-h-12 items-center rounded-lg bg-brand-blue px-4 font-black text-white transition hover:bg-brand-ink"
+            className="inline-flex min-h-12 w-full items-center justify-center rounded-lg border-2 border-secondary bg-brand-blue px-4 font-black text-white shadow-[0_4px_0_0_rgba(88,96,98,1)] transition hover:bg-brand-ink sm:w-fit"
             href="/student/challenges"
           >
             Voir le defi
@@ -135,26 +139,33 @@ export function QuizEngine({ module, userId }: QuizEngineProps) {
   }
 
   return (
-    <section className="grid gap-5 rounded-lg bg-white p-5 shadow-sm">
-      <div>
-        <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
-          <p className="text-sm font-black uppercase text-brand-gold">
-            Question {currentIndex + 1} de {module.quiz.length}
-          </p>
-          <p className="text-sm font-bold text-slate-500">Score minimum: 70%</p>
+    <section className="grid gap-5 rounded-lg border-2 border-secondary bg-white p-4 shadow-[0_4px_0_0_rgba(88,96,98,1)] sm:p-5">
+      <div className="grid gap-4 lg:grid-cols-[1fr_21rem] lg:items-center">
+        <div>
+          <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
+            <p className="text-sm font-black uppercase text-tertiary">
+              Question {currentIndex + 1} de {module.quiz.length}
+            </p>
+            <p className="text-sm font-bold text-slate-500">Score minimum: 70%</p>
+          </div>
+          <div className="progress-sheen mt-3 h-3 rounded-full bg-slate-100">
+            <div
+              className="progress-fill-animate h-3 rounded-full bg-[#ffcc32]"
+              style={{
+                width: `${Math.round(((currentIndex + 1) / module.quiz.length) * 100)}%`
+              }}
+            />
+          </div>
         </div>
-        <div className="mt-3 h-2 rounded-full bg-slate-100">
-          <div
-            className="h-2 rounded-full bg-brand-gold"
-            style={{
-              width: `${Math.round(((currentIndex + 1) / module.quiz.length) * 100)}%`
-            }}
-          />
-        </div>
+        <MascotCoach mascotMood={selectedIndex === null ? "focus" : "cheer"}>
+          {selectedIndex === null
+            ? "Choisis la meilleure reponse."
+            : "Lis l'explication, puis continue."}
+        </MascotCoach>
       </div>
 
       <div>
-        <h2 className="text-2xl font-black text-brand-ink">
+        <h2 className="break-words font-display text-2xl font-black leading-tight text-brand-ink">
           {currentQuestion.question}
         </h2>
         <div className="mt-5 grid gap-3">
@@ -167,10 +178,10 @@ export function QuizEngine({ module, userId }: QuizEngineProps) {
               <button
                 className={
                   showFeedback && isCorrect
-                    ? "flex min-h-12 items-center justify-between rounded-lg border border-green-300 bg-green-50 p-4 text-left font-bold text-green-800"
+                    ? "flex min-h-12 items-center justify-between gap-3 rounded-lg border-2 border-secondary bg-green-50 p-4 text-left font-bold text-green-800 shadow-[0_4px_0_0_rgba(88,96,98,1)]"
                     : showFeedback && isSelected
-                      ? "flex min-h-12 items-center justify-between rounded-lg border border-red-300 bg-red-50 p-4 text-left font-bold text-red-800"
-                      : "min-h-12 rounded-lg border border-slate-200 p-4 text-left font-bold text-slate-700 transition hover:border-brand-blue hover:bg-brand-sky"
+                      ? "flex min-h-12 items-center justify-between gap-3 rounded-lg border-2 border-secondary bg-red-50 p-4 text-left font-bold text-red-800 shadow-[0_4px_0_0_rgba(88,96,98,1)]"
+                      : "min-h-12 rounded-lg border-2 border-secondary bg-white p-4 text-left font-bold text-slate-700 shadow-[0_4px_0_0_rgba(88,96,98,1)] transition hover:-translate-y-0.5 hover:bg-brand-sky"
                 }
                 disabled={showFeedback}
                 key={option}
@@ -187,13 +198,13 @@ export function QuizEngine({ module, userId }: QuizEngineProps) {
       </div>
 
       {selectedIndex !== null ? (
-        <p className="rounded-lg bg-slate-50 p-4 text-sm font-bold leading-6 text-slate-700">
+        <p className="rounded-lg border-2 border-secondary bg-tertiary-fixed p-4 text-sm font-bold leading-6 text-tertiary shadow-[0_4px_0_0_rgba(88,96,98,1)]">
           {currentQuestion.explanation}
         </p>
       ) : null}
 
       <button
-        className="min-h-12 rounded-lg bg-brand-blue px-5 font-black text-white transition hover:bg-brand-ink disabled:cursor-not-allowed disabled:opacity-50"
+        className="min-h-12 rounded-lg border-2 border-secondary bg-brand-blue px-5 font-black text-white shadow-[0_4px_0_0_rgba(88,96,98,1)] transition hover:bg-brand-ink disabled:cursor-not-allowed disabled:opacity-50"
         disabled={selectedIndex === null}
         onClick={handleNext}
         type="button"

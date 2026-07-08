@@ -226,12 +226,12 @@ export function LoginForm() {
         </select>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 rounded-lg bg-brand-rose p-1">
+      <div className="grid grid-cols-2 gap-2 rounded-xl border-2 border-secondary bg-surface-container p-1 shadow-[0_3px_0_0_rgba(88,96,98,1)]">
         <button
           className={
             mode === "phone"
-              ? "min-h-12 rounded-md bg-white px-3 text-sm font-black text-brand-blue shadow-sm"
-              : "min-h-12 rounded-md px-3 text-sm font-black text-brand-graphite"
+              ? "min-h-12 rounded-lg bg-primary px-3 text-sm font-black text-white"
+              : "min-h-12 rounded-lg px-3 text-sm font-black text-secondary hover:bg-surface-container-high"
           }
           onClick={() => {
             setMode("phone");
@@ -245,8 +245,8 @@ export function LoginForm() {
         <button
           className={
             mode === "email"
-              ? "min-h-12 rounded-md bg-white px-3 text-sm font-black text-brand-blue shadow-sm"
-              : "min-h-12 rounded-md px-3 text-sm font-black text-brand-graphite"
+              ? "min-h-12 rounded-lg bg-primary px-3 text-sm font-black text-white"
+              : "min-h-12 rounded-lg px-3 text-sm font-black text-secondary hover:bg-surface-container-high"
           }
           onClick={() => {
             setMode("email");
@@ -315,14 +315,14 @@ export function LoginForm() {
         </>
       )}
 
-      <div className="rounded-lg border border-rose-100 bg-brand-sky p-3">
-        <p className="text-xs font-black uppercase tracking-wide text-brand-blue">
+      <div className="rounded-xl border-2 border-secondary bg-surface-container-low p-3 shadow-[0_3px_0_0_rgba(88,96,98,1)]">
+        <p className="text-xs font-black uppercase tracking-wide text-primary">
           Comptes demo
         </p>
         <div className="mt-3 grid gap-2 sm:grid-cols-3">
           {demoAccounts.map((account) => (
             <button
-              className="min-h-11 rounded-md border border-rose-100 bg-white px-3 text-sm font-black text-brand-blue transition hover:border-brand-gold hover:bg-brand-rose"
+              className="min-h-11 rounded-lg border-2 border-secondary bg-white px-3 text-sm font-black text-primary shadow-[0_2px_0_0_rgba(88,96,98,1)] transition hover:bg-primary-fixed"
               disabled={isSubmitting}
               key={account.email}
               onClick={() => selectDemoAccount(account)}
@@ -335,13 +335,13 @@ export function LoginForm() {
       </div>
 
       {status ? (
-        <p className="rounded-md border border-rose-100 bg-brand-sky px-3 py-2 text-sm font-bold text-brand-blue">
+        <p className="rounded-lg border-2 border-secondary bg-primary-fixed px-3 py-2 text-sm font-bold text-primary">
           {status}
         </p>
       ) : null}
 
       <button
-        className="min-h-12 rounded-lg bg-brand-blue px-5 py-3 font-black text-white shadow-glow transition hover:bg-brand-ink disabled:cursor-not-allowed disabled:opacity-60"
+        className="min-h-12 rounded-xl bg-primary px-5 py-3 font-black text-white transition hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-60"
         disabled={isSubmitting}
         type="submit"
       >
@@ -355,7 +355,7 @@ export function LoginForm() {
       </button>
 
       <button
-        className="min-h-12 rounded-lg border border-rose-100 bg-white px-5 font-black text-brand-blue transition hover:bg-brand-sky disabled:cursor-not-allowed disabled:opacity-60"
+        className="min-h-12 rounded-xl border-2 border-secondary bg-white px-5 font-black text-primary shadow-[0_4px_0_0_rgba(88,96,98,1)] transition hover:bg-surface-container-low disabled:cursor-not-allowed disabled:opacity-60"
         disabled={isSubmitting}
         onClick={handleGoogleLogin}
         type="button"
@@ -363,13 +363,13 @@ export function LoginForm() {
         Google
       </button>
 
-      <div className="grid gap-2 text-sm text-slate-600">
-        <Link className="font-bold text-brand-blue" href="/register/ambassador">
+      <div className="grid gap-2 text-sm font-semibold text-secondary">
+        <Link className="font-bold text-primary" href="/register/ambassador">
           {language === "fr"
             ? "Inscrire un ambassadeur"
             : "Register an ambassador"}
         </Link>
-        <Link className="font-bold text-brand-blue" href="/register/parent">
+        <Link className="font-bold text-primary" href="/register/parent">
           {language === "fr"
             ? "Je suis parent et j'ai deja un eleve"
             : "I am a parent with an existing student"}

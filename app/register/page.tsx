@@ -10,13 +10,13 @@ export default function RegisterPage() {
     <AuthShell title="Inscription" subtitle={t.mission}>
       <div className="grid gap-4">
         <Link
-          className="rounded-lg bg-brand-blue p-5 font-black text-white transition hover:bg-brand-ink"
+          className="rounded-xl bg-primary p-5 font-black text-white transition hover:bg-primary-container"
           href="/register/ambassador"
         >
           Ambassadeur
         </Link>
         <Link
-          className="rounded-lg border border-slate-200 p-5 font-black text-brand-blue transition hover:bg-brand-sky"
+          className="rounded-xl border-2 border-secondary bg-white p-5 font-black text-primary shadow-[0_4px_0_0_rgba(88,96,98,1)] transition hover:bg-surface-container-low"
           href="/register/parent"
         >
           Parent

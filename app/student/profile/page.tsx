@@ -1,9 +1,11 @@
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { requireRole } from "@/lib/auth/guards";
+import { listProgramModulesForStudent } from "@/lib/db/cybera";
 import { getProgramCompletionPercent, leaderboardEntries } from "@/lib/program";
 
 export default async function ProfilePage() {
   const user = await requireRole(["student"]);
+  const modules = await listProgramModulesForStudent(user.supabaseUserId);
   const currentEntry = leaderboardEntries.find((entry) => entry.isCurrentUser);
 
   return (
@@ -47,7 +49,7 @@ export default async function ProfilePage() {
             <div className="rounded-lg bg-slate-50 p-4">
               <p className="text-sm font-bold text-slate-500">Progression</p>
               <p className="mt-2 text-3xl font-black text-brand-blue">
-                {getProgramCompletionPercent()}%
+                {getProgramCompletionPercent(modules)}%
               </p>
             </div>
           </div>

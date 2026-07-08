@@ -36,7 +36,7 @@ export function LogoutButton({ label }: { label: string }) {
   return (
     <div className="grid gap-2">
       <button
-        className="min-h-11 rounded-lg border border-white/20 bg-white/10 px-4 text-sm font-bold text-white transition hover:bg-brand-blue disabled:cursor-not-allowed disabled:opacity-60"
+        className="min-h-11 rounded-xl border-2 border-secondary bg-white px-4 text-sm font-black text-primary shadow-[0_3px_0_0_rgba(88,96,98,1)] transition hover:bg-primary hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
         disabled={isLoggingOut}
         type="button"
         onClick={handleLogout}

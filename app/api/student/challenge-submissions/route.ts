@@ -3,6 +3,9 @@ import { NextResponse } from "next/server";
 import { requireApiRole, jsonError } from "@/lib/api/authz";
 import { createSupabaseAdminClient } from "@/lib/auth/supabase-server";
 
+const uuidPattern =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 export async function POST(request: Request) {
   const auth = await requireApiRole(["student"]);
   if (!auth.ok) return auth.response;
@@ -16,6 +19,16 @@ export async function POST(request: Request) {
   if (!challengeId || reportText.trim().length < 100) {
     return NextResponse.json(
       { message: "Soumission invalide: rapport de 100 caracteres minimum requis." },
+      { status: 400 }
+    );
+  }
+
+  if (!uuidPattern.test(challengeId)) {
+    return NextResponse.json(
+      {
+        message:
+          "Defi invalide: ce defi local n'existe pas dans Supabase. Active un defi cree depuis l'administration."
+      },
       { status: 400 }
     );
   }

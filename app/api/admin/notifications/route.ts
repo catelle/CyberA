@@ -5,10 +5,20 @@ import { requireApiRole, jsonError } from "@/lib/api/authz";
 import { createSupabaseAdminClient } from "@/lib/auth/supabase-server";
 
 const broadcastSchema = z.object({
-  title: z.string().trim().min(3),
-  body: z.string().trim().min(5),
+  title: z.string().trim().min(1, "Le titre est requis."),
+  body: z.string().trim().min(1, "Le message est requis."),
   audience: z.enum(["ambassadors", "parents", "all"]).default("ambassadors")
 });
+
+function validationMessage(error: z.ZodError) {
+  const issue = error.issues[0];
+
+  if (!issue) {
+    return "Notification invalide.";
+  }
+
+  return issue.message;
+}
 
 export async function POST(request: Request) {
   const auth = await requireApiRole(["admin"]);
@@ -17,7 +27,7 @@ export async function POST(request: Request) {
   const payload = await request.json().catch(() => null);
   const parsed = broadcastSchema.safeParse(payload);
   if (!parsed.success) {
-    return NextResponse.json({ message: "Notification invalide.", issues: parsed.error.flatten() }, { status: 400 });
+    return NextResponse.json({ message: validationMessage(parsed.error), issues: parsed.error.flatten() }, { status: 400 });
   }
 
   const supabase = createSupabaseAdminClient();

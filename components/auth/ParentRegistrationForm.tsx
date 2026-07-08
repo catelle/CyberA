@@ -108,20 +108,20 @@ export function ParentRegistrationForm() {
       </div>
 
       {status ? (
-        <p className="rounded-md bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">
+        <p className="rounded-lg border-2 border-error bg-error-container px-3 py-2 text-sm font-semibold text-error">
           {status}
         </p>
       ) : null}
 
       <button
-        className="rounded-lg bg-brand-blue px-5 py-3 font-black text-white transition hover:bg-brand-ink disabled:cursor-not-allowed disabled:opacity-60"
+        className="rounded-xl bg-primary px-5 py-3 font-black text-white transition hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-60"
         disabled={isSubmitting}
         type="submit"
       >
         {isSubmitting ? "..." : t.createParentAccount}
       </button>
 
-      <Link className="text-sm font-bold text-brand-blue" href="/login">
+      <Link className="text-sm font-bold text-primary" href="/login">
         {language === "fr" ? "J'ai deja un compte" : "I already have an account"}
       </Link>
     </form>

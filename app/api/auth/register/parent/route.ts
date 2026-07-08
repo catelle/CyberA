@@ -7,6 +7,21 @@ import { ensureSupabaseProfileForAuthUser } from "@/lib/db/supabase-users";
 import { getUserByEmail, serializeUser } from "@/lib/db/users";
 import { UserModel } from "@/models/User";
 
+function registrationErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (error && typeof error === "object" && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string" && message.trim()) {
+      return message;
+    }
+  }
+
+  return fallback;
+}
+
 export async function POST(request: Request) {
   const payload = await request.json().catch(() => null);
   const parsed = parentRegistrationSchema.safeParse(payload);
@@ -48,6 +63,7 @@ export async function POST(request: Request) {
     email_confirm: true,
     user_metadata: {
       fullName: parent.fullName,
+      phone: parent.phone,
       language: parent.language
     }
   });
@@ -108,14 +124,16 @@ export async function POST(request: Request) {
       { status: 201 }
     );
   } catch (error) {
+    console.error("Parent registration failed", error);
+
     await supabase.auth.admin.deleteUser(data.user.id);
 
     return NextResponse.json(
       {
-        message:
-          error instanceof Error
-            ? error.message
-            : "Impossible d'enregistrer le profil parent."
+        message: registrationErrorMessage(
+          error,
+          "Impossible d'enregistrer le profil parent."
+        )
       },
       { status: 500 }
     );

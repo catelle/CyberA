@@ -198,7 +198,11 @@ export async function ensureSupabaseProfileForAuthUser(
   options: ProfileBootstrapOptions = {}
 ) {
   const admin = createSupabaseAdminClient();
-  const phone = authUser.phone ?? null;
+  const authPhone =
+    typeof authUser.phone === "string" && authUser.phone.trim()
+      ? authUser.phone.trim()
+      : null;
+  let phone = authPhone ?? authUserMetadataString(authUser, "phone");
   const fullName =
     authUserMetadataString(authUser, "fullName") ??
     authUserMetadataString(authUser, "full_name") ??
@@ -209,9 +213,9 @@ export async function ensureSupabaseProfileForAuthUser(
 
   const { data: existingProfile, error: existingProfileError } = await admin
     .from("users")
-    .select("role")
+    .select("role, phone")
     .eq("id", authUser.id)
-    .maybeSingle<{ role: string | null }>();
+    .maybeSingle<{ role: string | null; phone: string | null }>();
 
   if (existingProfileError) {
     throw existingProfileError;
@@ -220,6 +224,22 @@ export async function ensureSupabaseProfileForAuthUser(
   const profileRole = normalizeSupabaseProfileRole(
     existingProfile?.role ?? options.role
   );
+
+  if (phone) {
+    const { data: phoneOwner, error: phoneOwnerError } = await admin
+      .from("users")
+      .select("id")
+      .eq("phone", phone)
+      .maybeSingle<{ id: string }>();
+
+    if (phoneOwnerError) {
+      throw phoneOwnerError;
+    }
+
+    if (phoneOwner && phoneOwner.id !== authUser.id) {
+      phone = existingProfile?.phone ?? null;
+    }
+  }
 
   const { error: userError } = await admin.from("users").upsert(
     {
