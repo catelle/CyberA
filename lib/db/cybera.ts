@@ -57,6 +57,26 @@ export type ActiveChallengeRow = {
   is_active: boolean;
 };
 
+export async function getSupabaseUserRoleCounts() {
+  const supabase = createSupabaseAdminClient();
+  const [students, parents, admins, consented] = await Promise.all([
+    supabase.from("users").select("id", { count: "exact", head: true }).eq("role", "ambassador"),
+    supabase.from("users").select("id", { count: "exact", head: true }).eq("role", "parent"),
+    supabase.from("users").select("id", { count: "exact", head: true }).eq("role", "admin"),
+    supabase
+      .from("ambassador_profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("parental_consent_given", true)
+  ]);
+
+  return {
+    students: students.count ?? 0,
+    parents: parents.count ?? 0,
+    admins: admins.count ?? 0,
+    consented: consented.count ?? 0
+  };
+}
+
 type FamilyLinkForParentRow = {
   child_id: string | null;
   linked_at: string | null;

@@ -1,5 +1,9 @@
 import { redirect } from "next/navigation";
 
-export default function DashboardAliasPage() {
-  redirect("/student/dashboard");
+import { dashboardForRole } from "@/lib/auth/roles";
+import { requireAuthenticatedUser } from "@/lib/auth/guards";
+
+export default async function DashboardAliasPage() {
+  const user = await requireAuthenticatedUser();
+  redirect(dashboardForRole(user.role));
 }

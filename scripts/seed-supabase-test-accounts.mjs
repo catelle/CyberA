@@ -183,7 +183,8 @@ async function upsertAuthUser(account) {
     user_metadata: {
       role: account.role,
       fullName: account.fullName
-    }
+    },
+    app_metadata: { role: account.role }
   });
 
   if (!error && data.user) {
@@ -207,7 +208,8 @@ async function upsertAuthUser(account) {
       user_metadata: {
         role: account.role,
         fullName: account.fullName
-      }
+      },
+      app_metadata: { ...existingUser.app_metadata, role: account.role }
     });
 
   if (updateError || !updated.user) {

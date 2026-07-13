@@ -2,13 +2,11 @@ import { NextResponse } from "next/server";
 
 import { createSupabaseAdminClient } from "@/lib/auth/supabase-server";
 import { studentRegistrationSchema } from "@/lib/auth/validation";
-import { connectToMongo } from "@/lib/db/mongodb";
 import {
   ensureSupabaseProfileForAuthUser,
+  findSupabaseAuthUserByEmail,
   linkRegisteredParentToChild
 } from "@/lib/db/supabase-users";
-import { getUserByEmail, serializeUser } from "@/lib/db/users";
-import { UserModel } from "@/models/User";
 
 function registrationErrorMessage(error: unknown, fallback: string) {
   if (error instanceof Error) {
@@ -40,13 +38,11 @@ export async function POST(request: Request) {
     );
   }
 
-  const { student, parent, consentGiven } = parsed.data;
-
-  await connectToMongo();
+  const { student, parent } = parsed.data;
 
   const [existingStudent, existingParent] = await Promise.all([
-    getUserByEmail(student.email),
-    getUserByEmail(parent.email)
+    findSupabaseAuthUserByEmail(student.email),
+    findSupabaseAuthUserByEmail(parent.email)
   ]);
 
   if (existingStudent || existingParent) {
@@ -104,59 +100,9 @@ export async function POST(request: Request) {
     await ensureSupabaseProfileForAuthUser(parentAuth.user, { role: "parent" });
     await linkRegisteredParentToChild(parentAuth.user.id, studentAuth.user.id);
 
-    const consentDate = new Date();
-    const parentUser = await UserModel.create({
-      supabaseUserId: parentAuth.user.id,
-      email: parent.email,
-      role: "parent",
-      profile: {
-        fullName: parent.fullName,
-        phone: parent.phone
-      },
-      language: student.language,
-      consentGiven: true,
-      consentDate
-    });
-
-    const studentUser = await UserModel.create({
-      supabaseUserId: studentAuth.user.id,
-      email: student.email,
-      role: "student",
-      profile: {
-        fullName: student.fullName,
-        age: student.age,
-        city: student.city,
-        school: student.school,
-        gradeLevel: student.gradeLevel
-      },
-      language: student.language,
-      consentGiven,
-      consentDate,
-      requiresEnhancedProtection: student.age < 13,
-      onboardingCompletedAt: consentDate,
-      linkedAccounts: [
-        {
-          userId: parentUser._id,
-          role: "parent",
-          relation: "parent"
-        }
-      ]
-    });
-
-    await UserModel.findByIdAndUpdate(parentUser._id, {
-      $set: {
-        linkedAccounts: [{
-          userId: studentUser._id,
-          role: "student",
-          relation: "child"
-        }]
-      }
-    });
-
     return NextResponse.json(
       {
-        message: "Comptes eleve et parent crees avec succes.",
-        user: serializeUser(studentUser)
+        message: "Comptes eleve et parent crees avec succes."
       },
       { status: 201 }
     );

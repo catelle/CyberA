@@ -143,7 +143,8 @@ async function main() {
         role: "admin",
         fullName: adminName,
         language
-      }
+      },
+      app_metadata: { role: "admin" }
     });
 
     if (error || !data.user) {
@@ -162,7 +163,8 @@ async function main() {
           role: "admin",
           fullName: adminName,
           language
-        }
+        },
+        app_metadata: { ...authUser.app_metadata, role: "admin" }
       }
     );
 

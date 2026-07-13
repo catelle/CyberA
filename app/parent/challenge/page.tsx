@@ -11,7 +11,6 @@ export default async function ParentChallengePage() {
     listParentChildren(user.supabaseUserId),
     listActiveChallenges(1)
   ]);
-  const childId = children[0]?.id;
   const challenge = challenges[0];
 
   return (
@@ -55,11 +54,14 @@ export default async function ParentChallengePage() {
               <p className="mt-3 leading-7 text-slate-600">
                 {challenge.description}
               </p>
-              <p className="mt-3 text-sm font-bold text-slate-500">
-                Enfant: {children[0].fullName}
-              </p>
             </div>
-            <ParentChallengeForm challengeId={challenge.id} childId={childId} />
+            <ParentChallengeForm
+              challengeId={challenge.id}
+              childOptions={children.map((child) => ({
+                id: child.id,
+                fullName: child.fullName
+              }))}
+            />
           </>
         )}
       </section>

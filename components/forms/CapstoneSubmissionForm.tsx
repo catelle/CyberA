@@ -36,16 +36,26 @@ export function CapstoneSubmissionForm({ userId }: { userId: string }) {
 
   async function onSubmit(values: CapstoneSubmissionFormValues) {
     if (navigator.onLine) {
-      const response = await fetch("/api/student/capstone", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values)
-      });
+      try {
+        const response = await fetch("/api/student/capstone", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(values)
+        });
+        const result = (await response.json().catch(() => null)) as {
+          message?: string;
+        } | null;
 
-      if (response.ok) {
-        reset();
-        setStatus("Projet capstone envoye a l'equipe programme.");
+        if (response.ok) {
+          reset();
+          setStatus("Projet capstone envoye a l'equipe programme.");
+          return;
+        }
+
+        setStatus(result?.message ?? "Le projet n'a pas pu etre envoye.");
         return;
+      } catch {
+        // A network failure is safe to retry through the offline queue.
       }
     }
 
