@@ -25,44 +25,22 @@ export async function POST(request: Request, { params }: ReviewRouteProps) {
   }
 
   const supabase = createSupabaseAdminClient();
-  const { data: previous, error: previousError } = await supabase
-    .from("challenge_submissions")
-    .select("status, points_awarded")
-    .eq("id", params.id)
-    .single<{ status: string; points_awarded: number | null }>();
-
-  if (previousError) return jsonError(previousError, "Soumission introuvable.", 404);
-
   const { data: submission, error: submissionError } = await supabase
-    .from("challenge_submissions")
-    .update({
-      status: parsed.data.status,
-      points_awarded: parsed.data.status === "approved" ? parsed.data.pointsAwarded : 0,
-      reviewer_id: auth.user.supabaseUserId,
-      reviewer_note: parsed.data.reviewerNote || null,
-      reviewed_at: new Date().toISOString(),
-      auto_delete_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+    .rpc("review_challenge_submission", {
+      p_submission_id: params.id,
+      p_status: parsed.data.status,
+      p_points: parsed.data.pointsAwarded,
+      p_reviewer_id: auth.user.supabaseUserId,
+      p_reviewer_note: parsed.data.reviewerNote || ""
     })
-    .eq("id", params.id)
-    .select("user_id, challenge_id, points_awarded")
-    .single();
+    .single<{ user_id: string; points_delta: number; review_changed: boolean }>();
 
   if (submissionError) return jsonError(submissionError, "Impossible de reviser la soumission.");
 
-  const previousPoints = previous.status === "approved" ? previous.points_awarded ?? 0 : 0;
-  const nextPoints = parsed.data.status === "approved" ? parsed.data.pointsAwarded : 0;
-  const pointsDelta = nextPoints - previousPoints;
-
-  if (pointsDelta !== 0 && submission?.user_id) {
-    const { error: pointsError } = await supabase.rpc("adjust_ambassador_points", {
-      p_user_id: submission.user_id,
-      p_delta: pointsDelta
-    });
-
-    if (pointsError) return jsonError(pointsError, "Impossible de mettre a jour les points.");
-  }
-
-  if (submission?.user_id) {
+  if (
+    submission?.user_id &&
+    (submission.review_changed || submission.points_delta !== 0)
+  ) {
     await supabase.from("notifications").insert({
       user_id: submission.user_id,
       type: parsed.data.status === "approved" ? "challenge_approved" : "challenge_rejected",
