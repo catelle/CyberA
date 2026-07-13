@@ -1,13 +1,14 @@
 "use client";
 
+import Link from "next/link";
 import { Plus, Save } from "lucide-react";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import type { ModuleRow } from "@/lib/db/cybera";
+import type { ModuleWithLessons } from "@/lib/db/cybera";
 
 type AdminModuleManagerProps = {
-  modules: ModuleRow[];
+  modules: ModuleWithLessons[];
 };
 
 export function AdminModuleManager({ modules }: AdminModuleManagerProps) {
@@ -15,6 +16,17 @@ export function AdminModuleManager({ modules }: AdminModuleManagerProps) {
   const [status, setStatus] = useState<string | null>(null);
   const [selectedModuleId, setSelectedModuleId] = useState(modules[0]?.id ?? "");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (modules.length === 0) {
+      setSelectedModuleId("");
+      return;
+    }
+
+    if (!modules.some((module) => module.id === selectedModuleId)) {
+      setSelectedModuleId(modules[0].id);
+    }
+  }, [modules, selectedModuleId]);
 
   async function submitJson(url: string, formData: FormData) {
     const response = await fetch(url, {
@@ -68,7 +80,7 @@ export function AdminModuleManager({ modules }: AdminModuleManagerProps) {
     }
   }
 
-  async function toggleModule(module: ModuleRow) {
+  async function toggleModule(module: ModuleWithLessons) {
     setStatus(null);
     const response = await fetch(`/api/admin/modules/${module.id}`, {
       method: "PATCH",
@@ -122,6 +134,18 @@ export function AdminModuleManager({ modules }: AdminModuleManagerProps) {
             <label htmlFor="color">Couleur</label>
             <input defaultValue="#1A5276" id="color" name="color" />
           </div>
+          <div className="field">
+            <label htmlFor="icon">Icone</label>
+            <input
+              id="icon"
+              name="icon"
+              placeholder="shield, globe, warning..."
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="videoUrl">Video / Bunny embed URL</label>
+            <input id="videoUrl" name="videoUrl" placeholder="https://..." type="url" />
+          </div>
           <div className="field md:col-span-2">
             <label htmlFor="description">Description</label>
             <textarea
@@ -155,19 +179,25 @@ export function AdminModuleManager({ modules }: AdminModuleManagerProps) {
         <form className="grid gap-4" onSubmit={handleCreateLesson}>
           <div className="field">
             <label htmlFor="moduleId">Module</label>
-            <select
-              id="moduleId"
-              onChange={(event) => setSelectedModuleId(event.target.value)}
-              value={selectedModuleId}
-            >
-              {modules.map((module) => (
-                <option key={module.id} value={module.id}>
-                  {module.order_index}. {module.title}
-                </option>
-              ))}
-            </select>
+            {modules.length > 0 ? (
+              <select
+                id="moduleId"
+                onChange={(event) => setSelectedModuleId(event.target.value)}
+                value={selectedModuleId}
+              >
+                {modules.map((module) => (
+                  <option key={module.id} value={module.id}>
+                    {module.order_index}. {module.title}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm font-bold text-amber-800">
+                Creez d&apos;abord un module pour pouvoir ajouter des lecons.
+              </p>
+            )}
           </div>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-3">
             <div className="field">
               <label htmlFor="lessonOrder">Ordre</label>
               <input id="lessonOrder" min={1} name="orderIndex" required type="number" />
@@ -175,6 +205,17 @@ export function AdminModuleManager({ modules }: AdminModuleManagerProps) {
             <div className="field">
               <label htmlFor="lessonTitle">Titre</label>
               <input id="lessonTitle" name="title" required />
+            </div>
+            <div className="field">
+              <label htmlFor="estimatedMins">Minutes</label>
+              <input
+                defaultValue={5}
+                id="estimatedMins"
+                min={1}
+                name="estimatedMins"
+                required
+                type="number"
+              />
             </div>
           </div>
           <div className="field">
@@ -209,12 +250,57 @@ export function AdminModuleManager({ modules }: AdminModuleManagerProps) {
                   {module.title}
                 </h2>
                 <p className="mt-2 leading-7 text-slate-600">{module.description}</p>
+                <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold text-slate-500">
+                  {module.subtitle ? (
+                    <span className="rounded-full bg-slate-100 px-3 py-1">
+                      {module.subtitle}
+                    </span>
+                  ) : null}
+                  {module.video_url ? (
+                    <span className="rounded-full bg-slate-100 px-3 py-1">
+                      Video liee
+                    </span>
+                  ) : null}
+                  <span className="rounded-full bg-slate-100 px-3 py-1">
+                    {module.lessons.length} lecon(s)
+                  </span>
+                </div>
               </div>
               <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-black uppercase text-slate-500">
                 {module.is_published ? "publie" : "brouillon"}
               </span>
             </div>
+            {module.lessons.length > 0 ? (
+              <div className="mt-4 rounded-lg border border-slate-200">
+                {module.lessons.map((lesson) => (
+                  <div
+                    className="flex flex-col justify-between gap-2 border-b border-slate-200 p-3 last:border-b-0 sm:flex-row sm:items-center"
+                    key={lesson.id}
+                  >
+                    <div>
+                      <p className="text-xs font-black uppercase text-brand-gold">
+                        Lecon {lesson.order_index}
+                      </p>
+                      <h3 className="font-black text-brand-ink">{lesson.title}</h3>
+                    </div>
+                    <span className="text-sm font-bold text-slate-500">
+                      {lesson.estimated_mins ?? 5} min
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-4 rounded-lg border border-dashed border-slate-200 p-3 text-sm font-bold text-slate-500">
+                Aucune lecon ajoutee pour ce module.
+              </p>
+            )}
             <div className="mt-4 flex flex-wrap gap-3">
+              <Link
+                className="inline-flex min-h-12 items-center rounded-lg border border-slate-200 px-4 font-black text-brand-blue"
+                href={`/student/modules/${module.id}`}
+              >
+                Ouvrir
+              </Link>
               <button
                 className="min-h-12 rounded-lg border border-slate-200 px-4 font-black text-brand-blue"
                 onClick={() => toggleModule(module)}

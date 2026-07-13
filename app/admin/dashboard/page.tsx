@@ -1,13 +1,13 @@
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { requireRole } from "@/lib/auth/guards";
-import { getUserRoleCounts } from "@/lib/db/users";
+import { getSupabaseUserRoleCounts } from "@/lib/db/cybera";
 import { getDictionary } from "@/lib/i18n/dictionary";
 import { cohorts, getAdminMetrics, programModules } from "@/lib/program";
 
 export default async function AdminDashboardPage() {
   const user = await requireRole(["admin"]);
   const t = getDictionary(user.language);
-  const counts = await getUserRoleCounts();
+  const counts = await getSupabaseUserRoleCounts();
   const metrics = getAdminMetrics();
 
   const stats = [

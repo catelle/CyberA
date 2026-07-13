@@ -14,6 +14,18 @@ export function OfflineSyncListener() {
   useEffect(() => {
     async function registerServiceWorker() {
       if ("serviceWorker" in navigator) {
+        if (process.env.NODE_ENV !== "production") {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(registrations.map((registration) => registration.unregister()));
+          const cacheKeys = await caches.keys();
+          await Promise.all(
+            cacheKeys
+              .filter((key) => key.startsWith("cyberambassador-"))
+              .map((key) => caches.delete(key))
+          );
+          return;
+        }
+
         await navigator.serviceWorker.register("/sw.js");
       }
     }

@@ -2,9 +2,26 @@ import { NextResponse } from "next/server";
 
 import { createSupabaseAdminClient } from "@/lib/auth/supabase-server";
 import { parentRegistrationSchema } from "@/lib/auth/validation";
-import { connectToMongo } from "@/lib/db/mongodb";
-import { getUserByEmail, serializeUser } from "@/lib/db/users";
-import { UserModel } from "@/models/User";
+import {
+  ensureSupabaseProfileForAuthUser,
+  findSupabaseAuthUserByEmail,
+  linkRegisteredParentToChild
+} from "@/lib/db/supabase-users";
+
+function registrationErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (error && typeof error === "object" && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string" && message.trim()) {
+      return message;
+    }
+  }
+
+  return fallback;
+}
 
 export async function POST(request: Request) {
   const payload = await request.json().catch(() => null);
@@ -22,9 +39,7 @@ export async function POST(request: Request) {
 
   const { parent, studentEmail } = parsed.data;
 
-  await connectToMongo();
-
-  const existingParent = await getUserByEmail(parent.email);
+  const existingParent = await findSupabaseAuthUserByEmail(parent.email);
   if (existingParent) {
     return NextResponse.json(
       { message: "Un compte parent existe deja avec cette adresse email." },
@@ -32,24 +47,35 @@ export async function POST(request: Request) {
     );
   }
 
-  const student = studentEmail ? await getUserByEmail(studentEmail) : null;
-  if (studentEmail && (!student || student.role !== "student")) {
+  const student = studentEmail
+    ? await findSupabaseAuthUserByEmail(studentEmail)
+    : null;
+  const supabase = createSupabaseAdminClient();
+  const { data: studentProfile } = student
+    ? await supabase
+        .from("users")
+        .select("role")
+        .eq("id", student.id)
+        .maybeSingle<{ role: string }>()
+    : { data: null };
+
+  if (studentEmail && (!student || studentProfile?.role !== "ambassador")) {
     return NextResponse.json(
       { message: "Aucun compte eleve ne correspond a cette adresse email." },
       { status: 404 }
     );
   }
 
-  const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase.auth.admin.createUser({
     email: parent.email,
     password: parent.password,
     email_confirm: true,
     user_metadata: {
-      role: "parent",
       fullName: parent.fullName,
+      phone: parent.phone,
       language: parent.language
-    }
+    },
+    app_metadata: { role: "parent" }
   });
 
   if (error || !data.user) {
@@ -60,60 +86,28 @@ export async function POST(request: Request) {
   }
 
   try {
-    const parentUser = await UserModel.create({
-      supabaseUserId: data.user.id,
-      email: parent.email,
-      role: "parent",
-      profile: {
-        fullName: parent.fullName,
-        phone: parent.phone
-      },
-      language: parent.language,
-      consentGiven: true,
-      consentDate: new Date(),
-      linkedAccounts: student
-        ? [
-            {
-              userId: student._id,
-              role: "student",
-              relation: "child"
-            }
-          ]
-        : []
-    });
-
+    await ensureSupabaseProfileForAuthUser(data.user, { role: "parent" });
     if (student) {
-      await UserModel.findByIdAndUpdate(student._id, {
-        $push: {
-          linkedAccounts: {
-            userId: parentUser._id,
-            role: "parent",
-            relation: "parent"
-          }
-        },
-        $set: {
-          consentGiven: true,
-          consentDate: student.consentDate ?? new Date()
-        }
-      });
+      await linkRegisteredParentToChild(data.user.id, student.id);
     }
 
     return NextResponse.json(
       {
-        message: "Compte parent cree avec succes.",
-        user: serializeUser(parentUser)
+        message: "Compte parent cree avec succes."
       },
       { status: 201 }
     );
   } catch (error) {
+    console.error("Parent registration failed", error);
+
     await supabase.auth.admin.deleteUser(data.user.id);
 
     return NextResponse.json(
       {
-        message:
-          error instanceof Error
-            ? error.message
-            : "Impossible d'enregistrer le profil parent."
+        message: registrationErrorMessage(
+          error,
+          "Impossible d'enregistrer le profil parent."
+        )
       },
       { status: 500 }
     );

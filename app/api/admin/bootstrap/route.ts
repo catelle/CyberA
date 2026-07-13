@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 
 import { createSupabaseAdminClient } from "@/lib/auth/supabase-server";
 import { adminBootstrapSchema } from "@/lib/auth/validation";
-import { getServerEnv } from "@/lib/env";
-import { connectToMongo } from "@/lib/db/mongodb";
-import { getUserByEmail, serializeUser } from "@/lib/db/users";
-import { UserModel } from "@/models/User";
+import { getAdminBootstrapToken } from "@/lib/env";
+import {
+  ensureSupabaseProfileForAuthUser,
+  findSupabaseAuthUserByEmail
+} from "@/lib/db/supabase-users";
 
 export async function POST(request: Request) {
   const payload = await request.json().catch(() => null);
@@ -18,14 +19,12 @@ export async function POST(request: Request) {
     );
   }
 
-  const { adminBootstrapToken } = getServerEnv();
+  const adminBootstrapToken = getAdminBootstrapToken();
   if (!adminBootstrapToken || parsed.data.token !== adminBootstrapToken) {
     return NextResponse.json({ message: "Token invalide." }, { status: 403 });
   }
 
-  await connectToMongo();
-
-  const existingAdmin = await getUserByEmail(parsed.data.email);
+  const existingAdmin = await findSupabaseAuthUserByEmail(parsed.data.email);
   if (existingAdmin) {
     return NextResponse.json(
       { message: "Cet administrateur existe deja." },
@@ -39,10 +38,10 @@ export async function POST(request: Request) {
     password: parsed.data.password,
     email_confirm: true,
     user_metadata: {
-      role: "admin",
       fullName: parsed.data.fullName,
       language: parsed.data.language
-    }
+    },
+    app_metadata: { role: "admin" }
   });
 
   if (error || !data.user) {
@@ -53,23 +52,11 @@ export async function POST(request: Request) {
   }
 
   try {
-    const adminUser = await UserModel.create({
-      supabaseUserId: data.user.id,
-      email: parsed.data.email,
-      role: "admin",
-      profile: {
-        fullName: parsed.data.fullName
-      },
-      language: parsed.data.language,
-      consentGiven: true,
-      consentDate: new Date(),
-      onboardingCompletedAt: new Date()
-    });
+    await ensureSupabaseProfileForAuthUser(data.user, { role: "admin" });
 
     return NextResponse.json(
       {
-        message: "Administrateur cree avec succes.",
-        user: serializeUser(adminUser)
+        message: "Administrateur cree avec succes."
       },
       { status: 201 }
     );

@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-import { getServerEnv } from "@/lib/env";
+import { getMongoEnv } from "@/lib/env";
 
 type CachedConnection = {
   conn: typeof mongoose | null;
@@ -27,7 +27,7 @@ export async function connectToMongo() {
   }
 
   if (!cached.promise) {
-    const { mongodbUri, mongodbDb } = getServerEnv();
+    const { mongodbUri, mongodbDb } = getMongoEnv();
 
     cached.promise = mongoose.connect(mongodbUri, {
       dbName: mongodbDb,

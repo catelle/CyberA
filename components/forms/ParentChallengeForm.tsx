@@ -6,11 +6,12 @@ import { useRouter } from "next/navigation";
 
 type ParentChallengeFormProps = {
   challengeId: string;
-  childId?: string;
+  childOptions: Array<{ id: string; fullName: string }>;
 };
 
-export function ParentChallengeForm({ challengeId, childId }: ParentChallengeFormProps) {
+export function ParentChallengeForm({ challengeId, childOptions }: ParentChallengeFormProps) {
   const router = useRouter();
+  const [childId, setChildId] = useState(childOptions[0]?.id ?? "");
   const [status, setStatus] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -43,6 +44,20 @@ export function ParentChallengeForm({ challengeId, childId }: ParentChallengeFor
 
   return (
     <form className="grid gap-5 rounded-lg bg-white p-5 shadow-sm" onSubmit={handleSubmit}>
+      <div className="field">
+        <label htmlFor="childId">Enfant concerne</label>
+        <select
+          id="childId"
+          onChange={(event) => setChildId(event.target.value)}
+          value={childId}
+        >
+          {childOptions.map((child) => (
+            <option key={child.id} value={child.id}>
+              {child.fullName}
+            </option>
+          ))}
+        </select>
+      </div>
       <div className="field">
         <label htmlFor="message">Message pour l&apos;enfant</label>
         <textarea

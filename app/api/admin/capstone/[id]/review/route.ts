@@ -23,6 +23,14 @@ export async function POST(request: Request, { params }: CapstoneReviewRouteProp
   }
 
   const supabase = createSupabaseAdminClient();
+  const { data: previous, error: previousError } = await supabase
+    .from("capstone_projects")
+    .select("status")
+    .eq("id", params.id)
+    .single<{ status: string }>();
+
+  if (previousError) return jsonError(previousError, "Capstone introuvable.", 404);
+
   const { data, error } = await supabase
     .from("capstone_projects")
     .update({
@@ -36,11 +44,20 @@ export async function POST(request: Request, { params }: CapstoneReviewRouteProp
 
   if (error) return jsonError(error, "Impossible de reviser le capstone.");
 
-  if (parsed.data.status === "approved" && data?.user_id) {
-    await supabase.rpc("increment_ambassador_points", {
+  const pointsDelta =
+    parsed.data.status === previous.status
+      ? 0
+      : parsed.data.status === "approved"
+        ? 500
+        : -500;
+
+  if (pointsDelta !== 0 && data?.user_id) {
+    const { error: pointsError } = await supabase.rpc("adjust_ambassador_points", {
       p_user_id: data.user_id,
-      p_points: 500
+      p_delta: pointsDelta
     });
+
+    if (pointsError) return jsonError(pointsError, "Impossible de mettre a jour les points.");
   }
 
   return NextResponse.json({ message: "Capstone revise." });

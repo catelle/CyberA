@@ -71,6 +71,249 @@ const accounts = [
   }
 ];
 
+const trainingModules = [
+  {
+    orderIndex: 1,
+    title: "Risques en ligne",
+    subtitle: "Online Risks",
+    description:
+      "Identifier les arnaques, le phishing, le cyberharcelement, la desinformation et les situations qui demandent de l'aide.",
+    color: "#1A5276",
+    icon: "shield",
+    lessons: [
+      {
+        orderIndex: 1,
+        title: "Reconnaitre une arnaque",
+        estimatedMins: 8,
+        contentText:
+          "Observe le message, verifie l'expediteur, cherche les signes d'urgence artificielle et demande conseil avant de cliquer."
+      }
+    ]
+  },
+  {
+    orderIndex: 2,
+    title: "Opportunites numeriques",
+    subtitle: "Digital Opportunities",
+    description:
+      "Utiliser internet pour apprendre, creer, trouver des opportunites utiles et construire une presence numerique positive.",
+    color: "#1E8449",
+    icon: "globe",
+    lessons: [
+      {
+        orderIndex: 1,
+        title: "Transformer internet en outil de croissance",
+        estimatedMins: 7,
+        contentText:
+          "Choisis un objectif concret, trouve deux sources fiables et transforme ce que tu apprends en action utile pour ton ecole ou ta famille."
+      }
+    ]
+  },
+  {
+    orderIndex: 3,
+    title: "Hygiene numerique",
+    subtitle: "Digital Hygiene",
+    description:
+      "Installer des reflexes concrets: mots de passe solides, confidentialite, double verification, gestion du temps et protection des donnees.",
+    color: "#B7950B",
+    icon: "lock",
+    lessons: [
+      {
+        orderIndex: 1,
+        title: "Proteger ses comptes essentiels",
+        estimatedMins: 9,
+        contentText:
+          "Cree une phrase de passe unique, active la double verification et verifie les parametres de confidentialite de tes comptes principaux."
+      }
+    ]
+  },
+  {
+    orderIndex: 4,
+    title: "Leadership citoyen numerique",
+    subtitle: "Digital Citizen Leadership",
+    description:
+      "Passer de l'apprentissage a l'action: sensibiliser, aider d'autres eleves, documenter ses preuves et inspirer sa communaute.",
+    color: "#6C3483",
+    icon: "trophy",
+    lessons: [
+      {
+        orderIndex: 1,
+        title: "Mener une action de sensibilisation",
+        estimatedMins: 10,
+        contentText:
+          "Prepare un message simple, choisis un public, partage une bonne pratique et collecte une preuve de ton action de leadership."
+      }
+    ]
+  }
+];
+
+async function findAuthUserByEmail(email) {
+  let page = 1;
+
+  while (true) {
+    const { data, error } = await supabase.auth.admin.listUsers({
+      page,
+      perPage: 1000
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    const user = data.users.find(
+      (item) => item.email?.toLowerCase() === email.toLowerCase()
+    );
+
+    if (user) {
+      return user;
+    }
+
+    if (data.users.length < 1000) {
+      return null;
+    }
+
+    page += 1;
+  }
+}
+
+async function upsertAuthUser(account) {
+  const { data, error } = await supabase.auth.admin.createUser({
+    email: account.email,
+    password: account.password,
+    email_confirm: true,
+    user_metadata: {
+      role: account.role,
+      fullName: account.fullName
+    },
+    app_metadata: { role: account.role }
+  });
+
+  if (!error && data.user) {
+    return data.user;
+  }
+
+  if (!error || !error.message.toLowerCase().includes("already")) {
+    throw error ?? new Error(`Could not create ${account.email}`);
+  }
+
+  const existingUser = await findAuthUserByEmail(account.email);
+
+  if (!existingUser) {
+    throw new Error(`Could not find existing auth user for ${account.email}`);
+  }
+
+  const { data: updated, error: updateError } =
+    await supabase.auth.admin.updateUserById(existingUser.id, {
+      password: account.password,
+      email_confirm: true,
+      user_metadata: {
+        role: account.role,
+        fullName: account.fullName
+      },
+      app_metadata: { ...existingUser.app_metadata, role: account.role }
+    });
+
+  if (updateError || !updated.user) {
+    throw updateError ?? new Error(`Could not update ${account.email}`);
+  }
+
+  return updated.user;
+}
+
+async function upsertTrainingModule(module) {
+  const { data: existingModules, error: readError } = await supabase
+    .from("modules")
+    .select("id")
+    .eq("order_index", module.orderIndex)
+    .order("created_at", { ascending: true })
+    .limit(1);
+
+  if (readError) {
+    throw readError;
+  }
+
+  const payload = {
+    order_index: module.orderIndex,
+    title: module.title,
+    subtitle: module.subtitle,
+    description: module.description,
+    color: module.color,
+    icon: module.icon,
+    is_published: true
+  };
+
+  const existingModuleId = existingModules?.[0]?.id;
+
+  if (existingModuleId) {
+    const { data, error } = await supabase
+      .from("modules")
+      .update(payload)
+      .eq("id", existingModuleId)
+      .select("id")
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    return data.id;
+  }
+
+  const { data, error } = await supabase
+    .from("modules")
+    .insert(payload)
+    .select("id")
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data.id;
+}
+
+async function upsertStarterLesson(moduleId, lesson) {
+  const { data: existingLessons, error: readError } = await supabase
+    .from("lessons")
+    .select("id")
+    .eq("module_id", moduleId)
+    .eq("order_index", lesson.orderIndex)
+    .order("created_at", { ascending: true })
+    .limit(1);
+
+  if (readError) {
+    throw readError;
+  }
+
+  const payload = {
+    module_id: moduleId,
+    order_index: lesson.orderIndex,
+    title: lesson.title,
+    estimated_mins: lesson.estimatedMins,
+    content: [{ type: "text", content: lesson.contentText }]
+  };
+
+  const existingLessonId = existingLessons?.[0]?.id;
+
+  if (existingLessonId) {
+    const { error } = await supabase
+      .from("lessons")
+      .update(payload)
+      .eq("id", existingLessonId);
+
+    if (error) {
+      throw error;
+    }
+
+    return;
+  }
+
+  const { error } = await supabase.from("lessons").insert(payload);
+
+  if (error) {
+    throw error;
+  }
+}
+
 const { data: cohort } = await supabase
   .from("cohorts")
   .upsert(
@@ -89,23 +332,8 @@ const { data: cohort } = await supabase
 const created = new Map();
 
 for (const account of accounts) {
-  const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-    email: account.email,
-    password: account.password,
-    email_confirm: true,
-    user_metadata: {
-      role: account.role,
-      fullName: account.fullName
-    }
-  });
-
-  if (authError && !authError.message.includes("already")) {
-    console.error(authError.message);
-    continue;
-  }
-
-  const userId = authData.user?.id;
-  if (!userId) continue;
+  const authUser = await upsertAuthUser(account);
+  const userId = authUser.id;
   created.set(account.email, userId);
 
   await supabase.from("users").upsert(
@@ -146,7 +374,16 @@ if (parentId && childId) {
   );
 }
 
+for (const module of trainingModules) {
+  const moduleId = await upsertTrainingModule(module);
+
+  for (const lesson of module.lessons) {
+    await upsertStarterLesson(moduleId, lesson);
+  }
+}
+
 console.log("Seeded test accounts:");
 for (const account of accounts) {
   console.log(`${account.role}: ${account.email} / ${account.password}`);
 }
+console.log("Seeded editable training modules and starter lessons.");

@@ -1,4 +1,4 @@
-const CACHE_NAME = "cyberambassador-shell-v1";
+const CACHE_NAME = "cyberambassador-shell-v2";
 const SHELL_ASSETS = ["/", "/manifest.json", "/icons/icon-192.png", "/icons/icon-512.png"];
 
 self.addEventListener("install", (event) => {
@@ -31,7 +31,11 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (request.destination === "image" || request.url.includes("/_next/static/")) {
+  if (request.url.includes("/_next/static/")) {
+    return;
+  }
+
+  if (request.destination === "image") {
     event.respondWith(
       caches.open(CACHE_NAME).then(async (cache) => {
         const cached = await cache.match(request);

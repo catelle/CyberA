@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { requireApiRole, jsonError } from "@/lib/api/authz";
 import { createSupabaseAdminClient } from "@/lib/auth/supabase-server";
-import { listModulesWithFallback } from "@/lib/db/cybera";
+import { listModulesFromDatabase } from "@/lib/db/cybera";
 
 const moduleSchema = z.object({
   orderIndex: z.coerce.number().int().min(1),
@@ -20,7 +20,7 @@ export async function GET() {
   const auth = await requireApiRole(["admin"]);
   if (!auth.ok) return auth.response;
 
-  return NextResponse.json({ modules: await listModulesWithFallback() });
+  return NextResponse.json({ modules: await listModulesFromDatabase() });
 }
 
 export async function POST(request: Request) {

@@ -95,7 +95,10 @@ export async function saveQuizProgress(progress: LocalProgress) {
 }
 
 export async function countPendingSyncItems() {
-  return offlineDb.pendingSync.where("status").equals("queued").count();
+  return offlineDb.pendingSync
+    .where("status")
+    .anyOf("queued", "syncing", "failed")
+    .count();
 }
 
 async function pushPendingItem(item: PendingSync) {
@@ -153,7 +156,10 @@ async function pushPendingItem(item: PendingSync) {
 }
 
 export async function syncPending() {
-  const pending = await offlineDb.pendingSync.where("status").equals("queued").toArray();
+  const pending = await offlineDb.pendingSync
+    .where("status")
+    .anyOf("queued", "syncing", "failed")
+    .toArray();
 
   for (const item of pending) {
     if (!item.id) continue;

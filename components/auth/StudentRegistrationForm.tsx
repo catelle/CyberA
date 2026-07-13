@@ -93,7 +93,7 @@ export function StudentRegistrationForm() {
           </select>
         </div>
 
-        <h2 className="text-lg font-black text-brand-blue sm:col-span-2">
+        <h2 className="font-display text-lg font-black text-primary sm:col-span-2">
           {language === "fr" ? "Eleve" : "Student"}
         </h2>
 
@@ -138,7 +138,7 @@ export function StudentRegistrationForm() {
           <input id="gradeLevel" name="gradeLevel" required />
         </div>
 
-        <h2 className="text-lg font-black text-brand-blue sm:col-span-2">
+        <h2 className="font-display text-lg font-black text-primary sm:col-span-2">
           {language === "fr" ? "Parent ou tuteur" : "Parent or guardian"}
         </h2>
 
@@ -169,7 +169,7 @@ export function StudentRegistrationForm() {
         </div>
       </div>
 
-      <label className="flex items-start gap-3 rounded-lg bg-brand-sky p-4 text-sm font-semibold text-brand-ink">
+      <label className="flex items-start gap-3 rounded-xl border-2 border-secondary bg-surface-container-low p-4 text-sm font-semibold text-on-surface shadow-[0_3px_0_0_rgba(88,96,98,1)]">
         <input
           className="mt-1 h-4 w-4"
           name="consentGiven"
@@ -180,20 +180,20 @@ export function StudentRegistrationForm() {
       </label>
 
       {status ? (
-        <p className="rounded-md bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">
+        <p className="rounded-lg border-2 border-error bg-error-container px-3 py-2 text-sm font-semibold text-error">
           {status}
         </p>
       ) : null}
 
       <button
-        className="rounded-lg bg-brand-blue px-5 py-3 font-black text-white transition hover:bg-brand-ink disabled:cursor-not-allowed disabled:opacity-60"
+        className="rounded-xl bg-primary px-5 py-3 font-black text-white transition hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-60"
         disabled={isSubmitting}
         type="submit"
       >
         {isSubmitting ? "..." : t.createStudentAccount}
       </button>
 
-      <Link className="text-sm font-bold text-brand-blue" href="/login">
+      <Link className="text-sm font-bold text-primary" href="/login">
         {language === "fr" ? "J'ai deja un compte" : "I already have an account"}
       </Link>
     </form>

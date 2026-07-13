@@ -1,34 +1,87 @@
 import Image from "next/image";
 import Link from "next/link";
+import { ArrowRight, Award, ClipboardCheck, MessageCircle, Trophy, UsersRound } from "lucide-react";
 
-import { ambassadorActions, cohorts, programModules } from "@/lib/program";
+const homepageModules = [
+  {
+    title: "Risques en ligne",
+    subtitle: "Online Risks",
+    summary:
+      "Identifier les arnaques, le phishing, le cyberharcelement, la desinformation et les situations qui demandent de l'aide."
+  },
+  {
+    title: "Opportunites numeriques",
+    subtitle: "Digital Opportunities",
+    summary:
+      "Utiliser internet pour apprendre, creer, trouver des opportunites utiles et construire une presence numerique positive."
+  },
+  {
+    title: "Hygiene numerique",
+    subtitle: "Digital Hygiene",
+    summary:
+      "Installer des reflexes concrets: mots de passe solides, confidentialite, double verification, gestion du temps et protection des donnees."
+  },
+  {
+    title: "Leadership citoyen numerique",
+    subtitle: "Digital Citizen Leadership",
+    summary:
+      "Passer de l'apprentissage a l'action: sensibiliser, aider d'autres eleves, documenter ses preuves et inspirer sa communaute."
+  }
+];
+
+const platformHighlights = [
+  {
+    title: "Defis hebdomadaires avec preuve",
+    description:
+      "Chaque eleve accomplit une action reelle, soumet une preuve et gagne des points apres validation.",
+    Icon: ClipboardCheck
+  },
+  {
+    title: "Parents challenges par leur enfant",
+    description:
+      "Un enfant certifie peut inviter son parent a relever un defi similaire et prolonger l'apprentissage a la maison.",
+    Icon: UsersRound
+  },
+  {
+    title: "Classement mensuel et recompenses",
+    description:
+      "Les points alimentent un leaderboard mensuel qui valorise l'effort, l'impact et la constance.",
+    Icon: Trophy
+  },
+  {
+    title: "Badge verifiable et forum d'entraide",
+    description:
+      "La certification officielle donne acces a un badge verifiable et a une communaute ou les ambassadeurs aident d'autres eleves.",
+    Icon: Award
+  }
+];
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-white text-brand-ink">
+    <main className="min-h-screen bg-background font-body-md text-on-background">
       <section className="relative min-h-[92vh] overflow-hidden bg-brand-ink text-white">
         <Image
           alt="Jeunes Cyberambassadeurs en formation"
-          className="object-cover opacity-30"
+          className="object-cover opacity-55"
           fill
           priority
           src="/img/cybera.jpg"
         />
+        <div className="absolute inset-0 bg-gradient-to-b from-brand-ink/85 via-brand-ink/60 to-brand-ink/85" />
         <div className="relative z-10 mx-auto flex min-h-[92vh] max-w-7xl flex-col px-5 py-6">
-          <header className="flex items-center justify-between gap-4">
+          <header className="flex items-center justify-between gap-4 rounded-xl border-2 border-white/70 bg-white/95 px-3 py-3 text-on-surface shadow-[0_4px_0_0_rgba(88,96,98,1)]">
             <Link className="flex items-center gap-3 font-black" href="/">
-              <Image alt="" height={42} src="/img/logo.png" width={42} />
-              <span>Cyberambassadeurs</span>
+              <span className="flex h-10 w-10 items-center justify-center rounded-lg border-2 border-secondary bg-primary-container text-lg font-black text-white">
+                C
+              </span>
+              <span className="font-display uppercase text-primary">Cyberambassadeurs</span>
             </Link>
             <nav className="flex items-center gap-3 text-sm font-bold">
-              <Link className="hidden text-white/80 hover:text-white sm:inline" href="#cohortes">
-                Cohortes
-              </Link>
-              <Link className="hidden text-white/80 hover:text-white sm:inline" href="#programme">
+              <Link className="hidden text-secondary hover:text-primary sm:inline" href="#programme">
                 Programme
               </Link>
               <Link
-                className="rounded-lg bg-white px-4 py-2 text-brand-ink transition hover:bg-brand-gold"
+                className="rounded-xl bg-primary px-4 py-2 font-black text-white transition hover:bg-primary-container"
                 href="/login"
               >
                 Connexion
@@ -38,100 +91,121 @@ export default function HomePage() {
 
           <div className="grid flex-1 items-center gap-10 py-14 lg:grid-cols-[1fr_0.78fr]">
             <div className="max-w-3xl">
-              <p className="mb-4 inline-flex rounded-full bg-brand-gold px-4 py-2 text-sm font-black text-brand-ink">
-                Formation interactive de 4 modules
+              <p className="mb-4 inline-flex rounded-full border-2 border-secondary bg-primary-fixed px-4 py-2 text-sm font-black uppercase text-primary shadow-[0_2px_0_0_rgba(88,96,98,1)]">
+                Formation certifiante en 4 modules
               </p>
-              <h1 className="text-4xl font-black leading-tight sm:text-6xl">
-                Devenez un CyberAmbassadeur
+              <h1 className="font-display text-4xl font-black leading-tight sm:text-6xl">
+                Former les Cyberambassadeurs qui changent leur communaute
               </h1>
-              <p className="mt-6 max-w-2xl text-lg leading-8 text-white/82">
-                Une plateforme PWA pour former les jeunes a reconnaitre les risques en
-                ligne, proteger leurs donnees et guider leur communaute avec des reflexes
-                simples.
+              <p className="mt-6 max-w-2xl text-lg font-semibold leading-8 text-white/90">
+                Sur un continent ou des millions de jeunes utilisent internet sans
+                connaitre ses dangers ni sa puissance, Cyberambassadeurs forme des jeunes
+                certifies qui apprennent a l&apos;utiliser pour grandir, se proteger, inspirer
+                et changer leurs communautes.
+              </p>
+              <p className="mt-4 max-w-2xl text-base font-semibold leading-7 text-white/80">
+                Across a continent where millions of young people use the internet without
+                knowing its dangers or its power, we train certified cyberambassadors who
+                use it to grow, protect, inspire, and change their communities.
+              </p>
+              <p className="mt-5 max-w-2xl text-base font-semibold leading-7 text-white/90">
+                Le parcours combine quatre modules structures, des defis de leadership
+                hebdomadaires avec preuves, un systeme de points, un classement mensuel,
+                des recompenses et un badge officiel verifiable.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
-                  className="rounded-lg bg-brand-gold px-5 py-3 font-black text-brand-ink transition hover:bg-white"
+                  className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-primary px-5 py-3 font-black text-white transition hover:bg-primary-container"
                   href="/register/student"
                 >
-                  Inscrire un eleve
+                  Je suis eleve
+                  <ArrowRight aria-hidden className="h-4 w-4" />
                 </Link>
                 <Link
-                  className="rounded-lg border border-white/35 px-5 py-3 font-black text-white transition hover:bg-white/10"
+                  className="inline-flex min-h-12 items-center gap-2 rounded-xl border-2 border-secondary bg-white px-5 py-3 font-black text-primary shadow-[0_4px_0_0_rgba(88,96,98,1)] transition hover:bg-primary-fixed"
                   href="/register/parent"
                 >
-                  Espace parent
+                  Je suis parent
+                  <ArrowRight aria-hidden className="h-4 w-4" />
                 </Link>
               </div>
             </div>
 
-            <div className="grid gap-4 rounded-lg bg-white/10 p-4 backdrop-blur">
-              {ambassadorActions.map((action) => (
-                <div className="rounded-lg bg-white p-4 text-brand-ink" key={action.title}>
-                  <p className="text-sm font-black uppercase text-brand-gold">{action.owner}</p>
-                  <h2 className="mt-1 text-xl font-black">{action.title}</h2>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">{action.description}</p>
-                </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+              {platformHighlights.map(({ Icon, description, title }) => (
+                <article className="rounded-xl border-2 border-secondary bg-white/95 p-4 text-on-surface shadow-[0_4px_0_0_rgba(88,96,98,1)]" key={title}>
+                  <div className="flex items-start gap-3">
+                    <span className="mt-1 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-secondary bg-primary-fixed text-primary">
+                      <Icon aria-hidden className="h-5 w-5" />
+                    </span>
+                    <div>
+                      <h2 className="font-display text-lg font-black">{title}</h2>
+                      <p className="mt-2 text-sm font-semibold leading-6 text-secondary">{description}</p>
+                    </div>
+                  </div>
+                </article>
               ))}
             </div>
           </div>
         </div>
       </section>
 
-      <section className="bg-slate-50 py-16" id="cohortes">
-        <div className="mx-auto max-w-7xl px-5">
-          <div className="max-w-2xl">
-            <p className="text-sm font-black uppercase text-brand-gold">Cohortes</p>
-            <h2 className="mt-2 text-3xl font-black text-brand-blue">
-              Trois parcours pour apprendre, agir et transmettre.
-            </h2>
-          </div>
-          <div className="mt-8 grid gap-5 md:grid-cols-3">
-            {cohorts.map((cohort) => (
-              <article className="overflow-hidden rounded-lg bg-white shadow-sm" key={cohort.name}>
-                <div className="relative h-44">
-                  <Image
-                    alt={cohort.name}
-                    className="object-cover"
-                    fill
-                    src={cohort.image}
-                  />
-                </div>
-                <div className="p-5">
-                  <h3 className="text-xl font-black text-brand-blue">{cohort.name}</h3>
-                  <p className="mt-3 text-sm leading-6 text-slate-600">{cohort.description}</p>
-                </div>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="py-16" id="programme">
+      <section className="bg-background py-16" id="programme">
         <div className="mx-auto max-w-7xl px-5">
           <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
             <div className="max-w-2xl">
-              <p className="text-sm font-black uppercase text-brand-gold">Programme</p>
-              <h2 className="mt-2 text-3xl font-black text-brand-blue">
-                Modules progressifs, suivis par l&apos;eleve, le parent et l&apos;equipe.
+              <p className="text-sm font-black uppercase text-primary">Programme certifiant</p>
+              <h2 className="mt-2 font-display text-3xl font-black text-on-surface">
+                Quatre modules pour apprendre, pratiquer et devenir un leader numerique.
               </h2>
             </div>
             <Link
-              className="rounded-lg bg-brand-blue px-5 py-3 text-center font-black text-white transition hover:bg-brand-ink"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-center font-black text-white transition hover:bg-primary-container"
               href="/login"
             >
               Acceder a la plateforme
+              <ArrowRight aria-hidden className="h-4 w-4" />
             </Link>
           </div>
 
-          <div className="mt-8 grid gap-4 lg:grid-cols-5">
-            {programModules.map((module) => (
-              <article className="rounded-lg border border-slate-200 bg-white p-5" key={module.id}>
-                <p className="text-sm font-black text-brand-gold">Semaine {module.week}</p>
-                <h3 className="mt-2 text-lg font-black text-brand-ink">{module.title}</h3>
-                <p className="mt-3 text-sm leading-6 text-slate-600">{module.summary}</p>
+          <div className="mt-8 grid gap-4 lg:grid-cols-4">
+            {homepageModules.map((module, index) => (
+              <article className="rounded-xl border-2 border-secondary bg-white p-5 shadow-[0_4px_0_0_rgba(88,96,98,1)]" key={module.title}>
+                <p className="text-sm font-black text-primary">
+                  Module {String(index + 1).padStart(2, "0")}
+                </p>
+                <h3 className="mt-2 font-display text-lg font-black text-on-surface">{module.title}</h3>
+                <p className="mt-1 text-sm font-bold text-primary">{module.subtitle}</p>
+                <p className="mt-3 text-sm font-semibold leading-6 text-secondary">{module.summary}</p>
               </article>
             ))}
+          </div>
+
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
+            <article className="rounded-xl border-2 border-secondary bg-surface-container-low p-5 shadow-[0_4px_0_0_rgba(88,96,98,1)]">
+              <ClipboardCheck aria-hidden className="h-6 w-6 text-primary" />
+              <h3 className="mt-3 font-display text-lg font-black text-on-surface">Pas seulement apprendre</h3>
+              <p className="mt-2 text-sm font-semibold leading-6 text-secondary">
+                Les eleves doivent agir sur le terrain, documenter leurs preuves et recevoir
+                une validation.
+              </p>
+            </article>
+            <article className="rounded-xl border-2 border-secondary bg-surface-container-low p-5 shadow-[0_4px_0_0_rgba(88,96,98,1)]">
+              <UsersRound aria-hidden className="h-6 w-6 text-primary" />
+              <h3 className="mt-3 font-display text-lg font-black text-on-surface">Parents impliques</h3>
+              <p className="mt-2 text-sm font-semibold leading-6 text-secondary">
+                Les parents peuvent etre challenges par leur enfant certifie et suivre les
+                progres via leur espace.
+              </p>
+            </article>
+            <article className="rounded-xl border-2 border-secondary bg-surface-container-low p-5 shadow-[0_4px_0_0_rgba(88,96,98,1)]">
+              <MessageCircle aria-hidden className="h-6 w-6 text-primary" />
+              <h3 className="mt-3 font-display text-lg font-black text-on-surface">Ambassadeurs actifs</h3>
+              <p className="mt-2 text-sm font-semibold leading-6 text-secondary">
+                Les certifies rejoignent un forum ou ils aident d&apos;autres eleves et partagent
+                des alertes utiles.
+              </p>
+            </article>
           </div>
         </div>
       </section>

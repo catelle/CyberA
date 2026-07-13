@@ -163,7 +163,7 @@ export const programModules: ProgramModule[] = [
     icon: "shield",
     outcomes: ["Regler la confidentialite", "Creer une phrase de passe", "Limiter le partage"],
     status: "ready",
-    progressPercent: 60,
+    progressPercent: 0,
     lessons: [
       lesson("algorithmes", 1, "Comment les algorithmes influencent ce que tu vois", "Un fil d'actualite n'est jamais neutre: il apprend de tes clics.", [
         "Comparer deux sources avant de croire une information",
@@ -221,7 +221,7 @@ export const programModules: ProgramModule[] = [
     icon: "globe",
     outcomes: ["Verifier une information", "Proteger sa reputation", "Reagir avec respect"],
     status: "next",
-    progressPercent: 20,
+    progressPercent: 0,
     lessons: [
       lesson("empreinte", 1, "Ton empreinte numerique est permanente", "Une capture d'ecran peut survivre a la suppression d'un post.", [
         "Relire avant de publier",
@@ -575,9 +575,13 @@ export function getReadyModuleCount() {
   return programModules.filter((module) => module.status === "ready").length;
 }
 
-export function getProgramCompletionPercent() {
-  const total = programModules.reduce((sum, module) => sum + module.progressPercent, 0);
-  return Math.round(total / programModules.length);
+export function getProgramCompletionPercent(modules: ProgramModule[] = programModules) {
+  if (modules.length === 0) {
+    return 0;
+  }
+
+  const total = modules.reduce((sum, module) => sum + module.progressPercent, 0);
+  return Math.round(total / modules.length);
 }
 
 export function getAdminMetrics() {

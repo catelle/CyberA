@@ -36,20 +36,27 @@ export function ForumReportForm({ userId }: { userId: string }) {
 
   async function onSubmit(values: ForumReportFormValues) {
     if (navigator.onLine) {
-      const response = await fetch("/api/student/forum-reports", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values)
-      });
+      try {
+        const response = await fetch("/api/student/forum-reports", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(values)
+        });
+        const result = (await response.json().catch(() => null)) as {
+          message?: string;
+        } | null;
 
-      if (response.ok) {
-        reset();
-        setStatus("Rapport envoye a l'equipe de moderation.");
+        if (response.ok) {
+          reset();
+          setStatus("Rapport envoye a l'equipe de moderation.");
+          return;
+        }
+
+        setStatus(result?.message ?? "Le rapport n'a pas pu etre envoye.");
         return;
+      } catch {
+        // A network failure is safe to retry through the offline queue.
       }
-
-      const result = (await response.json().catch(() => null)) as { message?: string } | null;
-      setStatus(result?.message ?? "Rapport garde localement pour synchronisation.");
     }
 
     await queuePendingSync("forum_report", {

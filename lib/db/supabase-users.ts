@@ -28,6 +28,56 @@ type FamilyLinkRow = {
   family_code: string;
 };
 
+type ProfileBootstrapOptions = {
+  role?: SupabaseProfileRole;
+};
+
+export async function findSupabaseAuthUserByEmail(email: string) {
+  const admin = createSupabaseAdminClient();
+  const normalizedEmail = email.trim().toLowerCase();
+  let page = 1;
+
+  while (true) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 100 });
+    if (error) throw error;
+
+    const user = data.users.find(
+      (candidate) => candidate.email?.toLowerCase() === normalizedEmail
+    );
+    if (user) return user;
+    if (data.users.length < 100) return null;
+    page += 1;
+  }
+}
+
+function authUserAppRole(authUser: User): SupabaseProfileRole | undefined {
+  const role = authUser.app_metadata?.role;
+
+  return role === "ambassador" || role === "parent" || role === "admin"
+    ? role
+    : undefined;
+}
+
+function normalizeSupabaseProfileRole(
+  role: string | null | undefined
+): SupabaseProfileRole {
+  if (role === "parent" || role === "admin") {
+    return role;
+  }
+
+  return "ambassador";
+}
+
+function authUserMetadataString(authUser: User, key: string): string | null {
+  const value = authUser.user_metadata?.[key];
+
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function authUserLanguage(authUser: User): "fr" | "en" {
+  return authUserMetadataString(authUser, "language") === "en" ? "en" : "fr";
+}
+
 function serializeLinkedAccounts(
   userId: string,
   profileRole: SupabaseProfileRole,
@@ -101,7 +151,7 @@ export async function getSupabaseSafeUser(authUser: User): Promise<SafeUser | nu
       city: profile.city ?? undefined,
       phone: profile.phone ?? authUser.phone ?? undefined
     },
-    language: "fr",
+    language: authUserLanguage(authUser),
     consentGiven: Boolean(ambassadorProfile?.parental_consent_given),
     consentDate: ambassadorProfile?.parental_consent_at ?? undefined,
     familyCode:
@@ -173,28 +223,72 @@ function generateFamilyCode() {
   return Math.random().toString(36).slice(2, 8).toUpperCase();
 }
 
-export async function ensureSupabaseProfileForAuthUser(authUser: User) {
+export async function ensureSupabaseProfileForAuthUser(
+  authUser: User,
+  options: ProfileBootstrapOptions = {}
+) {
   const admin = createSupabaseAdminClient();
-  const phone = authUser.phone ?? null;
+  const authPhone =
+    typeof authUser.phone === "string" && authUser.phone.trim()
+      ? authUser.phone.trim()
+      : null;
+  let phone = authPhone ?? authUserMetadataString(authUser, "phone");
+  const metadataFullName =
+    authUserMetadataString(authUser, "fullName") ??
+    authUserMetadataString(authUser, "full_name");
+  const metadataCity = authUserMetadataString(authUser, "city");
+
+  const { data: existingProfile, error: existingProfileError } = await admin
+    .from("users")
+    .select("role, phone, full_name, city")
+    .eq("id", authUser.id)
+    .maybeSingle<{
+      role: string | null;
+      phone: string | null;
+      full_name: string | null;
+      city: string | null;
+    }>();
+
+  if (existingProfileError) {
+    throw existingProfileError;
+  }
+
+  const profileRole = normalizeSupabaseProfileRole(
+    existingProfile?.role ?? options.role ?? authUserAppRole(authUser)
+  );
   const fullName =
-    typeof authUser.user_metadata.fullName === "string"
-      ? authUser.user_metadata.fullName
-      : phone ?? authUser.email ?? "CyberAmbassadeur";
-  const requestedRole =
-    authUser.user_metadata.role === "parent" || authUser.user_metadata.role === "admin"
-      ? authUser.user_metadata.role
-      : "ambassador";
+    existingProfile?.full_name ??
+    metadataFullName ??
+    phone ??
+    authUser.email ??
+    "CyberAmbassadeur";
+  const city = existingProfile?.city ?? metadataCity;
+
+  phone ??= existingProfile?.phone ?? null;
+
+  if (phone) {
+    const { data: phoneOwner, error: phoneOwnerError } = await admin
+      .from("users")
+      .select("id")
+      .eq("phone", phone)
+      .maybeSingle<{ id: string }>();
+
+    if (phoneOwnerError) {
+      throw phoneOwnerError;
+    }
+
+    if (phoneOwner && phoneOwner.id !== authUser.id) {
+      phone = existingProfile?.phone ?? null;
+    }
+  }
 
   const { error: userError } = await admin.from("users").upsert(
     {
       id: authUser.id,
       phone,
       full_name: fullName,
-      role: requestedRole,
-      city:
-        typeof authUser.user_metadata.city === "string"
-          ? authUser.user_metadata.city
-          : null
+      role: profileRole,
+      city
     },
     { onConflict: "id" }
   );
@@ -203,19 +297,28 @@ export async function ensureSupabaseProfileForAuthUser(authUser: User) {
     throw userError;
   }
 
-  if (requestedRole === "ambassador") {
-    const { error: profileError } = await admin
+  if (profileRole === "ambassador") {
+    const { data: existingAmbassadorProfile, error: profileReadError } = await admin
       .from("ambassador_profiles")
-      .upsert(
-        {
+      .select("id")
+      .eq("user_id", authUser.id)
+      .maybeSingle<{ id: string }>();
+
+    if (profileReadError) {
+      throw profileReadError;
+    }
+
+    if (!existingAmbassadorProfile) {
+      const { error: profileError } = await admin
+        .from("ambassador_profiles")
+        .insert({
           user_id: authUser.id,
           parental_consent_given: false
-        },
-        { onConflict: "user_id" }
-      );
+        });
 
-    if (profileError) {
-      throw profileError;
+      if (profileError) {
+        throw profileError;
+      }
     }
 
     const { data: existingCode, error: codeReadError } = await admin
@@ -239,4 +342,28 @@ export async function ensureSupabaseProfileForAuthUser(authUser: User) {
       }
     }
   }
+
+  return { role: profileRole };
+}
+
+export async function linkRegisteredParentToChild(parentId: string, childId: string) {
+  const admin = createSupabaseAdminClient();
+  const now = new Date().toISOString();
+  const { data: link, error: linkError } = await admin
+    .from("family_links")
+    .update({ parent_id: parentId, linked_at: now })
+    .eq("child_id", childId)
+    .is("parent_id", null)
+    .select("id")
+    .maybeSingle<{ id: string }>();
+
+  if (linkError) throw linkError;
+  if (!link) throw new Error("Child family link is missing or already claimed");
+
+  const { error: consentError } = await admin
+    .from("ambassador_profiles")
+    .update({ parental_consent_given: true, parental_consent_at: now })
+    .eq("user_id", childId);
+
+  if (consentError) throw consentError;
 }

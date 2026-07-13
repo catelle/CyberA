@@ -27,15 +27,15 @@ export function LanguageToggle({ onChange }: LanguageToggleProps) {
 
   return (
     <div
-      className="inline-grid grid-cols-2 rounded-full border border-white/30 bg-white/10 p-1 text-sm font-semibold"
+      className="inline-grid grid-cols-2 rounded-full border-2 border-secondary bg-surface-container p-1 text-sm font-black shadow-[0_3px_0_0_rgba(88,96,98,1)]"
       aria-label="Language"
     >
       {(["fr", "en"] as const).map((item) => (
         <button
           className={`rounded-full px-3 py-1.5 transition ${
             language === item
-              ? "bg-white text-brand-blue shadow-sm"
-              : "text-white hover:bg-white/10"
+              ? "bg-primary text-white"
+              : "text-secondary hover:bg-surface-container-high"
           }`}
           key={item}
           type="button"
