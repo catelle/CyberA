@@ -20,7 +20,20 @@ async function resolveDatabaseModuleId(
   const staticModule = getModuleById(moduleId);
 
   if (!staticModule) {
-    return moduleId;
+    const [{ data: module }, { data: questions }] = await Promise.all([
+      supabase.from("modules").select("id").eq("id", moduleId).maybeSingle<{ id: string }>(),
+      supabase.from("quiz_questions").select("points").eq("module_id", moduleId)
+    ]);
+
+    return module
+      ? {
+          id: module.id,
+          points: (questions ?? []).reduce(
+            (sum, question) => sum + Math.max(question.points ?? 0, 0),
+            0
+          )
+        }
+      : null;
   }
 
   const { data } = await supabase
@@ -29,7 +42,15 @@ async function resolveDatabaseModuleId(
     .eq("order_index", staticModule.week)
     .maybeSingle<{ id: string }>();
 
-  return data?.id ?? null;
+  return data
+    ? {
+        id: data.id,
+        points: staticModule.quiz.reduce(
+          (sum, question) => sum + Math.max(question.points, 0),
+          0
+        )
+      }
+    : null;
 }
 
 export async function POST(request: Request) {
@@ -43,57 +64,27 @@ export async function POST(request: Request) {
   }
 
   const supabase = createSupabaseAdminClient();
-  const moduleId = await resolveDatabaseModuleId(supabase, parsed.data.moduleId);
+  const resolvedModule = await resolveDatabaseModuleId(supabase, parsed.data.moduleId);
 
-  if (!moduleId) {
+  if (!resolvedModule) {
     return NextResponse.json(
       { message: "Module introuvable pour enregistrer la progression." },
       { status: 404 }
     );
   }
 
-  const status = parsed.data.passed ? "completed" : "in_progress";
-  const { data: existingProgress } = await supabase
-    .from("module_progress")
-    .select("status, started_at")
-    .eq("user_id", auth.user.supabaseUserId)
-    .eq("module_id", moduleId)
-    .maybeSingle<{ status: string | null; started_at: string | null }>();
-  const now = new Date().toISOString();
-
-  const { error } = await supabase.from("module_progress").upsert(
-    {
-      user_id: auth.user.supabaseUserId,
-      module_id: moduleId,
-      status,
-      lessons_done: parsed.data.lessonsRead.length,
-      quiz_score: parsed.data.quizScore ?? null,
-      points_earned: parsed.data.pointsEarned,
-      started_at: existingProgress?.started_at ?? now,
-      completed_at: parsed.data.passed ? now : null
-    },
-    { onConflict: "user_id,module_id" }
-  );
+  const quizScore = parsed.data.quizScore ?? 0;
+  const passed = parsed.data.passed === true && quizScore >= 70;
+  const { error } = await supabase.rpc("record_module_progress", {
+    p_user_id: auth.user.supabaseUserId,
+    p_module_id: resolvedModule.id,
+    p_lessons_done: parsed.data.lessonsRead.length,
+    p_quiz_score: quizScore,
+    p_passed: passed,
+    p_points: passed ? resolvedModule.points : 0
+  });
 
   if (error) return jsonError(error, "Impossible d'enregistrer la progression.");
-
-  if (parsed.data.passed && existingProgress?.status !== "completed") {
-    await supabase.rpc("increment_ambassador_points", {
-      p_user_id: auth.user.supabaseUserId,
-      p_points: parsed.data.pointsEarned
-    });
-
-    const { count } = await supabase
-      .from("module_progress")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", auth.user.supabaseUserId)
-      .eq("status", "completed");
-
-    await supabase
-      .from("ambassador_profiles")
-      .update({ modules_completed: count ?? 0 })
-      .eq("user_id", auth.user.supabaseUserId);
-  }
 
   return NextResponse.json({ message: "Progression enregistree." });
 }
