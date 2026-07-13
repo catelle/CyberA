@@ -25,6 +25,14 @@ export async function POST(request: Request, { params }: ReviewRouteProps) {
   }
 
   const supabase = createSupabaseAdminClient();
+  const { data: previous, error: previousError } = await supabase
+    .from("challenge_submissions")
+    .select("status, points_awarded")
+    .eq("id", params.id)
+    .single<{ status: string; points_awarded: number | null }>();
+
+  if (previousError) return jsonError(previousError, "Soumission introuvable.", 404);
+
   const { data: submission, error: submissionError } = await supabase
     .from("challenge_submissions")
     .update({
@@ -41,11 +49,17 @@ export async function POST(request: Request, { params }: ReviewRouteProps) {
 
   if (submissionError) return jsonError(submissionError, "Impossible de reviser la soumission.");
 
-  if (parsed.data.status === "approved" && submission?.user_id) {
-    await supabase.rpc("increment_ambassador_points", {
+  const previousPoints = previous.status === "approved" ? previous.points_awarded ?? 0 : 0;
+  const nextPoints = parsed.data.status === "approved" ? parsed.data.pointsAwarded : 0;
+  const pointsDelta = nextPoints - previousPoints;
+
+  if (pointsDelta !== 0 && submission?.user_id) {
+    const { error: pointsError } = await supabase.rpc("adjust_ambassador_points", {
       p_user_id: submission.user_id,
-      p_points: parsed.data.pointsAwarded
+      p_delta: pointsDelta
     });
+
+    if (pointsError) return jsonError(pointsError, "Impossible de mettre a jour les points.");
   }
 
   if (submission?.user_id) {

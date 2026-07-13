@@ -190,7 +190,7 @@ export function LoginForm() {
     setStatus(null);
 
     const supabase = createSupabaseBrowserClient();
-    const redirectTo = `${window.location.origin}/login`;
+    const redirectTo = `${window.location.origin}/auth/callback`;
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {

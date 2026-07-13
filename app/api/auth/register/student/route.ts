@@ -3,7 +3,10 @@ import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/auth/supabase-server";
 import { studentRegistrationSchema } from "@/lib/auth/validation";
 import { connectToMongo } from "@/lib/db/mongodb";
-import { ensureSupabaseProfileForAuthUser } from "@/lib/db/supabase-users";
+import {
+  ensureSupabaseProfileForAuthUser,
+  linkRegisteredParentToChild
+} from "@/lib/db/supabase-users";
 import { getUserByEmail, serializeUser } from "@/lib/db/users";
 import { UserModel } from "@/models/User";
 
@@ -69,7 +72,8 @@ export async function POST(request: Request) {
           fullName: student.fullName,
           city: student.city,
           language: student.language
-        }
+        },
+        app_metadata: { role: "ambassador" }
       });
 
     if (studentError || !studentAuth.user) {
@@ -88,7 +92,8 @@ export async function POST(request: Request) {
           fullName: parent.fullName,
           phone: parent.phone,
           language: student.language
-        }
+        },
+        app_metadata: { role: "parent" }
       });
 
     if (parentError || !parentAuth.user) {
@@ -97,6 +102,7 @@ export async function POST(request: Request) {
 
     createdSupabaseIds.push(parentAuth.user.id);
     await ensureSupabaseProfileForAuthUser(parentAuth.user, { role: "parent" });
+    await linkRegisteredParentToChild(parentAuth.user.id, studentAuth.user.id);
 
     const consentDate = new Date();
     const parentUser = await UserModel.create({

@@ -32,6 +32,14 @@ type ProfileBootstrapOptions = {
   role?: SupabaseProfileRole;
 };
 
+function authUserAppRole(authUser: User): SupabaseProfileRole | undefined {
+  const role = authUser.app_metadata?.role;
+
+  return role === "ambassador" || role === "parent" || role === "admin"
+    ? role
+    : undefined;
+}
+
 function normalizeSupabaseProfileRole(
   role: string | null | undefined
 ): SupabaseProfileRole {
@@ -222,7 +230,7 @@ export async function ensureSupabaseProfileForAuthUser(
   }
 
   const profileRole = normalizeSupabaseProfileRole(
-    existingProfile?.role ?? options.role
+    existingProfile?.role ?? options.role ?? authUserAppRole(authUser)
   );
 
   if (phone) {
@@ -303,4 +311,26 @@ export async function ensureSupabaseProfileForAuthUser(
   }
 
   return { role: profileRole };
+}
+
+export async function linkRegisteredParentToChild(parentId: string, childId: string) {
+  const admin = createSupabaseAdminClient();
+  const now = new Date().toISOString();
+  const { data: link, error: linkError } = await admin
+    .from("family_links")
+    .update({ parent_id: parentId, linked_at: now })
+    .eq("child_id", childId)
+    .is("parent_id", null)
+    .select("id")
+    .maybeSingle<{ id: string }>();
+
+  if (linkError) throw linkError;
+  if (!link) throw new Error("Child family link is missing or already claimed");
+
+  const { error: consentError } = await admin
+    .from("ambassador_profiles")
+    .update({ parental_consent_given: true, parental_consent_at: now })
+    .eq("user_id", childId);
+
+  if (consentError) throw consentError;
 }
