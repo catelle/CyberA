@@ -1,5 +1,5 @@
 create table if not exists public.module_badges (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.users(id) on delete cascade,
   module_id uuid not null references public.modules(id) on delete cascade,
   badge_name text not null,
@@ -9,7 +9,7 @@ create table if not exists public.module_badges (
 );
 
 create table if not exists public.training_certificates (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   user_id uuid not null unique references public.users(id) on delete cascade,
   certificate_number text not null unique,
   issued_at timestamptz not null default now()

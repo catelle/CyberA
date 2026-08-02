@@ -1,7 +1,7 @@
 alter table public.challenges add column if not exists archived_at timestamptz;
 
 create table if not exists public.challenge_registrations (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.users(id) on delete cascade,
   challenge_id uuid not null references public.challenges(id) on delete cascade,
   status text not null default 'registered' check (status in ('registered', 'submitted', 'expired')),
