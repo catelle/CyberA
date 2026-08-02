@@ -7,7 +7,9 @@ import { createSupabaseAdminClient } from "@/lib/auth/supabase-server";
 const broadcastSchema = z.object({
   title: z.string().trim().min(1, "Le titre est requis."),
   body: z.string().trim().min(1, "Le message est requis."),
-  audience: z.enum(["ambassadors", "parents", "all"]).default("ambassadors")
+  audience: z
+    .enum(["students", "ambassadors", "parents", "all"])
+    .default("students")
 });
 
 function validationMessage(error: z.ZodError) {

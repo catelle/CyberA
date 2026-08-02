@@ -23,7 +23,7 @@ export default async function ParentChallengePage() {
               Ajoutez un enfant avant d&apos;accepter un defi parent
             </h2>
             <p className="mt-3 leading-7 text-slate-600">
-              Les defis parent sont rattaches a un ambassadeur lie a votre compte.
+              Les defis parent sont rattaches a un eleve lie a votre compte.
             </p>
             <Link
               className="mt-5 inline-flex min-h-12 items-center rounded-lg bg-brand-blue px-5 font-black text-white transition hover:bg-brand-ink"

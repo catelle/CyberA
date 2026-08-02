@@ -11,6 +11,14 @@ export type ProgramLesson = {
   title: string;
   estimatedMins: number;
   content: LessonContentBlock[];
+  quiz: LessonQuizQuestion;
+};
+
+export type LessonQuizQuestion = {
+  question: string;
+  options: string[];
+  correctIndex: number;
+  explanation: string;
 };
 
 export type QuizQuestion = {
@@ -63,6 +71,13 @@ export type WeeklyChallenge = {
   deadline: string;
   requiresPhoto: boolean;
   status: "open" | "submitted" | "reviewed";
+  registrationStatus?: "available" | "registered" | "submitted" | "cooldown";
+  registrationDeadline?: string | null;
+  cooldownUntil?: string | null;
+  submissionStatus?: "pending" | "approved" | "rejected" | null;
+  reviewerNote?: string | null;
+  pointsAwarded?: number;
+  reviewedAt?: string | null;
 };
 
 export type LeaderboardEntry = {
@@ -71,6 +86,7 @@ export type LeaderboardEntry = {
   city: string;
   level: "junior" | "senior" | "master";
   points: number;
+  performanceScore?: number;
   weeklyPoints: number;
   cohort: string;
   isCurrentUser?: boolean;
@@ -123,6 +139,15 @@ function lesson(
   warning: string,
   checklist: string[]
 ): ProgramLesson {
+  const correctIndex = (order - 1) % 4;
+  const options = [
+    "Partager immediatement sans verifier",
+    "Ignorer les signaux d'alerte",
+    "Donner ses informations personnelles",
+    "Attendre qu'un probleme arrive"
+  ];
+  options[correctIndex] = checklist[0];
+
   return {
     id,
     order,
@@ -147,7 +172,13 @@ function lesson(
         content:
           "Avant de partager, ralentis: verifier une source prend moins de temps que reparer une erreur publique."
       }
-    ]
+    ],
+    quiz: {
+      question: `Quelle action est recommandee dans la lecon « ${title} » ?`,
+      options,
+      correctIndex,
+      explanation: `${checklist[0]} est le bon reflexe a retenir.`
+    }
   };
 }
 

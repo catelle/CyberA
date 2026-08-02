@@ -24,7 +24,7 @@ export default async function AdminSubmissionsPage() {
                   {submission.report_text ?? "Aucun rapport."}
                 </p>
                 <p className="mt-2 text-sm font-bold text-slate-500">
-                  {submission.users?.full_name ?? "Ambassadeur"} /{" "}
+                  {submission.users?.full_name ?? "Eleve"} /{" "}
                   {submission.users?.city ?? "Ville inconnue"} /{" "}
                   {submission.ambassador_profiles?.total_points ?? 0} pts
                 </p>

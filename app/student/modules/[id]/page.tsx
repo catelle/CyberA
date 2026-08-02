@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight, BookOpen, Clock, Trophy } from "lucide-react";
+import { ArrowRight, BookOpen, CheckCircle2, Clock, Lock, Trophy } from "lucide-react";
 
 import { MascotCoach } from "@/components/gamified/CyberMascot";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { requireRole } from "@/lib/auth/guards";
-import { getModuleWithLessonsById } from "@/lib/db/cybera";
-import { getModuleById } from "@/lib/program";
+import {
+  getPublishedProgramModuleById,
+  listCompletedLessonIdsForStudent
+} from "@/lib/db/cybera";
 
 type ModulePageProps = {
   params: {
@@ -16,43 +18,39 @@ type ModulePageProps = {
 
 export default async function StudentModuleDetailPage({ params }: ModulePageProps) {
   const user = await requireRole(["student", "admin"]);
-  const staticModule = getModuleById(params.id);
-  const databaseModule = staticModule ? null : await getModuleWithLessonsById(params.id);
-  const selectedModule = staticModule
+  const programModule = await getPublishedProgramModuleById(params.id);
+  const selectedModule = programModule
     ? {
-        id: staticModule.id,
-        order: staticModule.week,
-        title: staticModule.title,
-        subtitle: staticModule.subtitle,
-        summary: staticModule.summary,
-        lessons: staticModule.lessons.map((lesson) => ({
-          id: lesson.id,
-          order: lesson.order,
-          title: lesson.title,
-          estimatedMins: lesson.estimatedMins
-        }))
+        id: programModule.id,
+        order: programModule.week,
+        title: programModule.title,
+        subtitle: programModule.subtitle,
+        summary: programModule.summary,
+        lessons: programModule.lessons,
+        hasModuleQuiz: programModule.quiz.length > 0
       }
-    : databaseModule
-      ? {
-          id: databaseModule.id,
-          order: databaseModule.order_index,
-          title: databaseModule.title,
-          subtitle: databaseModule.subtitle ?? "Module CyberAmbassadeur",
-          summary: databaseModule.description ?? "",
-          lessons: databaseModule.lessons.map((lesson) => ({
-            id: lesson.id,
-            order: lesson.order_index,
-            title: lesson.title,
-            estimatedMins: lesson.estimated_mins ?? 5
-          }))
-        }
-      : null;
+    : null;
 
   if (!selectedModule) {
     notFound();
   }
 
-  const firstLesson = selectedModule.lessons[0];
+  const completedLessonIds = new Set(
+    user.role === "student"
+      ? await listCompletedLessonIdsForStudent(
+          user.supabaseUserId,
+          selectedModule.id,
+          selectedModule.lessons.map((lesson) => lesson.id),
+          selectedModule.order
+        )
+      : []
+  );
+  const completedEveryLesson =
+    selectedModule.lessons.length > 0 &&
+    selectedModule.lessons.every((lesson) => completedLessonIds.has(lesson.id));
+  const firstLesson = selectedModule.lessons.find(
+    (lesson) => !completedLessonIds.has(lesson.id)
+  );
 
   return (
     <DashboardShell user={user} title={selectedModule.title}>
@@ -78,14 +76,19 @@ export default async function StudentModuleDetailPage({ params }: ModulePageProp
                   <ArrowRight aria-hidden className="h-4 w-4" />
                 </Link>
               ) : null}
-              {staticModule ? (
+              {selectedModule.hasModuleQuiz && completedEveryLesson ? (
                 <Link
                   className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border-2 border-secondary bg-[#fff4c2] px-4 font-black text-brand-blue shadow-[0_4px_0_0_rgba(88,96,98,1)] transition hover:bg-primary-fixed sm:w-fit"
                   href={`/student/modules/${selectedModule.id}/quiz`}
                 >
-                  Quiz
+                  Terminer avec le quiz
                   <Trophy aria-hidden className="h-4 w-4" />
                 </Link>
+              ) : selectedModule.hasModuleQuiz ? (
+                <span className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border-2 border-secondary bg-slate-100 px-4 font-black text-slate-500 shadow-[0_4px_0_0_rgba(88,96,98,1)] sm:w-fit">
+                  <Lock aria-hidden className="h-4 w-4" />
+                  Quiz apres les lecons
+                </span>
               ) : null}
             </div>
           </div>
@@ -95,15 +98,32 @@ export default async function StudentModuleDetailPage({ params }: ModulePageProp
         </section>
 
         <section className="grid gap-4">
-          {selectedModule.lessons.map((lesson, index) => (
-            <Link
-              className="mission-card grid gap-3 rounded-lg border-2 border-secondary bg-white p-4 shadow-[0_4px_0_0_rgba(88,96,98,1)] transition hover:-translate-y-1 hover:shadow-[0_7px_0_0_rgba(88,96,98,1)] sm:grid-cols-[4.5rem_1fr_auto] sm:items-center"
-              href={`/student/modules/${selectedModule.id}/lesson/${lesson.id}`}
-              key={lesson.id}
-              style={{ animationDelay: `${index * 55}ms` }}
-            >
-              <span className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-secondary bg-tertiary-fixed text-tertiary shadow-[0_4px_0_0_rgba(88,96,98,1)]">
-                <BookOpen aria-hidden className="h-6 w-6" />
+          {selectedModule.lessons.map((lesson, index) => {
+            const isCompleted = completedLessonIds.has(lesson.id);
+
+            return (
+              <Link
+                className={
+                  "mission-card grid gap-3 rounded-lg border-2 border-secondary p-4 shadow-[0_4px_0_0_rgba(88,96,98,1)] transition hover:-translate-y-1 hover:shadow-[0_7px_0_0_rgba(88,96,98,1)] sm:grid-cols-[4.5rem_1fr_auto] sm:items-center " +
+                  (isCompleted ? "bg-[#e8fff2]" : "bg-white")
+                }
+                href={`/student/modules/${selectedModule.id}/lesson/${lesson.id}`}
+                key={lesson.id}
+                style={{ animationDelay: `${index * 55}ms` }}
+              >
+              <span
+                className={
+                  "flex h-14 w-14 items-center justify-center rounded-full border-2 border-secondary shadow-[0_4px_0_0_rgba(88,96,98,1)] " +
+                  (isCompleted
+                    ? "bg-[#16a66a] text-white"
+                    : "bg-tertiary-fixed text-tertiary")
+                }
+              >
+                {isCompleted ? (
+                  <CheckCircle2 aria-hidden className="h-6 w-6" />
+                ) : (
+                  <BookOpen aria-hidden className="h-6 w-6" />
+                )}
               </span>
               <div className="min-w-0">
                 <p className="text-sm font-black text-brand-gold">
@@ -113,12 +133,25 @@ export default async function StudentModuleDetailPage({ params }: ModulePageProp
                   {lesson.title}
                 </h3>
               </div>
-              <div className="flex items-center gap-2 text-sm font-black text-slate-500 sm:justify-end">
-                <Clock aria-hidden className="h-4 w-4" />
-                {lesson.estimatedMins} min
+              <div className="flex flex-wrap items-center gap-2 text-sm font-black sm:justify-end">
+                <span
+                  className={
+                    "rounded-full px-3 py-1 text-xs uppercase " +
+                    (isCompleted
+                      ? "bg-[#c8f5dc] text-[#075f3f]"
+                      : "bg-slate-100 text-slate-500")
+                  }
+                >
+                  {isCompleted ? "Terminee" : "A faire"}
+                </span>
+                <span className="flex items-center gap-1 text-slate-500">
+                  <Clock aria-hidden className="h-4 w-4" />
+                  {lesson.estimatedMins} min
+                </span>
               </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </section>
       </div>
     </DashboardShell>

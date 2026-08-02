@@ -18,7 +18,7 @@ const demoAccounts = [
     password: "CyberA123!"
   },
   {
-    label: "Ambassadeur",
+    label: "Eleve",
     email: "amina.ambassador@example.com",
     password: "CyberA123!"
   },
@@ -366,7 +366,7 @@ export function LoginForm() {
       <div className="grid gap-2 text-sm font-semibold text-secondary">
         <Link className="font-bold text-primary" href="/register/ambassador">
           {language === "fr"
-            ? "Inscrire un ambassadeur"
+            ? "Inscrire un eleve"
             : "Register an ambassador"}
         </Link>
         <Link className="font-bold text-primary" href="/register/parent">

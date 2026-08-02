@@ -7,14 +7,14 @@
 
 :root {
   color-scheme: light;
-  --brand-red: #be185d;
-  --brand-pink: #ec4899;
+  --brand-red: #b5123f;
+  --brand-pink: #e11d48;
   --brand-dark: #191c1e;
   --brand-graphite: #41484a;
   --brand-soft: #f2f4f7;
   --brand-border: #586062;
   --cyber-shadow: #586062;
-  --cyber-primary-shadow: #9d174d;
+  --cyber-primary-shadow: #881337;
 }
 
 * {
@@ -50,7 +50,7 @@ a {
 }
 
 ::selection {
-  background: #fbcfe8;
+  background: #fecdd3;
   color: var(--brand-dark);
 }
 
@@ -154,11 +154,8 @@ a {
 
 .learning-surface {
   background:
-    radial-gradient(circle at 18px 18px, rgba(236, 72, 153, 0.13) 0 2px, transparent 3px),
-    linear-gradient(180deg, #f7f9fc 0%, #fdf2f8 42%, #f7f9fc 100%);
-  background-size:
-    42px 42px,
-    auto;
+    radial-gradient(circle at 84% 6%, rgba(225, 29, 72, 0.07), transparent 28rem),
+    linear-gradient(180deg, #f8fafc 0%, #f6f7f9 100%);
 }
 
 .mission-card {
@@ -166,7 +163,7 @@ a {
 }
 
 .mission-node {
-  animation: mission-node-bounce 2.8s ease-in-out infinite;
+  animation: none;
 }
 
 .progress-sheen {
@@ -203,7 +200,7 @@ a {
 }
 
 .cyber-mascot-shadow {
-  animation: mascot-shadow 3s ease-in-out infinite;
+  animation: mascot-shadow 4s ease-in-out infinite;
   background: rgba(25, 28, 30, 0.16);
   border-radius: 999px;
   filter: blur(1px);
@@ -214,62 +211,65 @@ a {
 }
 
 .cyber-mascot-body {
-  animation: mascot-float 3s ease-in-out infinite;
-  background: linear-gradient(180deg, #ffffff 0%, #fce7f3 58%, #f9a8d4 100%);
-  border: 2px solid #586062;
-  border-radius: 48% 48% 38% 38%;
+  animation: mascot-float 4s ease-in-out infinite;
+  background: linear-gradient(145deg, #ffffff 0 45%, #fff1f2 45% 72%, #e11d48 72% 100%);
+  border: 2px solid #41484a;
+  border-radius: 24% 24% 32% 32%;
   box-shadow:
-    0 5px 0 #586062,
-    inset 0 10px 0 rgba(255, 255, 255, 0.24);
-  height: calc(var(--mascot-size) * 1.02);
+    0 4px 0 #41484a,
+    0 12px 24px rgba(25, 28, 30, 0.12),
+    inset 0 8px 0 rgba(255, 255, 255, 0.32);
+  height: calc(var(--mascot-size) * 0.94);
   position: relative;
   width: calc(var(--mascot-size) * 0.84);
 }
 
 .cyber-mascot-antenna {
-  background: #586062;
+  background: #41484a;
   border-radius: 999px;
-  height: calc(var(--mascot-size) * 0.18);
+  height: calc(var(--mascot-size) * 0.12);
   left: 50%;
   position: absolute;
-  top: calc(var(--mascot-size) * -0.15);
+  top: calc(var(--mascot-size) * -0.1);
   transform: translateX(-50%);
   width: 4px;
 }
 
 .cyber-mascot-antenna::after {
-  background: #ffcc32;
-  border: 2px solid #586062;
+  background: #e11d48;
+  border: 2px solid #41484a;
   border-radius: 999px;
   content: "";
-  height: calc(var(--mascot-size) * 0.16);
+  height: calc(var(--mascot-size) * 0.12);
   left: 50%;
   position: absolute;
   top: calc(var(--mascot-size) * -0.13);
   transform: translateX(-50%);
-  width: calc(var(--mascot-size) * 0.16);
+  width: calc(var(--mascot-size) * 0.12);
 }
 
 .cyber-mascot-face {
-  background: #fafdff;
-  border: 2px solid #586062;
-  border-radius: 1.15rem;
-  height: calc(var(--mascot-size) * 0.38);
+  background: linear-gradient(135deg, #191c1e, #41484a);
+  border: 2px solid #191c1e;
+  border-radius: calc(var(--mascot-size) * 0.09);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  height: calc(var(--mascot-size) * 0.32);
   left: 50%;
   position: absolute;
   top: calc(var(--mascot-size) * 0.21);
   transform: translateX(-50%);
-  width: calc(var(--mascot-size) * 0.58);
+  width: calc(var(--mascot-size) * 0.62);
 }
 
 .cyber-mascot-eye {
   animation: mascot-blink 4.5s ease-in-out infinite;
-  background: #191c1e;
-  border-radius: 999px;
-  height: calc(var(--mascot-size) * 0.075);
+  background: #fda4af;
+  border-radius: 2px;
+  box-shadow: 0 0 7px rgba(225, 29, 72, 0.65);
+  height: calc(var(--mascot-size) * 0.045);
   position: absolute;
   top: 34%;
-  width: calc(var(--mascot-size) * 0.075);
+  width: calc(var(--mascot-size) * 0.12);
 }
 
 .cyber-mascot-eye-left {
@@ -281,56 +281,56 @@ a {
 }
 
 .cyber-mascot-smile {
-  border-bottom: 3px solid #be185d;
-  border-radius: 0 0 999px 999px;
-  bottom: 22%;
-  height: calc(var(--mascot-size) * 0.08);
+  background: #e11d48;
+  border-radius: 999px;
+  bottom: 21%;
+  height: 2px;
   left: 50%;
   position: absolute;
   transform: translateX(-50%);
-  width: calc(var(--mascot-size) * 0.22);
+  width: calc(var(--mascot-size) * 0.18);
 }
 
 .cyber-mascot-badge {
   align-items: center;
-  background: #be185d;
-  border: 2px solid #586062;
-  border-radius: 999px;
+  background: #b5123f;
+  border: 2px solid #41484a;
+  border-radius: 0.35rem;
   bottom: calc(var(--mascot-size) * 0.12);
   color: #ffffff;
   display: flex;
-  font-size: calc(var(--mascot-size) * 0.17);
+  font-size: calc(var(--mascot-size) * 0.14);
   font-weight: 900;
-  height: calc(var(--mascot-size) * 0.28);
+  height: calc(var(--mascot-size) * 0.24);
   justify-content: center;
   left: 50%;
   position: absolute;
   transform: translateX(-50%);
-  width: calc(var(--mascot-size) * 0.28);
+  width: calc(var(--mascot-size) * 0.24);
 }
 
 .cyber-mascot-arm,
 .cyber-mascot-foot {
-  background: #ec4899;
-  border: 2px solid #586062;
+  background: #b5123f;
+  border: 2px solid #41484a;
   position: absolute;
 }
 
 .cyber-mascot-arm {
-  height: calc(var(--mascot-size) * 0.28);
+  height: calc(var(--mascot-size) * 0.23);
   top: calc(var(--mascot-size) * 0.48);
-  width: calc(var(--mascot-size) * 0.14);
+  width: calc(var(--mascot-size) * 0.12);
 }
 
 .cyber-mascot-arm-left {
-  border-radius: 999px 999px 999px 0;
+  border-radius: 0.35rem 0.35rem 0.35rem 0;
   left: calc(var(--mascot-size) * -0.08);
   transform: rotate(22deg);
 }
 
 .cyber-mascot-arm-right {
   animation: mascot-wave 1.8s ease-in-out infinite;
-  border-radius: 999px 999px 0 999px;
+  border-radius: 0.35rem 0.35rem 0 0.35rem;
   right: calc(var(--mascot-size) * -0.08);
   transform-origin: top center;
 }
@@ -342,8 +342,8 @@ a {
 
 .cyber-mascot-celebrate .cyber-mascot-body::after {
   animation: sparkle-pop 1.3s ease-in-out infinite;
-  color: #ffcc32;
-  content: "*";
+  color: #e11d48;
+  content: "+";
   font-size: calc(var(--mascot-size) * 0.34);
   font-weight: 900;
   position: absolute;
@@ -352,10 +352,10 @@ a {
 }
 
 .cyber-mascot-foot {
-  border-radius: 999px;
+  border-radius: 0.25rem;
   bottom: calc(var(--mascot-size) * -0.05);
-  height: calc(var(--mascot-size) * 0.14);
-  width: calc(var(--mascot-size) * 0.26);
+  height: calc(var(--mascot-size) * 0.1);
+  width: calc(var(--mascot-size) * 0.23);
 }
 
 .cyber-mascot-foot-left {
@@ -372,7 +372,7 @@ a {
     transform: translateY(0);
   }
   50% {
-    transform: translateY(-8px);
+    transform: translateY(-3px);
   }
 }
 
@@ -394,7 +394,7 @@ a {
     transform: rotate(-18deg);
   }
   50% {
-    transform: rotate(-48deg);
+    transform: rotate(-32deg);
   }
 }
 

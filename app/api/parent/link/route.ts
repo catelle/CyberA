@@ -111,7 +111,7 @@ export async function POST(request: Request) {
           message:
             result.reason === "already_linked"
               ? "Ce code est deja lie a un parent."
-              : "Aucun ambassadeur ne correspond a ce code."
+              : "Aucun eleve ne correspond a ce code."
         },
         { status: result.reason === "already_linked" ? 409 : 404 }
       );

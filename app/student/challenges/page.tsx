@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { ArrowRight, Camera, CheckCircle2, Clock, Target } from "lucide-react";
+import { Camera, CheckCircle2, Clock, Target } from "lucide-react";
 
 import { MascotCoach } from "@/components/gamified/CyberMascot";
 import { DashboardShell } from "@/components/layout/DashboardShell";
+import { ChallengeRegistrationAction } from "@/components/forms/ChallengeRegistrationAction";
 import { requireRole } from "@/lib/auth/guards";
 import { listActiveChallengesWithFallback } from "@/lib/db/cybera";
 
@@ -14,8 +15,25 @@ const statusLabels = {
 
 export default async function ChallengesPage() {
   const user = await requireRole(["student"]);
-  const challenges = await listActiveChallengesWithFallback();
+  const challenges = await listActiveChallengesWithFallback(10, user.supabaseUserId);
   const activeChallenge = challenges[0];
+
+  if (!activeChallenge) {
+    return (
+      <DashboardShell user={user} title="Défis">
+        <section className="rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm sm:p-10">
+          <Target aria-hidden className="mx-auto h-10 w-10 text-slate-400" />
+          <h2 className="mt-4 font-display text-2xl font-extrabold text-slate-900">
+            Aucun défi actif
+          </h2>
+          <p className="mx-auto mt-3 max-w-xl text-sm font-medium leading-7 text-slate-600 sm:text-base">
+            Les défis publiés depuis l&apos;administration apparaîtront ici. Aucune
+            donnée de démonstration ne sera affichée à leur place.
+          </p>
+        </section>
+      </DashboardShell>
+    );
+  }
 
   return (
     <DashboardShell user={user} title="Defis">
@@ -51,13 +69,7 @@ export default async function ChallengesPage() {
                 <Clock aria-hidden className="h-4 w-4" />
                 {activeChallenge.deadline}
               </span>
-              <Link
-                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border-2 border-secondary bg-brand-blue px-4 font-black text-white shadow-[0_4px_0_0_rgba(88,96,98,1)] transition hover:bg-brand-ink sm:w-fit"
-                href="/student/challenges/submit"
-              >
-                Soumettre
-                <ArrowRight aria-hidden className="h-4 w-4" />
-              </Link>
+              <ChallengeRegistrationAction challenge={activeChallenge} />
             </div>
           </div>
           <MascotCoach eyebrow="Mission terrain" mascotMood="focus">
@@ -67,7 +79,7 @@ export default async function ChallengesPage() {
         </section>
 
         <section className="grid gap-3">
-          {challenges.map((challenge, index) => (
+          {challenges.slice(1).map((challenge, index) => (
             <article
               className="mission-card rounded-lg border-2 border-secondary bg-white p-4 shadow-[0_4px_0_0_rgba(88,96,98,1)]"
               key={challenge.id}
@@ -88,9 +100,12 @@ export default async function ChallengesPage() {
                   <p className="mt-1 text-sm font-semibold leading-6 text-slate-600">
                     {challenge.description}
                   </p>
+                  <div className="mt-3">
+                    <ChallengeRegistrationAction challenge={challenge} />
+                  </div>
                 </div>
                 <span className="w-fit rounded-full border-2 border-secondary bg-slate-100 px-3 py-1 text-xs font-black uppercase text-slate-500 shadow-[0_2px_0_0_rgba(88,96,98,1)]">
-                  {statusLabels[challenge.status]}
+                  {challenge.registrationStatus === "registered" ? "Inscrit" : challenge.registrationStatus === "cooldown" ? "Delai ferme" : statusLabels[challenge.status]}
                 </span>
               </div>
             </article>

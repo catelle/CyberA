@@ -5,8 +5,7 @@ import { ArrowRight, CheckCircle2, ShieldAlert, Sparkles } from "lucide-react";
 import { MascotCoach } from "@/components/gamified/CyberMascot";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { requireRole } from "@/lib/auth/guards";
-import { getModuleWithLessonsById } from "@/lib/db/cybera";
-import { getLessonById, getModuleById, type LessonContentBlock } from "@/lib/program";
+import { getPublishedProgramModuleById } from "@/lib/db/cybera";
 
 type LessonPageProps = {
   params: {
@@ -15,78 +14,12 @@ type LessonPageProps = {
   };
 };
 
-function normalizeLessonContent(content: unknown): LessonContentBlock[] {
-  if (!Array.isArray(content)) {
-    return [];
-  }
-
-  const blocks: LessonContentBlock[] = [];
-
-  content.forEach((block) => {
-    if (!block || typeof block !== "object") {
-      return;
-    }
-
-    const type = "type" in block ? block.type : null;
-    const value = "content" in block ? block.content : null;
-
-    if (
-      type !== "text" &&
-      type !== "tip" &&
-      type !== "warning" &&
-      type !== "checklist"
-    ) {
-      return;
-    }
-
-    if (type === "checklist" && Array.isArray(value)) {
-      const items = value.filter((item): item is string => typeof item === "string");
-      blocks.push({ type, content: items });
-      return;
-    }
-
-    if (typeof value === "string") {
-      blocks.push({ type, content: value });
-    }
-  });
-
-  return blocks;
-}
-
 export default async function LessonPage({ params }: LessonPageProps) {
   const user = await requireRole(["student", "admin"]);
-  const staticModule = getModuleById(params.id);
-  const staticLesson = getLessonById(params.id, params.lessonId);
-  const databaseModule = staticModule ? null : await getModuleWithLessonsById(params.id);
-  const databaseLesson = databaseModule?.lessons.find(
-    (lesson) => lesson.id === params.lessonId
+  const selectedModule = await getPublishedProgramModuleById(params.id);
+  const lesson = selectedModule?.lessons.find(
+    (item) => item.id === params.lessonId
   );
-  const selectedModule = staticModule
-    ? {
-        id: staticModule.id,
-        title: staticModule.title
-      }
-    : databaseModule
-      ? {
-          id: databaseModule.id,
-          title: databaseModule.title
-        }
-      : null;
-  const lesson = staticLesson
-    ? {
-        id: staticLesson.id,
-        order: staticLesson.order,
-        title: staticLesson.title,
-        content: staticLesson.content
-      }
-    : databaseLesson
-      ? {
-          id: databaseLesson.id,
-          order: databaseLesson.order_index,
-          title: databaseLesson.title,
-          content: normalizeLessonContent(databaseLesson.content)
-        }
-      : null;
 
   if (!selectedModule || !lesson) {
     notFound();
@@ -163,12 +96,12 @@ export default async function LessonPage({ params }: LessonPageProps) {
           >
             Retour au module
           </Link>
-          {staticModule ? (
+          {user.role === "student" ? (
             <Link
               className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border-2 border-secondary bg-brand-blue px-4 font-black text-white shadow-[0_4px_0_0_rgba(88,96,98,1)] transition hover:bg-brand-ink sm:w-fit"
-              href={`/student/modules/${selectedModule.id}/quiz`}
+              href={`/student/modules/${selectedModule.id}/lesson/${lesson.id}/quiz`}
             >
-              Passer au quiz
+              J&apos;ai termine la lecon
               <ArrowRight aria-hidden className="h-4 w-4" />
             </Link>
           ) : null}

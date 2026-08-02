@@ -48,7 +48,7 @@ export default async function ParentDashboardPage() {
                 Aucun compte enfant n&apos;est encore lie
               </h2>
               <p className="mt-3 leading-7 text-slate-600">
-                Demandez a l&apos;ambassadeur son code famille de 6 caracteres, puis
+                Demandez a l&apos;eleve son code famille de 6 caracteres, puis
                 ajoutez-le a votre espace parent.
               </p>
             </div>

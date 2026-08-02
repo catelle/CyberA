@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, Lock, Play, Star } from "lucide-react";
 
-import { CyberMascot, MascotCoach } from "@/components/gamified/CyberMascot";
+import { MascotCoach } from "@/components/gamified/CyberMascot";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { requireRole } from "@/lib/auth/guards";
-import { listProgramModulesForStudent } from "@/lib/db/cybera";
+import { getStudentStatusSummary, listProgramModulesForStudent } from "@/lib/db/cybera";
 import { getDictionary } from "@/lib/i18n/dictionary";
 import { getProgramCompletionPercent } from "@/lib/program";
 
@@ -23,14 +23,17 @@ const statusStyles = {
 export default async function StudentDashboardPage() {
   const user = await requireRole(["student"]);
   const t = getDictionary(user.language);
-  const modules = await listProgramModulesForStudent(user.supabaseUserId);
+  const [modules, studentStatus] = await Promise.all([
+    listProgramModulesForStudent(user.supabaseUserId),
+    getStudentStatusSummary(user.supabaseUserId)
+  ]);
   const completion = getProgramCompletionPercent(modules);
   const readyModule = modules.find((module) => module.status === "ready");
 
   return (
     <DashboardShell user={user} title={t.studentDashboard}>
       <div className="grid gap-5 sm:gap-6">
-        <section className="grid gap-4 overflow-hidden rounded-lg border-2 border-secondary bg-white p-4 shadow-[0_4px_0_0_rgba(88,96,98,1)] sm:p-5 lg:grid-cols-[1fr_18rem]">
+        <section className="grid gap-6 overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.07)] sm:p-7 lg:grid-cols-[1fr_17rem]">
           <div className="min-w-0">
             <MascotCoach mascotMood="cheer">
               Mission du jour: avance dans {readyModule?.title ?? "ton parcours"} et
@@ -38,18 +41,18 @@ export default async function StudentDashboardPage() {
             </MascotCoach>
 
             <div className="mt-5">
-              <p className="text-sm font-black uppercase text-tertiary">{t.nextStep}</p>
-              <h2 className="mt-2 break-words font-display text-2xl font-black leading-tight text-brand-blue sm:text-3xl">
+              <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-tertiary">{t.nextStep}</p>
+              <h2 className="mt-2 break-words font-display text-2xl font-extrabold leading-tight tracking-[-0.025em] text-on-surface sm:text-3xl">
                 {readyModule ? readyModule.title : "Programme CyberAmbassadeur"}
               </h2>
-              <p className="mt-3 max-w-2xl text-sm font-semibold leading-7 text-slate-600 sm:text-base">
+              <p className="mt-3 max-w-2xl text-sm font-medium leading-7 text-slate-600 sm:text-base">
                 {readyModule?.summary ??
                   "Les modules seront actives progressivement par l'equipe programme."}
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 {(readyModule?.outcomes ?? []).map((outcome) => (
                   <span
-                    className="rounded-full border-2 border-secondary bg-brand-sky px-3 py-1 text-xs font-black text-brand-blue shadow-[0_2px_0_0_rgba(88,96,98,1)] sm:text-sm"
+                    className="rounded-full border border-rose-100 bg-rose-50 px-3 py-1.5 text-xs font-bold text-primary sm:text-sm"
                     key={outcome}
                   >
                     {outcome}
@@ -58,7 +61,7 @@ export default async function StudentDashboardPage() {
               </div>
               {readyModule ? (
                 <Link
-                  className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border-2 border-secondary bg-primary px-4 font-black text-white shadow-[0_4px_0_0_rgba(88,96,98,1)] transition hover:bg-primary-container sm:w-fit"
+                  className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-extrabold text-white shadow-[0_10px_24px_rgba(181,18,63,0.2)] transition hover:bg-[#981137] sm:w-fit"
                   href={`/student/modules/${readyModule.id}`}
                 >
                   Continuer
@@ -68,19 +71,17 @@ export default async function StudentDashboardPage() {
             </div>
           </div>
 
-          <div className="relative overflow-hidden rounded-lg border-2 border-secondary bg-brand-blue p-5 text-white shadow-[0_4px_0_0_rgba(88,96,98,1)]">
-            <div className="absolute -right-4 -top-2 opacity-95">
-              <CyberMascot mood="celebrate" size="md" />
-            </div>
-            <p className="relative text-sm font-black text-white/75">Progression</p>
-            <p className="relative mt-3 text-5xl font-black">{completion}%</p>
-            <div className="progress-sheen relative mt-4 h-3 rounded-full bg-white/20">
+          <div className="relative overflow-hidden rounded-xl bg-[linear-gradient(145deg,#991238,#b5123f)] p-6 text-white shadow-[0_16px_32px_rgba(136,19,55,0.2)]">
+            <div className="absolute -bottom-10 -right-9 h-36 w-36 rounded-full border-[24px] border-white/5" />
+            <p className="relative text-xs font-extrabold uppercase tracking-[0.12em] text-white/70">Progression globale</p>
+            <p className="relative mt-3 text-5xl font-extrabold tracking-[-0.04em]">{completion}%</p>
+            <div className="relative mt-5 h-2 overflow-hidden rounded-full bg-white/20">
               <div
-                className="progress-fill-animate h-3 rounded-full bg-[#ffcc32]"
+                className="progress-fill-animate h-2 rounded-full bg-white"
                 style={{ width: `${completion}%` }}
               />
             </div>
-            <p className="relative mt-4 text-sm font-bold leading-6 text-white/80">
+            <p className="relative mt-4 text-xs font-semibold leading-5 text-white/75">
               {user.consentGiven
                 ? "Consentement parent confirme."
                 : "Consentement parent a confirmer."}
@@ -91,13 +92,13 @@ export default async function StudentDashboardPage() {
         <section className="grid gap-4">
           <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
             <div>
-              <p className="text-sm font-black uppercase text-tertiary">Parcours</p>
-              <h2 className="mt-1 font-display text-2xl font-black text-on-surface">
+              <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-tertiary">Parcours</p>
+              <h2 className="mt-1.5 font-display text-2xl font-extrabold tracking-[-0.025em] text-on-surface">
                 Tes missions de certification
               </h2>
             </div>
             <Link
-              className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border-2 border-secondary bg-white px-4 text-sm font-black text-primary shadow-[0_3px_0_0_rgba(88,96,98,1)] transition hover:bg-primary-fixed sm:w-fit"
+              className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-bold text-primary shadow-sm transition hover:border-rose-200 hover:bg-primary-fixed sm:w-fit"
               href="/student/modules"
             >
               Voir tout
@@ -112,7 +113,7 @@ export default async function StudentDashboardPage() {
 
               return (
                 <Link
-                  className="mission-card group relative grid min-h-[17rem] overflow-hidden rounded-lg border-2 border-secondary bg-white p-4 shadow-[0_4px_0_0_rgba(88,96,98,1)] transition hover:-translate-y-1 hover:shadow-[0_7px_0_0_rgba(88,96,98,1)] sm:p-5"
+                  className="mission-card group relative grid min-h-[17rem] overflow-hidden rounded-xl border border-slate-200 bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.05)] transition hover:-translate-y-1 hover:border-rose-200 hover:shadow-[0_16px_32px_rgba(15,23,42,0.09)] sm:p-5"
                   href={`/student/modules/${module.id}`}
                   key={module.id}
                   style={{ animationDelay: `${index * 70}ms` }}
@@ -136,8 +137,8 @@ export default async function StudentDashboardPage() {
                     <span
                       className={
                         isReady
-                          ? "mission-node flex h-20 w-20 items-center justify-center rounded-full border-2 border-secondary bg-primary text-white shadow-[0_6px_0_0_rgba(88,96,98,1)]"
-                          : "flex h-20 w-20 items-center justify-center rounded-full border-2 border-secondary bg-surface-container text-secondary shadow-[0_6px_0_0_rgba(88,96,98,1)]"
+                          ? "mission-node flex h-16 w-16 items-center justify-center rounded-xl bg-primary text-white shadow-[0_10px_24px_rgba(181,18,63,0.2)]"
+                          : "flex h-16 w-16 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-500"
                       }
                     >
                       <Icon aria-hidden className="h-8 w-8" />
@@ -145,26 +146,26 @@ export default async function StudentDashboardPage() {
                   </div>
 
                   <div className="relative z-10 mt-5 min-w-0">
-                    <p className="text-sm font-black text-brand-gold">
+                    <p className="text-xs font-extrabold uppercase tracking-[0.08em] text-primary">
                       Semaine {module.week}
                     </p>
-                    <h3 className="mt-2 break-words font-display text-lg font-black leading-tight text-brand-ink">
+                    <h3 className="mt-2 break-words font-display text-lg font-extrabold leading-tight tracking-[-0.015em] text-brand-ink">
                       {module.title}
                     </h3>
-                    <p className="mt-3 line-clamp-3 text-sm font-semibold leading-6 text-slate-600">
+                    <p className="mt-3 line-clamp-3 text-sm font-medium leading-6 text-slate-600">
                       {module.summary}
                     </p>
                   </div>
 
                   <div className="relative z-10 mt-5">
-                    <div className="h-3 rounded-full bg-slate-100">
+                    <div className="h-2 rounded-full bg-slate-100">
                       <div
-                        className="progress-fill-animate h-3 rounded-full bg-[#ffcc32]"
+                        className="progress-fill-animate h-2 rounded-full bg-primary"
                         style={{ width: `${module.progressPercent}%` }}
                       />
                     </div>
-                    <p className="mt-2 text-xs font-black text-secondary">
-                      {module.progressPercent}% complete
+                    <p className="mt-2 text-xs font-bold text-slate-500">
+                      {module.progressPercent}% terminé
                     </p>
                   </div>
                 </Link>
@@ -175,17 +176,18 @@ export default async function StudentDashboardPage() {
 
         <section className="grid gap-3 sm:grid-cols-3">
           {[
-            ["Serie", "3 jours", "bg-[#fff4c2]"],
-            ["XP", "120", "bg-tertiary-fixed"],
-            ["Badges", "2/8", "bg-[#d9fbe8]"]
+            ["Serie", `${studentStatus.streakDays} jour${studentStatus.streakDays > 1 ? "s" : ""}`, "bg-[#fff4c2]"],
+            ["XP", studentStatus.totalPoints.toLocaleString("fr-FR"), "bg-tertiary-fixed"],
+            ["Badges", `${studentStatus.badges.length}/${studentStatus.badgeTarget}`, "bg-[#d9fbe8]"]
           ].map(([label, value, tone]) => (
-            <article
-              className={`rounded-lg border-2 border-secondary ${tone} p-4 shadow-[0_4px_0_0_rgba(88,96,98,1)]`}
+            <Link
+              className={`rounded-xl border border-slate-200 ${tone} p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-primary hover:shadow-md`}
+              href="/student/status"
               key={label}
             >
-              <p className="text-sm font-black uppercase text-secondary">{label}</p>
-              <p className="mt-2 text-3xl font-black text-on-surface">{value}</p>
-            </article>
+              <p className="text-xs font-extrabold uppercase tracking-[0.1em] text-slate-500">{label}</p>
+              <p className="mt-2 text-2xl font-extrabold tracking-[-0.025em] text-on-surface">{value}</p>
+            </Link>
           ))}
         </section>
       </div>

@@ -1,14 +1,22 @@
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { requireRole } from "@/lib/auth/guards";
-import { getSupabaseUserRoleCounts } from "@/lib/db/cybera";
+import {
+  getAdminOperationalMetrics,
+  getSupabaseUserRoleCounts,
+  listCohortsFromDatabase,
+  listModulesFromDatabase
+} from "@/lib/db/cybera";
 import { getDictionary } from "@/lib/i18n/dictionary";
-import { cohorts, getAdminMetrics, programModules } from "@/lib/program";
 
 export default async function AdminDashboardPage() {
   const user = await requireRole(["admin"]);
   const t = getDictionary(user.language);
-  const counts = await getSupabaseUserRoleCounts();
-  const metrics = getAdminMetrics();
+  const [counts, metrics, modules, cohorts] = await Promise.all([
+    getSupabaseUserRoleCounts(),
+    getAdminOperationalMetrics(),
+    listModulesFromDatabase(),
+    listCohortsFromDatabase()
+  ]);
 
   const stats = [
     { label: "Eleves", value: counts.students },
@@ -19,7 +27,6 @@ export default async function AdminDashboardPage() {
     { label: "Forum", value: metrics.pendingForumReports },
     { label: "Cohortes", value: metrics.activeCohorts },
     { label: "Liens parents", value: metrics.parentAccountsLinked },
-    { label: "Actifs semaine", value: metrics.weeklyActiveUsers },
     { label: "Consentements", value: counts.consented }
   ];
 
@@ -42,19 +49,19 @@ export default async function AdminDashboardPage() {
               Etat de publication du parcours
             </h2>
             <div className="mt-5 grid gap-3">
-              {programModules.map((module) => (
+              {modules.map((module) => (
                 <div
                   className="flex flex-col justify-between gap-2 rounded-lg border border-slate-200 p-4 sm:flex-row sm:items-center"
                   key={module.id}
                 >
                   <div>
                     <p className="text-sm font-black text-brand-gold">
-                      Semaine {module.week}
+                      Module {module.order_index}
                     </p>
                     <h3 className="font-black text-brand-blue">{module.title}</h3>
                   </div>
                   <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-black uppercase text-slate-500">
-                    {module.status}
+                    {module.is_published ? "Publié" : "Brouillon"}
                   </span>
                 </div>
               ))}
@@ -69,7 +76,7 @@ export default async function AdminDashboardPage() {
                 <div className="rounded-lg bg-white/10 p-4" key={cohort.name}>
                   <h3 className="font-black">{cohort.name}</h3>
                   <p className="mt-2 text-sm leading-6 text-white/75">
-                    {cohort.description}
+                    {cohort.type} · {cohort.enrolled}/{cohort.max_size} inscrits
                   </p>
                 </div>
               ))}

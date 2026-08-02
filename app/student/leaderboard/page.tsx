@@ -14,7 +14,7 @@ export default async function LeaderboardPage() {
             Cohorte / National / Semaine
           </p>
           <h2 className="mt-2 text-2xl font-black text-brand-ink">
-            Progression des ambassadeurs
+            Progression des eleves
           </h2>
         </section>
 
@@ -23,8 +23,8 @@ export default async function LeaderboardPage() {
             <div
               className={
                 entry.isCurrentUser
-                  ? "grid gap-3 border-b border-slate-100 bg-brand-sky p-4 sm:grid-cols-[4rem_1fr_8rem_8rem]"
-                  : "grid gap-3 border-b border-slate-100 p-4 sm:grid-cols-[4rem_1fr_8rem_8rem]"
+                  ? "grid gap-3 border-b border-slate-100 bg-brand-sky p-4 sm:grid-cols-[4rem_1fr_8rem_10rem]"
+                  : "grid gap-3 border-b border-slate-100 p-4 sm:grid-cols-[4rem_1fr_8rem_10rem]"
               }
               key={entry.rank}
             >
@@ -36,7 +36,14 @@ export default async function LeaderboardPage() {
                 </p>
               </div>
               <p className="font-black capitalize text-brand-blue">{entry.level}</p>
-              <p className="font-black text-brand-gold">{entry.points} pts</p>
+              <div className="sm:text-right">
+                <p className="font-black text-brand-gold">
+                  {entry.performanceScore}% performance
+                </p>
+                <p className="text-xs font-bold text-slate-500">
+                  {entry.points} pts recompense
+                </p>
+              </div>
             </div>
           ))}
         </section>

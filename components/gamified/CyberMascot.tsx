@@ -58,8 +58,8 @@ export function MascotCoach({
     <aside className="grid gap-3 sm:grid-cols-[auto_1fr] sm:items-center">
       <CyberMascot mood={mascotMood} size="sm" />
       <div className="min-w-0">
-        <p className="text-xs font-black uppercase text-tertiary">{eyebrow}</p>
-        <p className="mt-1 text-sm font-extrabold leading-6 text-on-surface sm:text-base">
+        <p className="text-[0.68rem] font-extrabold uppercase tracking-[0.12em] text-tertiary">{eyebrow}</p>
+        <p className="mt-1 text-sm font-semibold leading-6 text-on-surface sm:text-base">
           {children}
         </p>
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { CheckCircle2, RotateCcw, XCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
@@ -14,10 +15,12 @@ type QuizEngineProps = {
 };
 
 export function QuizEngine({ module, userId }: QuizEngineProps) {
+  const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [isComplete, setIsComplete] = useState(false);
+  const [moduleCompleted, setModuleCompleted] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
 
   const currentQuestion = module.quiz[currentIndex];
@@ -31,8 +34,12 @@ export function QuizEngine({ module, userId }: QuizEngineProps) {
   const scorePercent =
     module.quiz.length > 0 ? Math.round((correctAnswers / module.quiz.length) * 100) : 0;
   const passed = scorePercent >= 70;
-  const totalPoints = module.quiz.reduce((sum, question) => sum + question.points, 0);
-  const pointsEarned = passed ? totalPoints : 0;
+  const earnedCorrectPoints = module.quiz.reduce(
+    (sum, question) =>
+      sum + (answers[question.id] === question.correctIndex ? question.points : 0),
+    0
+  );
+  const pointsEarned = passed ? earnedCorrectPoints : 0;
 
   useEffect(() => {
     cacheModuleForOffline(module).catch(() => undefined);
@@ -44,24 +51,46 @@ export function QuizEngine({ module, userId }: QuizEngineProps) {
     ).length;
     const nextScorePercent = Math.round((nextCorrectAnswers / module.quiz.length) * 100);
     const nextPassed = nextScorePercent >= 70;
+    const nextEarnedPoints = module.quiz.reduce(
+      (sum, question) =>
+        sum + (nextAnswers[question.id] === question.correctIndex ? question.points : 0),
+      0
+    );
 
-    await saveQuizProgress({
+    const savedProgress = await saveQuizProgress({
+      progressVersion: 3,
       userId,
       moduleId: module.id,
-      lessonsRead: module.lessons.map((lesson) => lesson.id),
+      // saveQuizProgress merges the lessons that were genuinely opened from
+      // IndexedDB. Completing a quiz must not mark every lesson as read.
+      lessonsRead: [],
+      lessonQuizAnswers: {},
       quizAnswers: nextAnswers,
       quizScore: nextScorePercent,
       passed: nextPassed,
-      pointsEarned: nextPassed ? totalPoints : 0,
+      pointsEarned: nextPassed ? nextEarnedPoints : 0,
       updatedAt: new Date()
     });
+    const completedEveryLesson =
+      module.lessons.length > 0 &&
+      module.lessons.every((lesson) =>
+        savedProgress.lessonsRead.includes(lesson.id)
+      );
+    const completedModule = nextPassed && completedEveryLesson;
 
     window.dispatchEvent(new CustomEvent("cybera:pending-sync-changed"));
+    if (!nextPassed) {
+      router.replace(`/student/modules/${module.id}`);
+      return;
+    }
     setStatus(
-      nextPassed
+      completedModule
         ? "Progression enregistree localement. Les points seront synchronises en ligne."
-        : "Tentative enregistree localement. Tu peux recommencer pour atteindre 70%."
+        : nextPassed
+          ? "Quiz reussi. Termine toutes les lecons pour valider le module et gagner les points."
+          : "Tentative enregistree localement. Tu peux recommencer pour atteindre 70%."
     );
+    setModuleCompleted(completedModule);
     setIsComplete(true);
   }
 
@@ -90,6 +119,7 @@ export function QuizEngine({ module, userId }: QuizEngineProps) {
     setSelectedIndex(null);
     setAnswers({});
     setIsComplete(false);
+    setModuleCompleted(false);
     setStatus(null);
   }
 
@@ -100,12 +130,18 @@ export function QuizEngine({ module, userId }: QuizEngineProps) {
           <div className="min-w-0">
             <p className="text-sm font-black uppercase text-tertiary">Resultat</p>
             <h2 className="mt-2 break-words font-display text-3xl font-black leading-tight text-brand-ink">
-              {scorePercent}% - {passed ? "Module reussi" : "Encore un effort"}
+              {scorePercent}% - {moduleCompleted
+                ? "Module reussi"
+                : passed
+                  ? "Quiz reussi"
+                  : "Encore un effort"}
             </h2>
             <p className="mt-3 font-semibold leading-7 text-slate-600">
               {correctAnswers}/{module.quiz.length} bonnes reponses.{" "}
-              {passed
+              {moduleCompleted
                 ? `${pointsEarned} points sont prets a etre synchronises.`
+                : passed
+                  ? "Termine les lecons restantes pour valider le module."
                 : "Relis les explications et retente le quiz."}
             </p>
           </div>

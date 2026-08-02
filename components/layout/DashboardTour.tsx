@@ -41,7 +41,7 @@ const parentTips: TourTip[] = [
   },
   {
     title: "Lie un enfant",
-    body: "Utilise le code famille donne par l'ambassadeur pour connecter son compte a ton espace parent."
+    body: "Utilise le code famille donne par l'eleve pour connecter son compte a ton espace parent."
   },
   {
     title: "Lis les rapports",
