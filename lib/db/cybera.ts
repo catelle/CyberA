@@ -906,12 +906,15 @@ export async function listProgramModulesForStudent(
     const recordedLessons =
       completedLessonsByModuleId.get(module.id) ?? completedLessonsByOrder.get(module.week);
     const currentLessonIds = new Set(module.lessons.map((lesson) => lesson.id));
-    const recordedCurrentLessons = Array.from(recordedLessons ?? []).filter((lessonId) =>
-      currentLessonIds.has(lessonId)
-    ).length;
-    const completedLessons = lessonProgressError
-      ? Math.max(row?.lessons_done ?? 0, 0)
-      : Math.max(recordedCurrentLessons, row?.lessons_done ?? 0);
+    const completedLessonIds = new Set(
+      lessonProgressError ? [] : Array.from(recordedLessons ?? []).filter((lessonId) =>
+        currentLessonIds.has(lessonId)
+      )
+    );
+    module.lessons
+      .slice(0, Math.min(Math.max(row?.lessons_done ?? 0, 0), module.lessons.length))
+      .forEach((lesson) => completedLessonIds.add(lesson.id));
+    const completedLessons = completedLessonIds.size;
 
     return {
       ...module,

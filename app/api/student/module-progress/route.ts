@@ -196,9 +196,34 @@ export async function POST(request: Request) {
       parsed.data.lessonQuizAnswers[lessonId] ===
       resolvedModule.lessonCorrectAnswers[lessonId]
   );
+  const [{ data: storedProgress }, { data: storedLessons }] = await Promise.all([
+    supabase
+      .from("module_progress")
+      .select("lessons_done")
+      .eq("user_id", auth.user.supabaseUserId)
+      .eq("module_id", resolvedModule.id)
+      .maybeSingle<{ lessons_done: number | null }>(),
+    supabase
+      .from("lesson_progress")
+      .select("lesson_id")
+      .eq("user_id", auth.user.supabaseUserId)
+      .eq("module_id", resolvedModule.id)
+      .returns<{ lesson_id: string }[]>()
+  ]);
+  const completedLessonIds = new Set([
+    ...resolvedModule.lessonIds.slice(
+      0,
+      Math.min(
+        Math.max(storedProgress?.lessons_done ?? 0, 0),
+        resolvedModule.lessonIds.length
+      )
+    ),
+    ...(storedLessons ?? []).map((lesson) => lesson.lesson_id),
+    ...verifiedLessonsRead
+  ]);
   const completedAllLessons =
     resolvedModule.lessonIds.length > 0 &&
-    resolvedModule.lessonIds.every((lessonId) => verifiedLessonsRead.includes(lessonId));
+    resolvedModule.lessonIds.every((lessonId) => completedLessonIds.has(lessonId));
   const submittedQuizAnswers = parsed.data.quizAnswers;
   const isQuizAttempt = Object.keys(submittedQuizAnswers).length > 0;
 
@@ -255,7 +280,7 @@ export async function POST(request: Request) {
     ? await supabase.rpc("record_module_progress", {
         p_user_id: auth.user.supabaseUserId,
         p_module_id: resolvedModule.id,
-        p_lessons_done: verifiedLessonsRead.length,
+        p_lessons_done: completedLessonIds.size,
         p_quiz_score: quizScore,
         p_passed: passed,
         p_points: passed ? verifiedPoints : 0
@@ -263,7 +288,7 @@ export async function POST(request: Request) {
     : await supabase.rpc("record_lesson_progress", {
         p_user_id: auth.user.supabaseUserId,
         p_module_id: resolvedModule.id,
-        p_lessons_done: verifiedLessonsRead.length
+        p_lessons_done: completedLessonIds.size
       });
 
   // Projects deployed before the atomic scoring migration do not expose the
@@ -273,7 +298,7 @@ export async function POST(request: Request) {
       supabase,
       userId: auth.user.supabaseUserId,
       moduleId: resolvedModule.id,
-      lessonsDone: verifiedLessonsRead.length,
+      lessonsDone: completedLessonIds.size,
       quizScore: isQuizAttempt ? quizScore : undefined,
       passed,
       points: verifiedPoints
