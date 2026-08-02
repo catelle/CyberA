@@ -10,6 +10,16 @@ export default async function AdminSubmissionsPage() {
   return (
     <DashboardShell user={user} title="Soumissions">
       <section className="grid gap-4">
+        {submissions.length === 0 ? (
+          <div className="rounded-xl border border-slate-200 bg-white p-6 text-center shadow-sm">
+            <h2 className="font-display text-xl font-black text-brand-ink">
+              Aucune soumission pour le moment
+            </h2>
+            <p className="mt-2 font-semibold text-slate-500">
+              Les rapports envoyes par les eleves apparaitront ici.
+            </p>
+          </div>
+        ) : null}
         {submissions.map((submission: any) => (
           <article className="rounded-lg bg-white p-5 shadow-sm" key={submission.id}>
             <div className="flex flex-col justify-between gap-3 md:flex-row md:items-start">

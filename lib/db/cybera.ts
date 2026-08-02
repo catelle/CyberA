@@ -1306,10 +1306,37 @@ export async function listChallengeSubmissionsWithFallback() {
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase
     .from("challenge_submissions")
-    .select("*, challenges(title, points), users(full_name, city), ambassador_profiles(total_points, level)")
+    .select(
+      "*, challenges!challenge_submissions_challenge_id_fkey(title, points), users!challenge_submissions_user_id_fkey(full_name, city)"
+    )
     .order("submitted_at", { ascending: false });
 
-  return error || !data ? [] : data;
+  if (error || !data) {
+    if (error) console.error("Unable to load challenge submissions", error);
+    return [];
+  }
+
+  const userIds = Array.from(
+    new Set(
+      data
+        .map((submission) => submission.user_id)
+        .filter((userId): userId is string => Boolean(userId))
+    )
+  );
+  const { data: profiles } = userIds.length > 0
+    ? await supabase
+        .from("ambassador_profiles")
+        .select("user_id, total_points, level")
+        .in("user_id", userIds)
+    : { data: [] };
+  const profileByUserId = new Map(
+    (profiles ?? []).map((profile) => [profile.user_id, profile])
+  );
+
+  return data.map((submission) => ({
+    ...submission,
+    ambassador_profiles: profileByUserId.get(submission.user_id) ?? null
+  }));
 }
 
 export async function listForumReportsWithFallback() {
