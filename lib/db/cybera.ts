@@ -132,15 +132,20 @@ async function calculateVerifiedXp(userIds?: string[]) {
     .from("capstone_projects")
     .select("user_id")
     .eq("status", "approved");
+  let parentChallengeQuery = supabase
+    .from("parent_challenges")
+    .select("child_id, points_awarded")
+    .eq("status", "approved");
 
   if (userIds?.length) {
     moduleQuery = moduleQuery.in("user_id", userIds);
     challengeQuery = challengeQuery.in("user_id", userIds);
     capstoneQuery = capstoneQuery.in("user_id", userIds);
+    parentChallengeQuery = parentChallengeQuery.in("child_id", userIds);
   }
 
-  const [{ data: modules }, { data: challenges }, { data: capstones }] =
-    await Promise.all([moduleQuery, challengeQuery, capstoneQuery]);
+  const [{ data: modules }, { data: challenges }, { data: capstones }, { data: parentChallenges }] =
+    await Promise.all([moduleQuery, challengeQuery, capstoneQuery, parentChallengeQuery]);
   const totals = new Map<string, number>();
   const add = (userId: string | null, points: number) => {
     if (!userId) return;
@@ -150,7 +155,20 @@ async function calculateVerifiedXp(userIds?: string[]) {
   (modules ?? []).forEach((row) => add(row.user_id, row.points_earned ?? 0));
   (challenges ?? []).forEach((row) => add(row.user_id, row.points_awarded ?? 0));
   (capstones ?? []).forEach((row) => add(row.user_id, 500));
+  (parentChallenges ?? []).forEach((row) => add(row.child_id, row.points_awarded ?? 0));
   return totals;
+}
+
+export async function getParentChildActivityDetail(parentId: string, childId: string) {
+  const supabase = createSupabaseAdminClient();
+  const { data: link, error } = await supabase
+    .from("family_links")
+    .select("id")
+    .eq("parent_id", parentId)
+    .eq("child_id", childId)
+    .maybeSingle();
+  if (error || !link) return null;
+  return getAdminStudentActivityDetail(childId);
 }
 
 export async function getAdminStudentActivityDetail(
@@ -1123,7 +1141,7 @@ function addDays(dateValue: string, days: number) {
 export async function listActiveChallengesWithFallback(limit = 3, userId?: string): Promise<WeeklyChallenge[]> {
   const data = await listActiveChallenges(limit);
   const supabase = createSupabaseAdminClient();
-  const [{ data: registrations }, { data: submissions }] = userId && data.length > 0
+  const [{ data: registrations }, { data: submissions }, { data: parentInvitations }] = userId && data.length > 0
     ? await Promise.all([
         supabase
           .from("challenge_registrations")
@@ -1136,9 +1154,15 @@ export async function listActiveChallengesWithFallback(limit = 3, userId?: strin
           .select("challenge_id, registration_id, status, reviewer_note, points_awarded, reviewed_at, submitted_at")
           .eq("user_id", userId)
           .in("challenge_id", data.map((challenge) => challenge.id))
-          .order("submitted_at", { ascending: false })
+          .order("submitted_at", { ascending: false }),
+        supabase
+          .from("parent_challenges")
+          .select("challenge_id, status, created_at")
+          .eq("child_id", userId)
+          .in("challenge_id", data.map((challenge) => challenge.id))
+          .order("created_at", { ascending: false })
       ])
-    : [{ data: [] }, { data: [] }];
+    : [{ data: [] }, { data: [] }, { data: [] }];
   const latestByChallenge = new Map<string, any>();
   (registrations ?? []).forEach((registration) => {
     if (!latestByChallenge.has(registration.challenge_id)) {
@@ -1150,6 +1174,10 @@ export async function listActiveChallengesWithFallback(limit = 3, userId?: strin
     if (!latestSubmissionByChallenge.has(submission.challenge_id)) {
       latestSubmissionByChallenge.set(submission.challenge_id, submission);
     }
+  });
+  const parentInvitationByChallenge = new Map<string, any>();
+  (parentInvitations ?? []).forEach((invitation) => {
+    if (!parentInvitationByChallenge.has(invitation.challenge_id)) parentInvitationByChallenge.set(invitation.challenge_id, invitation);
   });
 
   return data.map((challenge) => {
@@ -1190,7 +1218,8 @@ export async function listActiveChallengesWithFallback(limit = 3, userId?: strin
       submissionStatus: submission?.status ?? null,
       reviewerNote: submission?.reviewer_note ?? null,
       pointsAwarded: submission?.points_awarded ?? 0,
-      reviewedAt: submission?.reviewed_at ?? null
+      reviewedAt: submission?.reviewed_at ?? null,
+      parentInvitationStatus: parentInvitationByChallenge.get(challenge.id)?.status ?? null
     };
   });
 }
@@ -1382,6 +1411,46 @@ export async function listNotificationsForUser(userId: string) {
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
 
+  return error || !data ? [] : data;
+}
+
+export async function listAdminBroadcasts() {
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("notifications")
+    .select("id, title, body, data, created_at, user_id")
+    .eq("type", "broadcast")
+    .order("created_at", { ascending: false })
+    .limit(500);
+  if (error || !data) return [];
+
+  const broadcasts = new Map<string, any>();
+  data.forEach((row: any) => {
+    const key = row.data?.broadcast_id ?? `${row.title}:${row.body}:${row.created_at?.slice(0, 16)}`;
+    const current = broadcasts.get(key);
+    if (current) current.recipientCount += 1;
+    else broadcasts.set(key, { ...row, recipientCount: 1 });
+  });
+  return [...broadcasts.values()];
+}
+
+export async function listParentChallengeInvitations(parentId: string) {
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("parent_challenges")
+    .select("*, challenge:challenges(id, title, description, points), child:users!parent_challenges_child_id_fkey(id, full_name)")
+    .eq("parent_id", parentId)
+    .order("created_at", { ascending: false });
+  return error || !data ? [] : data;
+}
+
+export async function listParentChallengeSubmissions() {
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("parent_challenges")
+    .select("*, challenge:challenges(id, title, points), child:users!parent_challenges_child_id_fkey(id, full_name), parent:users!parent_challenges_parent_id_fkey(id, full_name)")
+    .in("status", ["submitted", "approved", "rejected"])
+    .order("submitted_at", { ascending: false });
   return error || !data ? [] : data;
 }
 

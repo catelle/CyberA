@@ -11,6 +11,20 @@ export function ChallengeRegistrationAction({ challenge }: { challenge: WeeklyCh
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  async function inviteParent() {
+    setIsSubmitting(true);
+    setError(null);
+    const response = await fetch("/api/student/parent-challenge-invitations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ challengeId: challenge.id })
+    });
+    const result = (await response.json().catch(() => null)) as { message?: string } | null;
+    if (!response.ok) setError(result?.message ?? "Invitation impossible.");
+    else router.refresh();
+    setIsSubmitting(false);
+  }
+
   if (challenge.registrationStatus === "registered") {
     return (
       <div>
@@ -19,12 +33,13 @@ export function ChallengeRegistrationAction({ challenge }: { challenge: WeeklyCh
       </div>
     );
   }
-  if (challenge.registrationStatus === "submitted") {
+  if (challenge.registrationStatus === "submitted" || challenge.submissionStatus === "approved" || challenge.submissionStatus === "rejected") {
     if (!challenge.submissionStatus || challenge.submissionStatus === "pending") {
       return <p className="rounded-lg bg-amber-50 px-4 py-3 text-sm font-black text-amber-900">Soumis · En attente de revision</p>;
     }
 
     return (
+      <div className="grid gap-2">
       <details className={challenge.submissionStatus === "approved" ? "rounded-lg bg-emerald-50 p-3 text-emerald-900" : "rounded-lg bg-rose-50 p-3 text-rose-900"}>
         <summary className="cursor-pointer text-sm font-black">
           {challenge.submissionStatus === "approved" ? "Approuve · Voir la revision" : "A ameliorer · Voir la revision"}
@@ -35,6 +50,14 @@ export function ChallengeRegistrationAction({ challenge }: { challenge: WeeklyCh
           {challenge.reviewedAt ? <p className="mt-1 text-xs opacity-70">Revise le {new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium" }).format(new Date(challenge.reviewedAt))}</p> : null}
         </div>
       </details>
+      {challenge.parentInvitationStatus ? (
+        <p className="rounded-lg bg-violet-50 px-3 py-2 text-sm font-black text-violet-900">Defi parent: {challenge.parentInvitationStatus === "invited" ? "invitation envoyee" : challenge.parentInvitationStatus === "submitted" ? "rapport en revision" : challenge.parentInvitationStatus === "approved" ? "bonus approuve" : "rapport a corriger"}</p>
+      ) : (
+        <button className="min-h-11 rounded-lg bg-brand-blue px-4 text-sm font-black text-white disabled:opacity-50" disabled={isSubmitting} onClick={inviteParent} type="button">{isSubmitting ? "Invitation..." : "Inviter mon parent a relever ce defi"}</button>
+      )}
+      {challenge.registrationStatus === "cooldown" ? <p className="text-xs font-bold text-amber-900">Une nouvelle tentative personnelle sera disponible apres le delai de 3 jours.</p> : null}
+      {error ? <p className="text-sm font-bold text-red-700">{error}</p> : null}
+      </div>
     );
   }
   if (challenge.registrationStatus === "cooldown") {

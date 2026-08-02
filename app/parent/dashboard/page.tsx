@@ -104,6 +104,9 @@ export default async function ParentDashboardPage() {
                       </p>
                     </div>
                   </div>
+                  <Link className="mt-4 inline-flex font-black text-primary hover:underline" href={`/parent/children/${child.id}`}>
+                    Voir le compte et les activites →
+                  </Link>
                 </article>
               ))}
             </div>

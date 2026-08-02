@@ -57,6 +57,7 @@ export function DashboardShell({ user, title, children }: DashboardShellProps) {
             { href: "/parent/dashboard", label: "Accueil", Icon: Home },
             { href: "/parent/reports", label: "Rapports", Icon: FileText },
             { href: "/parent/challenge", label: "Defi", Icon: ClipboardCheck },
+            { href: "/parent/notifications", label: "Notifications", Icon: Megaphone },
             { href: "/parent/link", label: "Lien enfant", Icon: Link2 }
           ]
         : [
@@ -65,6 +66,7 @@ export function DashboardShell({ user, title, children }: DashboardShellProps) {
             { href: "/student/challenges", label: "Defis", Icon: ClipboardCheck },
             { href: "/student/leaderboard", label: "Classement", Icon: Trophy },
             { href: "/student/forum", label: "Forum", Icon: MessageCircle },
+            { href: "/student/notifications", label: "Notifications", Icon: Megaphone },
             { href: "/student/profile", label: "Profil", Icon: User }
           ];
   const mobileNavItems =

@@ -4,7 +4,7 @@ import { Check, Send, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-type ReviewTarget = "submission" | "forum" | "capstone";
+type ReviewTarget = "submission" | "parentChallenge" | "forum" | "capstone";
 
 type AdminReviewActionsProps = {
   id: string;
@@ -14,6 +14,7 @@ type AdminReviewActionsProps = {
 
 function endpointFor(target: ReviewTarget, id: string) {
   if (target === "submission") return `/api/admin/submissions/${id}/review`;
+  if (target === "parentChallenge") return `/api/admin/parent-challenges/${id}/review`;
   if (target === "forum") return `/api/admin/forum/${id}/review`;
   return `/api/admin/capstone/${id}/review`;
 }
@@ -32,7 +33,7 @@ export function AdminReviewActions({ id, target, defaultPoints = 50 }: AdminRevi
 
     const formData = new FormData(formRef.current);
     const payload =
-      target === "submission"
+      target === "submission" || target === "parentChallenge"
         ? {
             status: nextStatus,
             pointsAwarded: formData.get("pointsAwarded") || defaultPoints,
@@ -59,7 +60,7 @@ export function AdminReviewActions({ id, target, defaultPoints = 50 }: AdminRevi
 
   return (
     <form className="mt-5 grid gap-3" ref={formRef}>
-      {target === "submission" ? (
+      {target === "submission" || target === "parentChallenge" ? (
         <>
           <div className="field">
             <label htmlFor={`points-${id}`}>Points</label>

@@ -1,11 +1,14 @@
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { AdminReviewActions } from "@/components/forms/AdminReviewActions";
 import { requireRole } from "@/lib/auth/guards";
-import { listChallengeSubmissionsWithFallback } from "@/lib/db/cybera";
+import { listChallengeSubmissionsWithFallback, listParentChallengeSubmissions } from "@/lib/db/cybera";
 
 export default async function AdminSubmissionsPage() {
   const user = await requireRole(["admin"]);
-  const submissions = await listChallengeSubmissionsWithFallback();
+  const [submissions, parentSubmissions] = await Promise.all([
+    listChallengeSubmissionsWithFallback(),
+    listParentChallengeSubmissions()
+  ]);
 
   return (
     <DashboardShell user={user} title="Soumissions">
@@ -21,7 +24,7 @@ export default async function AdminSubmissionsPage() {
           </div>
         ) : null}
         {submissions.map((submission: any) => (
-          <article className="rounded-lg bg-white p-4 shadow-sm" key={submission.id}>
+          <article className="rounded-lg bg-white p-3 shadow-sm" key={submission.id}>
             <div className="flex flex-col justify-between gap-3 md:flex-row md:items-start">
               <div>
                 <p className="text-sm font-black uppercase text-brand-gold">
@@ -30,9 +33,6 @@ export default async function AdminSubmissionsPage() {
                 <h2 className="mt-2 text-xl font-black text-brand-blue">
                   {submission.challenges?.title ?? "Soumission defi"}
                 </h2>
-                <p className="mt-2 max-h-24 overflow-y-auto leading-7 text-slate-600">
-                  {submission.report_text ?? "Aucun rapport."}
-                </p>
                 <p className="mt-2 text-sm font-bold text-slate-500">
                   {submission.users?.full_name ?? "Eleve"} /{" "}
                   {submission.users?.city ?? "Ville inconnue"} /{" "}
@@ -43,11 +43,16 @@ export default async function AdminSubmissionsPage() {
                 {submission.status}
               </span>
             </div>
+            <details className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+              <summary className="cursor-pointer text-sm font-black text-primary">Voir le rapport, la preuve et la revision</summary>
+              <p className="mt-3 max-h-24 overflow-y-auto leading-6 text-slate-600">
+                {submission.report_text ?? "Aucun rapport."}
+              </p>
             {submission.photo_signed_url ? (
-              <figure className="mt-4 w-full max-w-md overflow-hidden rounded-xl border-2 border-slate-200 bg-slate-50 p-2">
+              <figure className="mt-3 w-full max-w-sm overflow-hidden rounded-xl border-2 border-slate-200 bg-white p-2">
                 <img
                   alt={`Preuve envoyee par ${submission.users?.full_name ?? "l'eleve"}`}
-                  className="h-48 w-full rounded-lg object-cover"
+                  className="h-32 w-full rounded-lg object-cover"
                   src={submission.photo_signed_url}
                 />
                 <figcaption className="flex flex-wrap items-center justify-between gap-2 px-2 pb-1 pt-3 text-sm font-bold text-slate-500">
@@ -81,6 +86,35 @@ export default async function AdminSubmissionsPage() {
                 {submission.reviewer_note ? <p className="mt-1">{submission.reviewer_note}</p> : null}
               </div>
             )}
+            </details>
+          </article>
+        ))}
+      </section>
+      <section className="mt-7 grid gap-4">
+        <div>
+          <p className="text-sm font-black uppercase text-brand-gold">Bonus famille</p>
+          <h2 className="mt-1 text-2xl font-black text-brand-ink">Rapports des parents</h2>
+        </div>
+        {parentSubmissions.length === 0 ? <div className="rounded-lg bg-white p-5 text-slate-500 shadow-sm">Aucun rapport parent soumis.</div> : null}
+        {parentSubmissions.map((submission: any) => (
+          <article className="rounded-lg bg-white p-3 shadow-sm" key={submission.id}>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-sm font-black uppercase text-brand-gold">{submission.bonus_points ?? 20} points pour l&apos;enfant</p>
+                <h3 className="mt-1 text-xl font-black text-brand-blue">{submission.challenge?.title ?? "Defi famille"}</h3>
+                <p className="mt-1 text-sm font-bold text-slate-500">Parent: {submission.parent?.full_name ?? "Parent"} · Enfant: {submission.child?.full_name ?? "Eleve"}</p>
+              </div>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black uppercase text-slate-500">{submission.status}</span>
+            </div>
+            <details className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+            <summary className="cursor-pointer text-sm font-black text-primary">Voir le rapport et la revision</summary>
+            <p className="mt-3 max-h-24 overflow-y-auto leading-6 text-slate-600">{submission.report_text}</p>
+            {submission.status === "submitted" ? (
+              <AdminReviewActions defaultPoints={submission.bonus_points ?? 20} id={submission.id} target="parentChallenge" />
+            ) : (
+              <p className="mt-3 rounded-lg bg-slate-50 p-3 text-sm font-bold text-slate-600">Revision terminee · {submission.status === "approved" ? `${submission.points_awarded} points attribues a l'enfant` : "Rapport rejete"}{submission.reviewer_note ? ` · ${submission.reviewer_note}` : ""}</p>
+            )}
+            </details>
           </article>
         ))}
       </section>

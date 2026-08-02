@@ -46,13 +46,14 @@ export async function POST(request: Request) {
 
   if (userError) return jsonError(userError, "Impossible de charger l'audience.");
 
+  const broadcastId = crypto.randomUUID();
   const rows =
     users?.map((user) => ({
       user_id: user.id,
       type: "broadcast",
       title: parsed.data.title,
       body: parsed.data.body,
-      data: { audience: parsed.data.audience }
+      data: { audience: parsed.data.audience, broadcast_id: broadcastId }
     })) ?? [];
 
   if (rows.length > 0) {

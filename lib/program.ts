@@ -78,6 +78,7 @@ export type WeeklyChallenge = {
   reviewerNote?: string | null;
   pointsAwarded?: number;
   reviewedAt?: string | null;
+  parentInvitationStatus?: "invited" | "submitted" | "approved" | "rejected" | null;
 };
 
 export type LeaderboardEntry = {
