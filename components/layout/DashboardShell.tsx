@@ -78,6 +78,7 @@ export function DashboardShell({ user, title, children }: DashboardShellProps) {
         ? "Parent allié"
         : "Cyber-Éclaireur";
   const isStudent = user.role === "student";
+  const profileHref = isStudent ? "/student/profile" : "/parent/dashboard";
 
   return (
     <main
@@ -88,7 +89,7 @@ export function DashboardShell({ user, title, children }: DashboardShellProps) {
       }
     >
       <div className="flex min-h-screen flex-col lg:flex-row">
-        <aside className="border-b border-slate-200 bg-white/95 px-3 py-3 text-on-surface backdrop-blur sm:px-4 lg:sticky lg:top-0 lg:h-screen lg:w-64 lg:border-b-0 lg:border-r lg:px-5 lg:py-6">
+        <aside className={`${user.role === "admin" ? "" : "hidden lg:block"} border-b border-slate-200 bg-white/95 px-3 py-3 text-on-surface backdrop-blur sm:px-4 lg:sticky lg:top-0 lg:h-screen lg:w-64 lg:border-b-0 lg:border-r lg:px-5 lg:py-6`}>
           <div className="flex items-center justify-between gap-4 lg:block">
             <div className="flex min-w-0 items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary font-display text-lg font-black text-white shadow-[0_8px_20px_rgba(181,18,63,0.2)]">
@@ -143,7 +144,7 @@ export function DashboardShell({ user, title, children }: DashboardShellProps) {
 
         <section className="min-w-0 flex-1 px-3 py-4 sm:px-6 lg:px-9 lg:py-7">
           <div className="mx-auto w-full max-w-6xl">
-            <header className="mb-6 grid gap-4 border-b border-slate-200 pb-5 lg:mb-8 lg:grid-cols-[1fr_auto] lg:items-center">
+            <header className="mb-6 grid grid-cols-[1fr_auto] items-start gap-4 border-b border-slate-200 pb-5 lg:mb-8 lg:items-center">
               <div className="min-w-0">
                 <p className="text-[0.68rem] font-extrabold uppercase tracking-[0.16em] text-slate-500">
                   {roleLabel}
@@ -152,7 +153,24 @@ export function DashboardShell({ user, title, children }: DashboardShellProps) {
                   {title}
                 </h1>
               </div>
-              <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+              {user.role !== "admin" ? (
+                <details className="group relative lg:hidden">
+                  <summary aria-label="Afficher mon profil" className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-full border-2 border-secondary bg-primary font-display text-lg font-black text-white shadow-[0_3px_0_0_rgba(88,96,98,1)] marker:content-none">
+                    {user.profile.fullName.slice(0, 1).toUpperCase()}
+                  </summary>
+                  <div className="absolute right-0 top-14 z-50 w-64 rounded-xl border border-slate-200 bg-white p-4 shadow-xl">
+                    <p className="text-xs font-black uppercase tracking-wider text-primary">{roleLabel}</p>
+                    <p className="mt-1 truncate font-black text-brand-ink">{user.profile.fullName}</p>
+                    <Link className="mt-4 flex min-h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-black text-white" href={profileHref}>
+                      Voir mon profil
+                    </Link>
+                    <div className="mt-3 border-t border-slate-200 pt-3">
+                      <LogoutButton label={t.logout} />
+                    </div>
+                  </div>
+                </details>
+              ) : null}
+              <div className="col-span-2 flex flex-wrap items-center gap-2 lg:col-span-1 lg:justify-end">
                 {isStudent ? (
                   <>
                     <Link className="flex min-h-9 items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 text-xs font-extrabold text-amber-950 transition hover:border-primary" href="/student/status">
