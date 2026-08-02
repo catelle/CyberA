@@ -24,6 +24,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.77.0",
+    "pureimage": "0.4.20",
     "ws": "^8.21.0",
     "zod": "^3.23.8",
     "zustand": "^5.0.14"

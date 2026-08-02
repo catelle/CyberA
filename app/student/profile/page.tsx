@@ -1,5 +1,5 @@
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { Award, CheckCircle2, GraduationCap } from "lucide-react";
+import { Award, Download, GraduationCap } from "lucide-react";
 import { requireRole } from "@/lib/auth/guards";
 import { getStudentProfileStats, listProgramModulesForStudent } from "@/lib/db/cybera";
 import { getProgramCompletionPercent } from "@/lib/program";
@@ -100,16 +100,12 @@ export default async function ProfilePage() {
           ) : (
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {profileStats.badges.map((badge) => (
-                <article
-                  className="rounded-lg border-2 border-slate-200 p-4"
-                  key={badge.id}
-                  style={{ borderTopColor: badge.color }}
-                >
-                  <CheckCircle2 aria-hidden className="h-7 w-7" style={{ color: badge.color }} />
-                  <h4 className="mt-3 font-black text-brand-blue">{badge.name}</h4>
-                  <p className="mt-1 text-sm font-semibold text-slate-500">
-                    Domaine: {badge.focus}
-                  </p>
+                <article className="flex flex-col items-center rounded-2xl bg-brand-rose p-4 text-center" key={badge.id}>
+                  <img alt={badge.name} className="aspect-square w-full max-w-44 rounded-full object-contain drop-shadow-lg" src={`/api/student/badges/${badge.id}/download?inline=1`} />
+                  <a className="mt-3 inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-primary/20 bg-white px-4 text-sm font-black text-primary" href={`/api/student/badges/${badge.id}/download`}>
+                    <Download aria-hidden className="h-4 w-4" />
+                    Telecharger PNG
+                  </a>
                 </article>
               ))}
             </div>
