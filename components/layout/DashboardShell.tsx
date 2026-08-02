@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 
 import { LogoutButton } from "@/components/auth/LogoutButton";
+import { RewardPopup } from "@/components/gamified/RewardPopup";
 import { DashboardTour } from "@/components/layout/DashboardTour";
 import { getDictionary } from "@/lib/i18n/dictionary";
 import type { SafeUser } from "@/types/auth";
@@ -180,6 +181,8 @@ export function DashboardShell({ user, title, children }: DashboardShellProps) {
       {user.role !== "admin" ? (
         <DashboardTour role={user.role} userId={user.id} />
       ) : null}
+
+      {isStudent ? <RewardPopup userId={user.supabaseUserId} /> : null}
 
       {user.role !== "admin" ? (
         <nav className="fixed inset-x-3 bottom-3 z-40 grid grid-cols-5 rounded-2xl border border-slate-200 bg-white/95 p-1.5 shadow-[0_14px_36px_rgba(15,23,42,0.16)] backdrop-blur lg:hidden">

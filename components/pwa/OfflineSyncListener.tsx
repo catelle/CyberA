@@ -30,6 +30,7 @@ export function OfflineSyncListener() {
       setIsSyncing(true);
       await syncPending().catch(() => undefined);
       setIsSyncing(false);
+      window.dispatchEvent(new CustomEvent("cybera:rewards-changed"));
     }
 
     const summary = await getPendingSyncSummary().catch(() => ({
