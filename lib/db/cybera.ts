@@ -1161,7 +1161,11 @@ export async function listActiveChallengesWithFallback(limit = 3, userId?: strin
     const cooldownUntil = registration?.cooldown_until
       ? new Date(registration.cooldown_until)
       : derivedCooldown;
-    const inCooldown = deadlineExpired && cooldownUntil && cooldownUntil.getTime() > Date.now();
+    const inCooldown = Boolean(
+      cooldownUntil &&
+        cooldownUntil.getTime() > Date.now() &&
+        (deadlineExpired || registration?.status === "expired")
+    );
     const registrationStatus = registration?.status === "submitted"
       ? "submitted"
       : registration?.status === "registered" && !deadlineExpired

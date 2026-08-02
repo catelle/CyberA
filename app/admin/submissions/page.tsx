@@ -21,7 +21,7 @@ export default async function AdminSubmissionsPage() {
           </div>
         ) : null}
         {submissions.map((submission: any) => (
-          <article className="rounded-lg bg-white p-5 shadow-sm" key={submission.id}>
+          <article className="rounded-lg bg-white p-4 shadow-sm" key={submission.id}>
             <div className="flex flex-col justify-between gap-3 md:flex-row md:items-start">
               <div>
                 <p className="text-sm font-black uppercase text-brand-gold">
@@ -30,7 +30,7 @@ export default async function AdminSubmissionsPage() {
                 <h2 className="mt-2 text-xl font-black text-brand-blue">
                   {submission.challenges?.title ?? "Soumission defi"}
                 </h2>
-                <p className="mt-2 leading-7 text-slate-600">
+                <p className="mt-2 max-h-24 overflow-y-auto leading-7 text-slate-600">
                   {submission.report_text ?? "Aucun rapport."}
                 </p>
                 <p className="mt-2 text-sm font-bold text-slate-500">
@@ -44,10 +44,10 @@ export default async function AdminSubmissionsPage() {
               </span>
             </div>
             {submission.photo_signed_url ? (
-              <figure className="mt-5 overflow-hidden rounded-xl border-2 border-slate-200 bg-slate-50 p-2">
+              <figure className="mt-4 w-full max-w-md overflow-hidden rounded-xl border-2 border-slate-200 bg-slate-50 p-2">
                 <img
                   alt={`Preuve envoyee par ${submission.users?.full_name ?? "l'eleve"}`}
-                  className="max-h-[32rem] w-full rounded-lg object-contain"
+                  className="h-48 w-full rounded-lg object-cover"
                   src={submission.photo_signed_url}
                 />
                 <figcaption className="flex flex-wrap items-center justify-between gap-2 px-2 pb-1 pt-3 text-sm font-bold text-slate-500">
@@ -67,11 +67,20 @@ export default async function AdminSubmissionsPage() {
                 La photo existe, mais son apercu est temporairement indisponible.
               </p>
             ) : null}
-            <AdminReviewActions
-              defaultPoints={submission.challenges?.points ?? 50}
-              id={submission.id}
-              target="submission"
-            />
+            {submission.status === "pending" ? (
+              <AdminReviewActions
+                defaultPoints={submission.challenges?.points ?? 50}
+                id={submission.id}
+                target="submission"
+              />
+            ) : (
+              <div className="mt-4 rounded-lg bg-slate-50 p-3 text-sm font-semibold text-slate-600">
+                <p className="font-black text-brand-ink">
+                  Revision terminee · {submission.status === "approved" ? `${submission.points_awarded ?? 0} XP attribues` : "Nouvelle tentative possible apres 3 jours"}
+                </p>
+                {submission.reviewer_note ? <p className="mt-1">{submission.reviewer_note}</p> : null}
+              </div>
+            )}
           </article>
         ))}
       </section>

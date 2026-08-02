@@ -38,7 +38,7 @@ export function ChallengeRegistrationAction({ challenge }: { challenge: WeeklyCh
     );
   }
   if (challenge.registrationStatus === "cooldown") {
-    return <p className="rounded-lg bg-amber-50 px-4 py-3 text-sm font-black text-amber-900">Inscription fermee jusqu&apos;au {challenge.cooldownUntil ? new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(challenge.cooldownUntil)) : "terme du delai"}</p>;
+    return <p className="rounded-lg bg-amber-50 px-4 py-3 text-sm font-black leading-6 text-amber-900">Cette tentative a ete rejetee. Tu pourras t&apos;inscrire et envoyer une nouvelle version apres le delai de 3 jours, a partir du {challenge.cooldownUntil ? new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(challenge.cooldownUntil)) : "terme du delai"}.</p>;
   }
 
   return (

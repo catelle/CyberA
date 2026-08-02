@@ -48,7 +48,7 @@ export async function POST(request: Request, { params }: ReviewRouteProps) {
       body:
         parsed.data.status === "approved"
           ? `Ta soumission a ete approuvee: ${parsed.data.pointsAwarded} points.`
-          : parsed.data.reviewerNote || "Ta soumission doit etre corrigee.",
+          : `${parsed.data.reviewerNote || "Ta soumission doit etre corrigee."} Tu pourras tenter de nouveau ce defi apres 3 jours.`,
       data: { submission_id: params.id }
     });
   }
