@@ -1332,10 +1332,31 @@ export async function listChallengeSubmissionsWithFallback() {
   const profileByUserId = new Map(
     (profiles ?? []).map((profile) => [profile.user_id, profile])
   );
+  const photoPaths = Array.from(
+    new Set(
+      data
+        .map((submission) => submission.photo_url)
+        .filter((path): path is string => Boolean(path))
+    )
+  );
+  const { data: signedPhotos, error: signedPhotoError } = photoPaths.length > 0
+    ? await supabase.storage.from("challenge-photos").createSignedUrls(photoPaths, 60 * 60)
+    : { data: [], error: null };
+  if (signedPhotoError) {
+    console.error("Unable to sign challenge evidence photos", signedPhotoError);
+  }
+  const signedPhotoByPath = new Map(
+    (signedPhotos ?? [])
+      .filter((photo) => photo.signedUrl)
+      .map((photo) => [photo.path, photo.signedUrl])
+  );
 
   return data.map((submission) => ({
     ...submission,
-    ambassador_profiles: profileByUserId.get(submission.user_id) ?? null
+    ambassador_profiles: profileByUserId.get(submission.user_id) ?? null,
+    photo_signed_url: submission.photo_url
+      ? signedPhotoByPath.get(submission.photo_url) ?? null
+      : null
   }));
 }
 

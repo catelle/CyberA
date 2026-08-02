@@ -43,9 +43,28 @@ export default async function AdminSubmissionsPage() {
                 {submission.status}
               </span>
             </div>
-            {submission.photo_url ? (
-              <p className="mt-3 text-sm font-bold text-brand-blue">
-                Photo: {submission.photo_url}
+            {submission.photo_signed_url ? (
+              <figure className="mt-5 overflow-hidden rounded-xl border-2 border-slate-200 bg-slate-50 p-2">
+                <img
+                  alt={`Preuve envoyee par ${submission.users?.full_name ?? "l'eleve"}`}
+                  className="max-h-[32rem] w-full rounded-lg object-contain"
+                  src={submission.photo_signed_url}
+                />
+                <figcaption className="flex flex-wrap items-center justify-between gap-2 px-2 pb-1 pt-3 text-sm font-bold text-slate-500">
+                  <span>Photo soumise comme preuve</span>
+                  <a
+                    className="text-primary underline-offset-4 hover:underline"
+                    href={submission.photo_signed_url}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    Ouvrir en plein ecran
+                  </a>
+                </figcaption>
+              </figure>
+            ) : submission.photo_url ? (
+              <p className="mt-4 rounded-lg bg-amber-50 p-3 text-sm font-bold text-amber-900">
+                La photo existe, mais son apercu est temporairement indisponible.
               </p>
             ) : null}
             <AdminReviewActions
