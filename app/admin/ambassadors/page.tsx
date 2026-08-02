@@ -1,6 +1,7 @@
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { requireRole } from "@/lib/auth/guards";
 import { listAdminStudents } from "@/lib/db/cybera";
+import { AdminStudentInvitationForm } from "@/components/forms/AdminStudentInvitationForm";
 
 export default async function AdminAmbassadorsPage() {
   const user = await requireRole(["admin"]);
@@ -8,6 +9,8 @@ export default async function AdminAmbassadorsPage() {
 
   return (
     <DashboardShell user={user} title="Eleves">
+      <div className="grid gap-6">
+      <AdminStudentInvitationForm />
       <section className="overflow-hidden rounded-lg bg-white shadow-sm">
         {students.length === 0 ? (
           <p className="p-6 text-center text-sm font-medium text-slate-500">
@@ -47,6 +50,7 @@ export default async function AdminAmbassadorsPage() {
           </div>
         ))}
       </section>
+      </div>
     </DashboardShell>
   );
 }
