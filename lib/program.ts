@@ -1,8 +1,13 @@
+import { moduleOne } from "@/lib/curriculum/module-one";
+
 export type ProgramModuleStatus = "ready" | "next" | "planned";
 
 export type LessonContentBlock = {
-  type: "text" | "tip" | "warning" | "checklist";
+  type: "text" | "tip" | "warning" | "checklist" | "hook" | "story" | "discovery" | "mission" | "reflection" | "ability" | "image";
   content: string | string[];
+  src?: string;
+  alt?: string;
+  caption?: string;
 };
 
 export type ProgramLesson = {
@@ -184,64 +189,7 @@ function lesson(
 }
 
 export const programModules: ProgramModule[] = [
-  {
-    id: "hygiene-numerique",
-    week: 1,
-    title: "Hygiene Numerique",
-    subtitle: "Vie privee, mots de passe et temps d'ecran",
-    summary:
-      "Installer les reflexes de base pour proteger ses comptes, ses donnees et son attention.",
-    color: "#1A5276",
-    icon: "shield",
-    outcomes: ["Regler la confidentialite", "Creer une phrase de passe", "Limiter le partage"],
-    status: "ready",
-    progressPercent: 0,
-    lessons: [
-      lesson("algorithmes", 1, "Comment les algorithmes influencent ce que tu vois", "Un fil d'actualite n'est jamais neutre: il apprend de tes clics.", [
-        "Comparer deux sources avant de croire une information",
-        "Identifier ce qui te pousse a rester connecte",
-        "Choisir une pause numerique realiste"
-      ]),
-      lesson("temps-ecran", 2, "Gerer le temps d'ecran et les habitudes", "La fatigue numerique rend les arnaques plus faciles a rater.", [
-        "Activer un rappel de pause",
-        "Retirer une notification inutile",
-        "Definir une zone sans telephone"
-      ]),
-      lesson("vie-privee", 3, "Proteger ta vie privee", "Une publication anodine peut contenir ton ecole, ton quartier ou tes habitudes.", [
-        "Verifier qui peut voir ton profil",
-        "Utiliser une phrase de passe unique",
-        "Activer la double verification"
-      ]),
-      lesson("surmenage", 4, "Reconnaitre les signaux de surmenage numerique", "Le stress en ligne peut devenir physique: sommeil, humeur, concentration.", [
-        "Nommer un signal personnel",
-        "Prevenir un adulte de confiance",
-        "Remplacer une session par une activite hors ligne"
-      ]),
-      lesson("usage-sain", 5, "Utiliser la technologie de maniere saine", "Un bon outil reste au service de ton objectif, pas l'inverse.", [
-        "Planifier un usage utile",
-        "Bloquer un contenu nuisible",
-        "Aider un ami a regler son compte"
-      ])
-    ],
-    quiz: [
-      {
-        id: "privacy-default",
-        question: "Quel reglage verifier en premier sur un nouveau reseau social ?",
-        options: ["La couleur du profil", "Qui peut voir tes publications", "Le nombre d'abonnes", "Le fond d'ecran"],
-        correctIndex: 1,
-        explanation: "La visibilite des publications limite l'exposition de tes donnees personnelles.",
-        points: 10
-      },
-      {
-        id: "password",
-        question: "Quelle option est la plus sure ?",
-        options: ["Le meme mot de passe partout", "Une phrase de passe unique", "Ta date de naissance", "Le nom de ton ecole"],
-        correctIndex: 1,
-        explanation: "Une phrase longue et unique resiste mieux aux devinettes et aux fuites.",
-        points: 10
-      }
-    ]
-  },
+  moduleOne,
   {
     id: "e-reputation-desinformation",
     week: 2,

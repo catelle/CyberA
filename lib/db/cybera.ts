@@ -752,11 +752,25 @@ function normalizeContentBlocks(content: unknown): LessonContentBlock[] {
       return;
     }
 
-    if (
-      (type === "text" || type === "tip" || type === "warning") &&
-      typeof value === "string"
-    ) {
-      normalized.push({ type, content: value });
+    const textTypes = ["text", "tip", "warning", "hook", "story", "discovery", "reflection", "ability"];
+    if (typeof type === "string" && textTypes.includes(type) && typeof value === "string") {
+      normalized.push({ type: type as LessonContentBlock["type"], content: value });
+      return;
+    }
+
+    if (type === "mission" && Array.isArray(value)) {
+      normalized.push({ type, content: value.filter((item): item is string => typeof item === "string") });
+      return;
+    }
+
+    if (type === "image" && typeof value === "string" && "src" in block && typeof block.src === "string") {
+      normalized.push({
+        type,
+        content: value,
+        src: block.src,
+        alt: "alt" in block && typeof block.alt === "string" ? block.alt : value,
+        caption: "caption" in block && typeof block.caption === "string" ? block.caption : undefined
+      });
     }
   });
 
@@ -872,7 +886,11 @@ export async function listProgramModulesForStudent(
   const supabase = createSupabaseAdminClient();
   const databaseCurriculum = await loadPublishedDatabaseCurriculum();
   const baseModules = databaseCurriculum.cmsInitialized
-    ? databaseCurriculum.modules.map(databaseModuleToProgramModule)
+    ? databaseCurriculum.modules.map((databaseModule) => {
+        const converted = databaseModuleToProgramModule(databaseModule);
+        const curated = programModules.find((module) => module.week === converted.week);
+        return converted.week === 1 && curated ? { ...curated, id: converted.id } : converted;
+      })
     : programModules;
   const [
     { data, error },
@@ -954,7 +972,10 @@ export async function getPublishedProgramModuleById(moduleId: string) {
   const selectedModule = databaseCurriculum.modules.find(
     (item) => item.id === moduleId
   );
-  return selectedModule ? databaseModuleToProgramModule(selectedModule) : null;
+  if (!selectedModule) return null;
+  const converted = databaseModuleToProgramModule(selectedModule);
+  const curated = programModules.find((module) => module.week === converted.week);
+  return converted.week === 1 && curated ? { ...curated, id: converted.id } : converted;
 }
 
 export async function listCompletedLessonIdsForStudent(

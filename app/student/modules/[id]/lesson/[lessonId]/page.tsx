@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ArrowRight, CheckCircle2, ShieldAlert, Sparkles } from "lucide-react";
 
@@ -44,12 +45,20 @@ export default async function LessonPage({ params }: LessonPageProps) {
 
         <div className="grid gap-4">
           {lesson.content.map((block, index) => {
-            if (block.type === "checklist" && Array.isArray(block.content)) {
+            if (block.type === "image" && block.src) {
               return (
-                <ul
-                  className="grid gap-3 rounded-lg border-2 border-secondary bg-[#d9fbe8] p-4 shadow-[0_4px_0_0_rgba(88,96,98,1)]"
-                  key={index}
-                >
+                <figure className="overflow-hidden rounded-xl border-2 border-secondary bg-slate-950 shadow-[0_4px_0_0_rgba(88,96,98,1)]" key={index}>
+                  <Image alt={block.alt ?? String(block.content)} className="h-auto w-full object-cover" height={941} priority={index < 3} sizes="(max-width: 1024px) 100vw, 1050px" src={block.src} width={1672} />
+                  {block.caption ? <figcaption className="bg-brand-ink px-4 py-3 text-sm font-bold text-white/80">{block.caption}</figcaption> : null}
+                </figure>
+              );
+            }
+
+            if ((block.type === "checklist" || block.type === "mission") && Array.isArray(block.content)) {
+              return (
+                <section className={block.type === "mission" ? "rounded-lg border-2 border-secondary bg-[#fff4c2] p-4 shadow-[0_4px_0_0_rgba(88,96,98,1)]" : "rounded-lg border-2 border-secondary bg-[#d9fbe8] p-4 shadow-[0_4px_0_0_rgba(88,96,98,1)]"} key={index}>
+                  {block.type === "mission" ? <h3 className="mb-3 font-display text-lg font-black text-amber-950">Mission d&apos;investigation</h3> : null}
+                <ul className="grid gap-3">
                   {block.content.map((item) => (
                     <li
                       className="grid grid-cols-[auto_1fr] gap-2 text-sm font-extrabold leading-6 text-slate-700"
@@ -63,6 +72,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
                     </li>
                   ))}
                 </ul>
+                </section>
               );
             }
 
@@ -73,6 +83,16 @@ export default async function LessonPage({ params }: LessonPageProps) {
                     ? "grid grid-cols-[auto_1fr] gap-3 rounded-lg border-2 border-secondary bg-red-50 p-4 font-bold leading-7 text-red-800 shadow-[0_4px_0_0_rgba(88,96,98,1)]"
                     : block.type === "tip"
                       ? "grid grid-cols-[auto_1fr] gap-3 rounded-lg border-2 border-secondary bg-tertiary-fixed p-4 font-bold leading-7 text-tertiary shadow-[0_4px_0_0_rgba(88,96,98,1)]"
+                      : block.type === "hook"
+                        ? "rounded-xl border-2 border-secondary bg-brand-blue p-5 font-display text-xl font-black leading-8 text-white shadow-[0_4px_0_0_rgba(88,96,98,1)] sm:text-2xl"
+                        : block.type === "story"
+                          ? "rounded-lg border-l-4 border-primary bg-rose-50 p-5 font-semibold leading-8 text-slate-700"
+                          : block.type === "discovery"
+                            ? "rounded-lg bg-surface-container-low p-5 font-semibold leading-8 text-slate-700"
+                            : block.type === "reflection"
+                              ? "rounded-lg border-2 border-tertiary bg-cyan-50 p-5 font-black leading-8 text-brand-blue"
+                              : block.type === "ability"
+                                ? "rounded-full border-2 border-secondary bg-primary-fixed px-5 py-4 text-center font-black text-primary shadow-[0_3px_0_0_rgba(88,96,98,1)]"
                       : "rounded-lg bg-surface-container-low p-4 font-semibold leading-7 text-slate-700"
                 }
                 key={index}
