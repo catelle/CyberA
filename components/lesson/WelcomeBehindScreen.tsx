@@ -238,7 +238,7 @@ export function WelcomeBehindScreen({
     <article className="cyber-lesson cyber-lesson-light overflow-hidden rounded-[1.75rem] border-2 border-[#586062] bg-slate-50 text-brand-ink shadow-[0_8px_0_0_rgba(88,96,98,1)]">
       <SoundToggleButton />
       {toast ? <MascotToast message={toast.message} mood={toast.mood} /> : null}
-      <header className="border-b border-white/10 bg-slate-950/90 px-4 py-4 sm:px-7">
+      <header className="lesson-investigation-header border-b border-primary/20 bg-primary px-4 py-4 sm:px-7">
         <div className="flex items-center gap-3">
           <Link
             aria-label="Retour au module"
@@ -256,10 +256,10 @@ export function WelcomeBehindScreen({
             </div>
             <div
               aria-label={`Progression ${Math.round(progress)} %`}
-              className="h-2 overflow-hidden rounded-full bg-white/10"
+                className="h-2 overflow-hidden rounded-full bg-black/20"
             >
               <div
-                className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-violet-500 transition-all duration-500"
+                className="h-full rounded-full bg-white transition-all duration-500"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -341,7 +341,7 @@ export function WelcomeBehindScreen({
                   Il a forcément communiqué. Mais avec qui ? Et par quel chemin invisible ?
                 </p>
               </div>
-              <div className="mt-7 rounded-2xl border border-cyan-300/25 bg-cyan-300/10 p-4 font-black text-cyan-100">
+              <div className="lesson-key-evidence mt-7 rounded-2xl border border-primary bg-rose-50 p-4 font-black text-primary">
                 Aujourd'hui, tu passes derrière l'écran.
               </div>
             </div>
@@ -802,20 +802,20 @@ export function WelcomeBehindScreen({
         </> : null}
       </div>
 
-      <footer className="flex items-center justify-between gap-3 border-t border-white/10 bg-slate-950/90 px-4 py-4 sm:px-7">
+      <footer className="lesson-investigation-footer flex items-center justify-between gap-3 border-t border-slate-200 bg-white px-4 py-4 sm:px-7">
         <button
-          className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/15 px-4 font-black text-white/75 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-30"
+          className="inline-flex min-h-11 items-center gap-2 rounded-xl border-2 border-slate-300 px-4 font-black text-slate-700 transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-30"
           disabled={step === 0}
           onClick={() => setStep((value) => Math.max(0, value - 1))}
           type="button"
         >
           <ArrowLeft className="h-4 w-4" /> Retour
         </button>
-        <span className="hidden text-sm font-bold text-white/40 sm:block">
+        <span className="hidden text-sm font-bold text-slate-500 sm:block">
           {title}
         </span>
         <button
-          className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-5 font-black text-slate-950 transition hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-30"
+          className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary px-5 font-black text-white shadow-[0_4px_0_#7f1d36] transition hover:bg-[#a80f39] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600 disabled:shadow-none disabled:opacity-100"
           disabled={step === total - 1 || checkpointBlocked || isPillarBriefing || sceneRemainingSeconds > 0}
           onClick={() => {
             if (currentPillar && step === currentPillar.end) celebrate(currentPillar.unlocked);
@@ -866,6 +866,9 @@ function SceneImage({ alt, src }: { alt: string; src: string }) {
         sizes="(max-width: 1024px) 100vw, 50vw"
         src={src}
       />
+      <figcaption className="absolute bottom-4 left-4 rounded-full border border-white/40 bg-slate-950/80 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur">
+        Indice visuel · observe la scène
+      </figcaption>
     </figure>
   );
 }

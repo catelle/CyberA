@@ -94,10 +94,25 @@
   margin: 1.5rem auto;
   width: min(calc(100% - 2rem), 64rem);
   min-height: auto;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #fecdd3;
   border-radius: 1rem;
   background: #fff;
   box-shadow: 0 4px 0 #cbd5e1;
+}
+.cyber-lesson-light .lesson-scene > section:not(.lesson-opening-scene):not([class*="place-items-center"]) {
+  position: relative;
+  padding: clamp(1.25rem, 3vw, 2.5rem);
+}
+.cyber-lesson-light .lesson-scene > section:not(.lesson-opening-scene):not([class*="place-items-center"])::before {
+  content: "RAPPORT D'OBSERVATION";
+  display: block;
+  grid-column: 1 / -1;
+  width: max-content;
+  margin-bottom: .75rem;
+  color: #b5123f;
+  font-size: .68rem;
+  font-weight: 900;
+  letter-spacing: .16em;
 }
 .cyber-lesson-light .lesson-scene .text-white { color: #172033 !important; }
 .cyber-lesson-light .lesson-scene .text-white\/75,
@@ -108,11 +123,57 @@
 .cyber-lesson-light .lesson-scene .text-white\/55,
 .cyber-lesson-light .lesson-scene .text-white\/45 { color: #64748b !important; }
 .cyber-lesson-light .lesson-image { aspect-ratio: 16 / 6; border-color: #e2e8f0; border-radius: 1rem; animation: none; box-shadow: 0 10px 28px rgb(15 23 42 / .12); }
+.cyber-lesson-light .lesson-scene > section.grid .lesson-image {
+  grid-column: 1 / -1;
+  width: 100%;
+  order: -1;
+}
+.cyber-lesson-light .lesson-scene > section.grid > :not(.lesson-image) {
+  grid-column: 1 / -1;
+}
 .cyber-lesson-light .lesson-scene .bg-white\/5,
 .cyber-lesson-light .lesson-scene .bg-slate-950\/30,
 .cyber-lesson-light .lesson-scene .bg-slate-950\/35 { background: #fff !important; }
 .cyber-lesson-light .lesson-scene .border-white\/10,
 .cyber-lesson-light .lesson-scene .border-white\/15 { border-color: #cbd5e1 !important; }
+.cyber-lesson-light .lesson-key-evidence {
+  background: #fff1f2 !important;
+  border-color: #e11d48 !important;
+  color: #9f1239 !important;
+}
+.cyber-lesson-light .lesson-investigation-header .text-cyan-300,
+.cyber-lesson-light .lesson-investigation-header a { color: #fff !important; }
+.cyber-lesson-light .lesson-investigation-footer button:not(:disabled):last-child { color: #fff !important; }
+
+/* Reusable cards echo the investigation/evidence hierarchy used by the other lessons. */
+.cyber-lesson-light .lesson-scene .bg-cyan-300\/10,
+.cyber-lesson-light .lesson-scene .bg-violet-300\/10 {
+  background: #fff1f2 !important;
+  border-color: #fecdd3 !important;
+}
+.cyber-lesson-light .lesson-scene .bg-cyan-300\/10 .text-cyan-100,
+.cyber-lesson-light .lesson-scene .bg-cyan-300\/10 .text-cyan-50,
+.cyber-lesson-light .lesson-scene .bg-violet-300\/10 .text-violet-200 {
+  color: #9f1239 !important;
+}
+.cyber-lesson-light .lesson-scene .bg-\[\#100f12\] {
+  background: #151221 !important;
+  border-color: #fbbf24 !important;
+  color: #fff !important;
+}
+.cyber-lesson-light .lesson-scene .bg-\[\#100f12\] .text-white,
+.cyber-lesson-light .lesson-scene .bg-\[\#100f12\] .text-white\/65,
+.cyber-lesson-light .lesson-scene .bg-\[\#100f12\] .text-white\/55 {
+  color: #fff !important;
+}
+
+@media (max-width: 640px) {
+  .cyber-lesson-light .lesson-scene > section:not(.lesson-opening-scene) {
+    width: calc(100% - 1rem);
+    margin-block: .75rem;
+  }
+  .cyber-lesson-light .lesson-image { aspect-ratio: 16 / 8; }
+}
 
 .signal-track::before {
   content: "";
