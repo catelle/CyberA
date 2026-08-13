@@ -7,12 +7,12 @@ export async function GET(request: NextRequest) {
   const type = request.nextUrl.searchParams.get("type");
   const requestedNext = request.nextUrl.searchParams.get("next");
   const next = requestedNext?.startsWith("/") && !requestedNext.startsWith("//") ? requestedNext : "/auth/set-password";
-  if (!tokenHash || type !== "invite") {
+  if (!tokenHash || (type !== "invite" && type !== "recovery")) {
     return NextResponse.redirect(new URL("/login?error=invalid_invitation", request.url));
   }
 
   const supabase = createSupabaseServerClient();
-  const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: "invite" });
+  const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
   if (error) {
     return NextResponse.redirect(new URL("/login?error=expired_invitation", request.url));
   }

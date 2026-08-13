@@ -35,6 +35,12 @@ export function SetInvitedPasswordForm() {
       setIsSubmitting(false);
       return;
     }
+    const confirmationResponse = await fetch("/api/auth/password-configured", { method: "POST" });
+    if (!confirmationResponse.ok) {
+      setStatus("Le mot de passe a été enregistré, mais la finalisation a échoué. Réessaie.");
+      setIsSubmitting(false);
+      return;
+    }
     await supabase.auth.signOut();
     router.replace("/login?password_configured=1");
     router.refresh();

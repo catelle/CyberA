@@ -9,6 +9,19 @@ import {
 } from "@/lib/program";
 import { lessonQuizBanks } from "@/lib/curriculum/lesson-quiz-banks";
 
+async function listTestAuthUserIds() {
+  const supabase = createSupabaseAdminClient();
+  const ids = new Set<string>();
+  for (let page = 1; ; page += 1) {
+    const { data, error } = await supabase.auth.admin.listUsers({ page, perPage: 100 });
+    if (error) return ids;
+    data.users.forEach((user) => {
+      if (user.app_metadata?.is_test === true) ids.add(user.id);
+    });
+    if (data.users.length < 100) return ids;
+  }
+}
+
 export type ModuleRow = {
   id: string;
   order_index: number;
@@ -411,6 +424,7 @@ export async function getAdminStudentActivityDetail(
 
 export async function listAdminStudents() {
   const supabase = createSupabaseAdminClient();
+  const testUserIds = await listTestAuthUserIds();
   const [{ data, error }, { data: progress }, { count: publishedModuleCount }, verifiedXp] = await Promise.all([
     supabase
       .from("users")
@@ -441,7 +455,7 @@ export async function listAdminStudents() {
     scoresByStudent.set(row.user_id, scores);
   });
 
-  return data.map((student: any) => {
+  return data.filter((student: any) => !testUserIds.has(student.id)).map((student: any) => {
     const profile = joinedValue(student.ambassador_profiles) as {
       level?: string | null;
       total_points?: number | null;
@@ -470,8 +484,9 @@ export async function listAdminStudents() {
 
 export async function getSupabaseUserRoleCounts() {
   const supabase = createSupabaseAdminClient();
+  const testUserIds = await listTestAuthUserIds();
   const [students, parents, admins, consented] = await Promise.all([
-    supabase.from("users").select("id", { count: "exact", head: true }).eq("role", "ambassador"),
+    supabase.from("users").select("id").eq("role", "ambassador"),
     supabase.from("users").select("id", { count: "exact", head: true }).eq("role", "parent"),
     supabase.from("users").select("id", { count: "exact", head: true }).eq("role", "admin"),
     supabase
@@ -481,7 +496,7 @@ export async function getSupabaseUserRoleCounts() {
   ]);
 
   return {
-    students: students.count ?? 0,
+    students: (students.data ?? []).filter((row) => !testUserIds.has(row.id)).length,
     parents: parents.count ?? 0,
     admins: admins.count ?? 0,
     consented: consented.count ?? 0
@@ -695,16 +710,18 @@ export async function getStudentStatusSummary(userId: string) {
 
 export async function listCohortsFromDatabase() {
   const supabase = createSupabaseAdminClient();
+  const testUserIds = await listTestAuthUserIds();
   const [{ data: cohorts }, { data: profiles }] = await Promise.all([
     supabase
       .from("cohorts")
       .select("id, name, type, start_date, max_size, is_active")
       .order("start_date", { ascending: false }),
-    supabase.from("ambassador_profiles").select("cohort_id")
+    supabase.from("ambassador_profiles").select("user_id, cohort_id")
   ]);
   const enrollment = new Map<string, number>();
 
-  (profiles ?? []).forEach((profile: { cohort_id: string | null }) => {
+  (profiles ?? []).forEach((profile: { user_id: string; cohort_id: string | null }) => {
+    if (testUserIds.has(profile.user_id)) return;
     if (!profile.cohort_id) return;
     enrollment.set(profile.cohort_id, (enrollment.get(profile.cohort_id) ?? 0) + 1);
   });
@@ -1631,6 +1648,7 @@ export async function listParentReportsForUser(parentId: string) {
 
 export async function listLeaderboard(currentUserId?: string) {
   const supabase = createSupabaseAdminClient();
+  const testUserIds = await listTestAuthUserIds();
   const sevenDaysAgoIso = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const [
     { data, error },
@@ -1667,6 +1685,7 @@ export async function listLeaderboard(currentUserId?: string) {
   const moduleCount = publishedModuleCount ?? 0;
 
   return data
+    .filter((entry: any) => !testUserIds.has(entry.user_id))
     .map((entry: any) => {
       const scores = scoresByStudent.get(entry.user_id) ?? [];
       const performanceScore = moduleCount > 0
