@@ -135,6 +135,18 @@
 .cyber-lesson-light .lesson-scene .bg-white\/5,
 .cyber-lesson-light .lesson-scene .bg-slate-950\/30,
 .cyber-lesson-light .lesson-scene .bg-slate-950\/35 { background: #fff !important; }
+.cyber-lesson-light .lesson-scene .bg-white\/5 {
+  color: #172033 !important;
+}
+.cyber-lesson-light .lesson-scene .bg-white\/5 .text-white,
+.cyber-lesson-light .lesson-scene .bg-white\/5 .text-white\/75,
+.cyber-lesson-light .lesson-scene .bg-white\/5 .text-white\/70,
+.cyber-lesson-light .lesson-scene .bg-white\/5 .text-white\/65,
+.cyber-lesson-light .lesson-scene .bg-white\/5 .text-white\/60,
+.cyber-lesson-light .lesson-scene .bg-white\/5 .text-white\/55,
+.cyber-lesson-light .lesson-scene .bg-white\/5 .text-white\/50 {
+  color: #475569 !important;
+}
 .cyber-lesson-light .lesson-scene .border-white\/10,
 .cyber-lesson-light .lesson-scene .border-white\/15 { border-color: #cbd5e1 !important; }
 .cyber-lesson-light .lesson-key-evidence {
@@ -157,6 +169,12 @@
 .cyber-lesson-light .lesson-scene .bg-violet-300\/10 .text-violet-200 {
   color: #9f1239 !important;
 }
+.cyber-lesson-light .lesson-scene .text-rose-300,
+.cyber-lesson-light .lesson-scene .text-rose-200,
+.cyber-lesson-light .lesson-scene .text-emerald-200,
+.cyber-lesson-light .lesson-scene .text-emerald-100 {
+  color: #9f1239 !important;
+}
 .cyber-lesson-light .lesson-scene .bg-\[\#100f12\] {
   background: #151221 !important;
   border-color: #fbbf24 !important;
@@ -167,12 +185,48 @@
 .cyber-lesson-light .lesson-scene .bg-\[\#100f12\] .text-white\/55 {
   color: #fff !important;
 }
+.cyber-lesson-light .lesson-scene .bg-\[\#100f12\] .deep-scene-item {
+  background: #fff !important;
+  border-color: #cbd5e1 !important;
+  color: #172033 !important;
+}
+.cyber-lesson-light .lesson-scene .bg-cyan-300\/10,
+.cyber-lesson-light .lesson-scene .bg-violet-300\/10,
+.cyber-lesson-light .lesson-scene .bg-rose-300\/10,
+.cyber-lesson-light .lesson-scene .bg-amber-200\/10 {
+  color: #172033 !important;
+}
+.cyber-lesson-light .lesson-scene textarea {
+  background: #fff !important;
+  border-color: #cbd5e1 !important;
+  color: #172033 !important;
+}
+.cyber-lesson-light .lesson-scene textarea::placeholder {
+  color: #64748b !important;
+  opacity: 1;
+}
+
+/* Keep the learning space usable on tablets and narrow laptop/PWA windows. */
+@media (max-width: 1180px) {
+  .dashboard-layout { display: block !important; }
+  .dashboard-sidebar { display: none !important; }
+  .dashboard-content { padding-inline: clamp(.5rem, 2vw, 1rem) !important; }
+  .dashboard-mobile-nav { display: grid !important; }
+  .cyber-lesson { border-radius: 1rem; }
+}
 
 @media (max-width: 640px) {
+  .cyber-lesson-light .lesson-investigation-header,
+  .cyber-lesson-light .lesson-investigation-footer { padding-inline: .75rem; }
   .cyber-lesson-light .lesson-scene > section:not(.lesson-opening-scene) {
-    width: calc(100% - 1rem);
+    width: calc(100% - .5rem);
     margin-block: .75rem;
   }
+  .cyber-lesson-light .lesson-scene > section:not(.lesson-opening-scene):not([class*="place-items-center"]) {
+    padding: 1rem;
+  }
+  .cyber-lesson-light .scene-title { font-size: 1.75rem; }
+  .cyber-lesson-light .lesson-investigation-footer > span { display: none; }
   .cyber-lesson-light .lesson-image { aspect-ratio: 16 / 8; }
 }
 

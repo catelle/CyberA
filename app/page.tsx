@@ -69,12 +69,12 @@ export default function HomePage() {
         />
         <div className="absolute inset-0 bg-gradient-to-b from-brand-ink/85 via-brand-ink/60 to-brand-ink/85" />
         <div className="relative z-10 mx-auto flex min-h-[92vh] max-w-7xl flex-col px-5 py-6">
-          <header className="flex items-center justify-between gap-4 rounded-xl border-2 border-white/70 bg-white/95 px-3 py-3 text-on-surface shadow-[0_4px_0_0_rgba(88,96,98,1)]">
+          <header className="flex min-w-0 items-center justify-between gap-2 rounded-xl border-2 border-white/70 bg-white/95 px-3 py-3 text-on-surface shadow-[0_4px_0_0_rgba(88,96,98,1)] sm:gap-4">
             <Link className="flex items-center gap-3 font-black" href="/">
               <span className="flex h-10 w-10 items-center justify-center rounded-lg border-2 border-secondary bg-primary-container text-lg font-black text-white">
                 C
               </span>
-              <span className="font-display uppercase text-primary">Cyberambassadeurs</span>
+              <span className="min-w-0 truncate font-display text-sm uppercase text-primary sm:text-base">Cyberambassadeurs</span>
             </Link>
             <nav className="flex items-center gap-3 text-sm font-bold">
               <Link className="hidden text-secondary hover:text-primary sm:inline" href="#programme">
@@ -94,7 +94,7 @@ export default function HomePage() {
               <p className="mb-4 inline-flex rounded-full border-2 border-secondary bg-primary-fixed px-4 py-2 text-sm font-black uppercase text-primary shadow-[0_2px_0_0_rgba(88,96,98,1)]">
                 Formation certifiante en 4 modules
               </p>
-              <h1 className="font-display text-4xl font-black leading-tight sm:text-6xl">
+              <h1 className="break-words font-display text-4xl font-black leading-tight sm:text-6xl">
                 Former les Cyberambassadeurs qui changent leur communaute
               </h1>
               <p className="mt-6 max-w-2xl text-lg font-semibold leading-8 text-white/90">
@@ -113,7 +113,7 @@ export default function HomePage() {
                 hebdomadaires avec preuves, un systeme de points, un classement mensuel,
                 des recompenses et un badge officiel verifiable.
               </p>
-              <div className="mt-8 flex flex-wrap gap-3">
+              <div className="mt-8 grid gap-3 sm:flex sm:flex-wrap">
                 <Link
                   className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-primary px-5 py-3 font-black text-white transition hover:bg-primary-container"
                   href="/register/student"

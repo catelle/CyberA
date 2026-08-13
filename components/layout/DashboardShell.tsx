@@ -92,8 +92,8 @@ export function DashboardShell({ user, title, children }: DashboardShellProps) {
           : "min-h-screen bg-background pb-24 font-body-md text-on-background lg:pb-0"
       }
     >
-      <div className="flex min-h-screen flex-col lg:flex-row">
-        <aside className={`${user.role === "admin" ? "" : "hidden lg:block"} border-b border-slate-200 bg-white/95 px-3 py-3 text-on-surface backdrop-blur sm:px-4 lg:sticky lg:top-0 lg:h-screen lg:w-64 lg:border-b-0 lg:border-r lg:px-5 lg:py-6`}>
+      <div className="dashboard-layout flex min-h-screen flex-col lg:flex-row">
+        <aside className={`dashboard-sidebar ${user.role === "admin" ? "" : "hidden lg:block"} border-b border-slate-200 bg-white/95 px-3 py-3 text-on-surface backdrop-blur sm:px-4 lg:sticky lg:top-0 lg:h-screen lg:w-64 lg:border-b-0 lg:border-r lg:px-5 lg:py-6`}>
           <div className="flex items-center justify-between gap-4 lg:block">
             <div className="flex min-w-0 items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary font-display text-lg font-black text-white shadow-[0_8px_20px_rgba(181,18,63,0.2)]">
@@ -146,7 +146,7 @@ export function DashboardShell({ user, title, children }: DashboardShellProps) {
           </div>
         </aside>
 
-        <section className="min-w-0 flex-1 px-3 py-4 sm:px-6 lg:px-9 lg:py-7">
+        <section className="dashboard-content min-w-0 flex-1 px-3 py-4 sm:px-6 lg:px-9 lg:py-7">
           <div className="mx-auto w-full max-w-6xl">
             <header className="mb-6 grid grid-cols-[1fr_auto] items-start gap-4 border-b border-slate-200 pb-5 lg:mb-8 lg:items-center">
               <div className="min-w-0">
@@ -210,7 +210,7 @@ export function DashboardShell({ user, title, children }: DashboardShellProps) {
       {isStudent ? <RewardPopup userId={user.supabaseUserId} /> : null}
 
       {user.role !== "admin" ? (
-        <nav className="fixed inset-x-3 bottom-3 z-40 grid grid-cols-5 rounded-2xl border border-slate-200 bg-white/95 p-1.5 shadow-[0_14px_36px_rgba(15,23,42,0.16)] backdrop-blur lg:hidden">
+        <nav className="dashboard-mobile-nav fixed inset-x-3 bottom-3 z-40 grid grid-cols-5 rounded-2xl border border-slate-200 bg-white/95 p-1.5 shadow-[0_14px_36px_rgba(15,23,42,0.16)] backdrop-blur lg:hidden">
           {mobileNavItems.map(({ Icon, ...item }) => (
             <Link
               className="flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-1 text-center text-[0.68rem] font-bold leading-tight text-slate-600 transition hover:bg-primary-fixed hover:text-primary"
