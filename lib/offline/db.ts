@@ -149,10 +149,6 @@ export async function saveLessonProgress({
     new Set([...(previous?.lessonsRead ?? []), lessonId])
   );
 
-  if (previous?.lessonsRead.includes(lessonId)) {
-    return false;
-  }
-
   await saveModuleProgress(
     {
       progressVersion: 3,
@@ -172,7 +168,7 @@ export async function saveLessonProgress({
     "lesson_complete"
   );
 
-  return true;
+  return !previous?.lessonsRead.includes(lessonId);
 }
 
 export async function saveQuizProgress(progress: LocalProgress) {

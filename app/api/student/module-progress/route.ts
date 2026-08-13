@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { requireApiRole, jsonError } from "@/lib/api/authz";
 import { createSupabaseAdminClient } from "@/lib/auth/supabase-server";
-import { getModuleById } from "@/lib/program";
+import { getModuleById, programModules } from "@/lib/program";
 import { getLessonQuizBank } from "@/lib/curriculum/lesson-quiz-banks";
 
 const moduleProgressSchema = z.object({
@@ -119,7 +119,11 @@ async function resolveDatabaseModuleId(
 
   if (!staticModule) {
     const [{ data: module }, { data: questions }, { data: lessons }] = await Promise.all([
-      supabase.from("modules").select("id").eq("id", moduleId).maybeSingle<{ id: string }>(),
+      supabase
+        .from("modules")
+        .select("id, order_index")
+        .eq("id", moduleId)
+        .maybeSingle<{ id: string; order_index: number }>(),
       supabase
         .from("quiz_questions")
         .select("id, correct_index, points")
@@ -127,8 +131,31 @@ async function resolveDatabaseModuleId(
       supabase.from("lessons").select("id").eq("module_id", moduleId)
     ]);
 
-    return module
-      ? {
+    if (!module) return null;
+
+    // Published modules use database UUIDs, while the curated learning spaces
+    // use stable lesson/question IDs. Keep those IDs aligned with what the
+    // browser submits; otherwise a genuinely passed lesson is filtered out as
+    // unknown and the module appears stuck at 0%.
+    const curatedModule = programModules.find(
+      (candidate) => candidate.week === module.order_index
+    );
+    if (curatedModule) {
+      return {
+        id: module.id,
+        lessonIds: curatedModule.lessons.map((lesson) => lesson.id),
+        lessonCorrectAnswers: Object.fromEntries(
+          curatedModule.lessons.map((lesson) => [lesson.id, lesson.quiz.correctIndex])
+        ),
+        questions: curatedModule.quiz.map((question) => ({
+          id: question.id,
+          correctIndex: question.correctIndex,
+          points: Math.max(question.points, 0)
+        }))
+      };
+    }
+
+    return {
           id: module.id,
           lessonIds: (lessons ?? []).map((lesson) => lesson.id),
           lessonCorrectAnswers: Object.fromEntries(
@@ -139,8 +166,7 @@ async function resolveDatabaseModuleId(
             correctIndex: question.correct_index,
             points: Math.max(question.points ?? 0, 0)
           }))
-        }
-      : null;
+        };
   }
 
   const { data } = await supabase
