@@ -100,11 +100,12 @@ export default async function ProfilePage() {
           ) : (
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {profileStats.badges.map((badge) => (
-                <article className="flex flex-col items-center rounded-2xl bg-brand-rose p-4 text-center" key={badge.id}>
-                  <img alt={badge.name} className="aspect-square w-full max-w-44 rounded-full object-contain drop-shadow-lg" src={`/api/student/badges/${badge.id}/download?inline=1`} />
+                <article className="flex flex-col items-center rounded-2xl border border-primary/15 bg-white p-4 text-center" key={badge.id}>
+                  <img alt={`${badge.name} — ${badge.focus}`} className="aspect-square w-full max-w-44 rounded-full object-contain" src={`/api/student/badges/${badge.id}/download?inline=1`} />
+                  <p className="mt-3 text-sm font-black text-brand-ink">{badge.focus}</p>
                   <a className="mt-3 inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-primary/20 bg-white px-4 text-sm font-black text-primary" href={`/api/student/badges/${badge.id}/download`}>
                     <Download aria-hidden className="h-4 w-4" />
-                    Telecharger PNG
+                    Télécharger PNG
                   </a>
                 </article>
               ))}

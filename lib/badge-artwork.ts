@@ -1,80 +1,115 @@
+import { createReadStream } from "fs";
+import { join } from "path";
 import * as PImage from "pureimage";
 import { PassThrough } from "stream";
 
-function circle(ctx: PImage.Context, x: number, y: number, radius: number, color: string) {
+const BRAND_RED = "#BD0F43";
+const BRAND_PINK = "#F7C8D4";
+const BRAND_INK = "#111827";
+const BRAND_MUTED = "#667085";
+
+const regularFont = PImage.registerFont(
+  "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+  "CyberA Regular"
+);
+const boldFont = PImage.registerFont(
+  "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+  "CyberA Bold"
+);
+regularFont.loadSync();
+boldFont.loadSync();
+
+function circle(
+  ctx: PImage.Context,
+  x: number,
+  y: number,
+  radius: number,
+  color: string
+) {
   ctx.beginPath();
   ctx.arc(x, y, radius, 0, Math.PI * 2);
   ctx.fillStyle = color;
   ctx.fill();
 }
 
-function star(ctx: PImage.Context, x: number, y: number, outer: number, inner: number) {
-  ctx.beginPath();
-  for (let point = 0; point < 10; point += 1) {
-    const radius = point % 2 === 0 ? outer : inner;
-    const angle = -Math.PI / 2 + (point * Math.PI) / 5;
-    const px = x + Math.cos(angle) * radius;
-    const py = y + Math.sin(angle) * radius;
-    if (point === 0) ctx.moveTo(px, py);
-    else ctx.lineTo(px, py);
-  }
-  ctx.closePath();
-  ctx.fillStyle = "#FFCC32";
-  ctx.fill();
-  ctx.strokeStyle = "#FFFFFF";
-  ctx.lineWidth = 13;
-  ctx.stroke();
+function centeredText(
+  ctx: PImage.Context,
+  text: string,
+  y: number,
+  size: number,
+  color: string,
+  family = "CyberA Bold"
+) {
+  ctx.font = `${size}px '${family}'`;
+  ctx.fillStyle = color;
+  ctx.textAlign = "center";
+  ctx.fillText(text, 400, y);
 }
 
-export async function createBadgePng() {
+function wrapText(ctx: PImage.Context, text: string, maxWidth: number) {
+  const words = text.trim().split(/\s+/);
+  const lines: string[] = [];
+  let current = "";
+
+  for (const word of words) {
+    const candidate = current ? `${current} ${word}` : word;
+    if (ctx.measureText(candidate).width <= maxWidth || !current) {
+      current = candidate;
+    } else {
+      lines.push(current);
+      current = word;
+    }
+  }
+  if (current) lines.push(current);
+  return lines;
+}
+
+export async function createBadgePng({
+  badgeName,
+  moduleTitle
+}: {
+  badgeName: string;
+  moduleTitle: string;
+}) {
   const image = PImage.make(800, 800);
   const ctx = image.getContext("2d");
 
-  circle(ctx, 400, 400, 354, "#B5123F");
-  circle(ctx, 400, 400, 325, "#E11D48");
-  circle(ctx, 400, 400, 288, "#FFF1F2");
-  circle(ctx, 400, 400, 263, "#FFFFFF");
+  // Minimal round badge: white remains dominant, with restrained brand accents.
+  circle(ctx, 400, 400, 382, BRAND_RED);
+  circle(ctx, 400, 400, 366, "#FFFFFF");
+  circle(ctx, 400, 400, 346, "#FFF8FA");
 
-  ctx.strokeStyle = "#B7EAFF";
-  ctx.lineWidth = 12;
-  ctx.beginPath();
-  ctx.arc(400, 400, 246, 0, Math.PI * 2);
-  ctx.stroke();
+  centeredText(ctx, "SYKOTI · CYBERA", 92, 25, BRAND_RED);
+  centeredText(ctx, "MODULE VALIDÉ", 132, 18, BRAND_MUTED, "CyberA Regular");
 
-  ctx.beginPath();
-  ctx.moveTo(400, 176);
-  ctx.lineTo(548, 232);
-  ctx.lineTo(548, 362);
-  ctx.bezierCurveTo(548, 487, 486, 574, 400, 620);
-  ctx.bezierCurveTo(314, 574, 252, 487, 252, 362);
-  ctx.lineTo(252, 232);
-  ctx.closePath();
-  ctx.fillStyle = "#00647C";
-  ctx.fill();
+  const logo = await PImage.decodePNGFromStream(
+    createReadStream(
+      join(process.cwd(), "public/images/brand/sykoti-awareness-center-logo.png")
+    )
+  );
+  ctx.drawImage(logo, 315, 158, 170, 170);
 
-  ctx.beginPath();
-  ctx.moveTo(400, 218);
-  ctx.lineTo(505, 258);
-  ctx.lineTo(505, 354);
-  ctx.bezierCurveTo(505, 444, 464, 510, 400, 550);
-  ctx.bezierCurveTo(336, 510, 295, 444, 295, 354);
-  ctx.lineTo(295, 258);
-  ctx.closePath();
-  ctx.fillStyle = "#B7EAFF";
-  ctx.fill();
+  ctx.fillStyle = BRAND_PINK;
+  ctx.fillRect(180, 354, 440, 4);
 
-  star(ctx, 400, 357, 102, 46);
+  ctx.font = "38px 'CyberA Bold'";
+  const moduleLines = wrapText(ctx, moduleTitle, 560).slice(0, 4);
+  const lineHeight = 47;
+  const firstLineY = 420 - ((moduleLines.length - 1) * lineHeight) / 2;
+  moduleLines.forEach((line, index) => {
+    centeredText(ctx, line, firstLineY + index * lineHeight, 38, BRAND_INK);
+  });
 
-  ctx.strokeStyle = "#B5123F";
-  ctx.lineWidth = 24;
-  ctx.beginPath();
-  ctx.arc(400, 357, 44, Math.PI * 0.32, Math.PI * 1.68);
-  ctx.stroke();
+  const cleanedBadgeName = badgeName
+    .replace(/^badge\s+/i, "")
+    .trim();
+  if (cleanedBadgeName && cleanedBadgeName !== moduleTitle) {
+    centeredText(ctx, cleanedBadgeName, 590, 22, BRAND_RED);
+  }
 
-  circle(ctx, 306, 634, 17, "#FFCC32");
-  circle(ctx, 352, 657, 11, "#B7EAFF");
-  circle(ctx, 448, 657, 11, "#B7EAFF");
-  circle(ctx, 494, 634, 17, "#FFCC32");
+  circle(ctx, 400, 646, 7, BRAND_RED);
+  centeredText(ctx, "CYBERAMBASSADEURS", 690, 23, BRAND_RED);
+  centeredText(ctx, "LEARN · ACT · LEAD", 725, 17, BRAND_MUTED, "CyberA Regular");
 
   const stream = new PassThrough();
   const chunks: Buffer[] = [];

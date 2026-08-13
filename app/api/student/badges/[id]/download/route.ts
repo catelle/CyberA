@@ -17,14 +17,17 @@ export async function GET(request: Request, { params }: { params: { id: string }
       .maybeSingle();
   if (!badge) return new Response("Badge introuvable.", { status: 404 });
 
-  const png = await createBadgePng();
+  const png = await createBadgePng({
+    badgeName: badge.badge_name,
+    moduleTitle: badge.badge_focus
+  });
   const inline = new URL(request.url).searchParams.get("inline") === "1";
 
   return new Response(new Uint8Array(png), {
     headers: {
       "Content-Type": "image/png",
       "Content-Disposition": `${inline ? "inline" : "attachment"}; filename="badge-${params.id}.png"`,
-      "Cache-Control": "private, max-age=300"
+      "Cache-Control": "private, max-age=60"
     }
   });
 }
