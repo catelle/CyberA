@@ -1,4 +1,7 @@
 import { moduleOne } from "@/lib/curriculum/module-one";
+import { moduleTwo } from "@/lib/curriculum/module-two";
+import { moduleThreeQuiz } from "@/lib/curriculum/module-three-quiz-banks";
+import { moduleFourQuiz } from "@/lib/curriculum/module-four-quiz-banks";
 
 export type ProgramModuleStatus = "ready" | "next" | "planned";
 
@@ -20,6 +23,7 @@ export type ProgramLesson = {
 };
 
 export type LessonQuizQuestion = {
+  id?: string;
   question: string;
   options: string[];
   correctIndex: number;
@@ -190,63 +194,14 @@ function lesson(
 
 export const programModules: ProgramModule[] = [
   moduleOne,
-  {
-    id: "e-reputation-desinformation",
-    week: 2,
-    title: "E-Reputation & Desinformation",
-    subtitle: "Empreinte numerique et verification",
-    summary:
-      "Construire une identite positive et ralentir la diffusion des fausses informations.",
-    color: "#1E8449",
-    icon: "globe",
-    outcomes: ["Verifier une information", "Proteger sa reputation", "Reagir avec respect"],
-    status: "next",
-    progressPercent: 0,
-    lessons: [
-      lesson("empreinte", 1, "Ton empreinte numerique est permanente", "Une capture d'ecran peut survivre a la suppression d'un post.", [
-        "Relire avant de publier",
-        "Eviter les details personnels",
-        "Penser a l'effet dans un an"
-      ]),
-      lesson("identite", 2, "Construire une identite numerique positive", "Ton profil peut montrer tes competences, pas seulement tes opinions.", [
-        "Mettre en avant un projet",
-        "Choisir une photo respectueuse",
-        "Retirer un contenu ambigu"
-      ]),
-      lesson("verification", 3, "Verifier avant de partager", "Une rumeur utile a partager vite est souvent une rumeur a verifier d'abord.", [
-        "Chercher la source originale",
-        "Comparer avec un media fiable",
-        "Verifier la date"
-      ]),
-      lesson("resister", 4, "Resister a la desinformation", "Les contenus qui provoquent peur ou colere cherchent souvent le partage rapide.", [
-        "Identifier l'emotion ciblee",
-        "Chercher une preuve",
-        "Ne pas relayer sans contexte"
-      ]),
-      lesson("reagir", 5, "Reagir de maniere constructive", "Corriger publiquement peut aider, humilier peut bloquer la conversation.", [
-        "Proposer une source",
-        "Rester calme",
-        "Signaler si le contenu est dangereux"
-      ])
-    ],
-    quiz: [
-      {
-        id: "verify-date",
-        question: "Pourquoi verifier la date d'une information ?",
-        options: ["Pour changer la langue", "Pour savoir si le contexte est encore vrai", "Pour augmenter les likes", "Pour masquer l'auteur"],
-        correctIndex: 1,
-        explanation: "Une information ancienne peut etre vraie mais trompeuse dans un nouveau contexte.",
-        points: 10
-      }
-    ]
-  },
+  moduleTwo,
   {
     id: "online-scams-digital-safety",
     week: 3,
-    title: "Online Scams & Digital Safety",
-    subtitle: "Scams, phishing et aide aux victimes",
+    title: "Digital Toolbox / Outils & Pratiques",
+    subtitle: "Des capacités pratiques que tu peux réellement utiliser",
     summary:
-      "Reconnaitre les arnaques courantes au Cameroun et savoir quoi faire sans paniquer.",
+      "Passer de la théorie à l'action avec des méthodes concrètes pour vérifier, protéger, documenter et signaler.",
     color: "#B7950B",
     icon: "alert",
     outcomes: ["Reconnaitre le phishing", "Documenter les faits", "Signaler une arnaque"],
@@ -279,24 +234,15 @@ export const programModules: ProgramModule[] = [
         "Decrire les faits clairement"
       ])
     ],
-    quiz: [
-      {
-        id: "urgent-money",
-        question: "Un inconnu promet un gain rapide si tu paies des frais. Que fais-tu ?",
-        options: ["Je paie vite", "Je partage a mes amis", "Je verifie et j'en parle a un adulte", "J'envoie ma CNI"],
-        correctIndex: 2,
-        explanation: "L'urgence et les frais avant gain sont des signaux classiques de fraude.",
-        points: 10
-      }
-    ]
+    quiz: moduleThreeQuiz
   },
   {
     id: "leadership-advocacy",
     week: 4,
-    title: "Leadership & Advocacy",
-    subtitle: "Forum, action collective et capstone",
+    title: "Digital Citizenship Leadership / Leadership Citoyen Numérique",
+    subtitle: "Aider les autres à mieux naviguer dans le monde numérique",
     summary:
-      "Transformer les competences apprises en actions utiles pour sa famille, son ecole ou son quartier.",
+      "Transformer tes compétences en actions utiles pour ta famille, ton école ou ton quartier et devenir un guide responsable.",
     color: "#6C3483",
     icon: "trophy",
     outcomes: ["Animer une sensibilisation", "Signaler collectivement", "Preparer le capstone"],
@@ -329,16 +275,7 @@ export const programModules: ProgramModule[] = [
         "Mesurer les personnes touchees"
       ])
     ],
-    quiz: [
-      {
-        id: "forum-sensitive",
-        question: "Que faut-il eviter dans un rapport forum public ?",
-        options: ["Le type de menace", "La plateforme", "Un numero de telephone prive", "Une description generale"],
-        correctIndex: 2,
-        explanation: "Les informations sensibles ne doivent pas etre exposees dans le forum.",
-        points: 10
-      }
-    ]
+    quiz: moduleFourQuiz
   }
 ];
 

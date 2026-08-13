@@ -8,7 +8,7 @@ type Spec = {
 
 function academyLesson(spec: Spec): ProgramLesson {
   return {
-    id: spec.id, order: spec.order, title: spec.title, estimatedMins: 14,
+    id: spec.id, order: spec.order, title: spec.title, estimatedMins: spec.id === "ou-est-internet" ? 60 : spec.id === "apres-envoyer" ? 20 : 14,
     content: [
       { type: "hook", content: spec.hook },
       { type: "story", content: spec.story },
@@ -30,8 +30,8 @@ const footprintImage = "/images/module-1/digital-footprint.png";
 export const moduleOne: ProgramModule = {
   id: "hygiene-numerique",
   week: 1,
-  title: "The Digital World",
-  subtitle: "Ce qui se passe vraiment derriere ton ecran",
+  title: "The Digital World / Le Monde Numérique",
+  subtitle: "Comprendre ce qui se passe vraiment derrière l'écran",
   summary: "Entre a l'Academie, suis les traces invisibles de tes clics et construis une carte mentale claire d'Internet, des donnees, des algorithmes et de ton identite numerique.",
   color: "#1A5276",
   icon: "globe",
@@ -40,52 +40,52 @@ export const moduleOne: ProgramModule = {
   progressPercent: 0,
   lessons: [
     academyLesson({
-      id: "ou-est-internet", order: 1, title: "Ou est Internet ?",
-      hook: "Tu peux tenir ton telephone dans ta main. Mais peux-tu montrer Internet du doigt ?",
-      story: "Premiere mission a l'Academie. Amina ouvre son navigateur a Yaounde et saisit une adresse. La page apparait presque instantanement. Elle imagine que le site vit dans son telephone. En realite, sa demande vient de commencer un voyage physique: ondes radio, antenne, fournisseur d'acces, routeurs, cables terrestres ou sous-marins, puis un ordinateur distant qui prepare la reponse.",
-      image: messageImage, imageAlt: "Trajet d'une donnee entre deux telephones, une antenne, des cables et un centre de donnees",
+      id: "ou-est-internet", order: 1, title: "Bienvenue derriere l'ecran",
+      hook: "Le monde numerique est beaucoup plus grand que tu ne l'imagines.",
+      story: "Chaque matin, des millions de jeunes deverrouillent leur telephone pour envoyer des messages, regarder des videos, chercher, jouer, utiliser l'IA ou etudier. Mais ou tout cela se passe-t-il vraiment ? Aujourd'hui, tu passes derriere l'ecran.",
+      image: "/images/module-1/lesson-1/behind-the-screen.png", imageAlt: "Un jeune decouvre le reseau mondial invisible derriere son telephone",
       discoveries: [
-        "Internet n'est ni un nuage magique ni un seul ordinateur. C'est un reseau mondial de reseaux. Ton operateur est une porte d'entree; les routeurs sont des carrefours; les cables transportent les paquets; les serveurs conservent ou calculent ce que tu demandes.",
-        "Le navigateur est ton outil de lecture. Une application est une interface specialisee. Le DNS ressemble a un carnet d'adresses: il transforme un nom facile a retenir en adresse IP. Le cloud signifie surtout: des ordinateurs distants accessibles par Internet.",
-        "Chaque action numerique possede donc une geographie, consomme de l'electricite et traverse des organisations. Une panne locale, un cable endommage ou un serveur lointain peut ralentir un service qui semble vivre dans ta poche."
+        "Tu vis dans un monde physique et dans un monde numerique fait d'appareils, de reseaux, de donnees, d'algorithmes et de personnes connectees.",
+        "Ton telephone est une cle, une fenetre et une telecommande. Une grande partie de ce que tu utilises vit sur d'autres appareils et serveurs.",
+        "Messages, photos, recherches et decisions automatisees circulent sans cesse. Le monde numerique ne dort jamais."
       ],
-      mission: ["Choisis un site courant et note les acteurs probables entre toi et lui.", "Identifie si ton telephone utilise le Wi-Fi ou les donnees mobiles.", "Dessine une route avec appareil, operateur, DNS, routeurs, serveur et reponse."],
-      reflection: "Si Internet traverse plusieurs organisations, lesquelles peuvent observer une partie de ton trajet ?",
-      ability: "Capacite debloquee · Internet Navigator",
-      quiz: { question: "Quand tu ouvres un site, quel enchainement est le plus juste ?", options: ["Le site etait cache dans le telephone", "Le DNS trouve une adresse, des routeurs acheminent la demande et un serveur repond", "L'antenne cree la page", "Le navigateur fabrique Internet"], correctIndex: 1, explanation: "Une requete traverse plusieurs couches avant que le serveur renvoie les donnees." }
+      mission: ["Pendant une heure, note chaque application ouverte.", "Ecris pourquoi tu l'as ouverte.", "Observe quelle information tu as partagee, sans changer tes habitudes."],
+      reflection: "Combien de services numeriques as-tu deja utilises aujourd'hui ?",
+      ability: "Capacite debloquee · Digital Explorer",
+      quiz: { question: "Quel est le meilleur role pour decrire ton telephone ?", options: ["Il contient tout le monde numerique", "C'est une porte d'acces vers une infrastructure beaucoup plus vaste", "Il fabrique Internet tout seul", "Il conserve toutes les donnees du monde"], correctIndex: 1, explanation: "Ton telephone donne acces a des reseaux, serveurs, services et appareils situes ailleurs." }
     }),
     academyLesson({
-      id: "apres-envoyer", order: 2, title: "Que se passe-t-il apres Envoyer ?",
-      hook: "Ton message semble sauter directement vers ton ami. Que lui arrive-t-il pendant les millisecondes ou tu ne le vois plus ?",
-      story: "Junior envoie une photo dans un groupe. Avant que les coches de livraison apparaissent, son telephone compresse le fichier, l'application prepare les donnees et le message est divise en paquets. Un serveur aide a trouver les destinataires et peut garder une copie le temps de la livraison.",
-      image: messageImage, imageAlt: "Paquets lumineux circulant entre deux jeunes et plusieurs infrastructures",
+      id: "apres-envoyer", order: 2, title: "Inside TikTok : qui choisit ta prochaine video ?",
+      hook: "Tu ouvres TikTok. Une video apparait. Mais qui a decide que celle-ci devait etre la premiere ?",
+      story: "Tu entres comme enqueteur dans un fil qui n'existe que pour toi. En suivant tes pauses, tes relectures et tes passages rapides, tu decouvres une boucle : la plateforme teste, tu reagis, puis elle ajuste sa prochaine prediction.",
+      image: "/images/module-1/lesson-2/personalized-feeds.png", imageAlt: "Deux jeunes africains decouvrent des fils video personnalises differents",
       discoveries: [
-        "Un message contient plus que son texte: expediteur, destinataire, heure, taille, appareil et etat de livraison. Ces informations autour du contenu sont des metadonnees.",
-        "Le chiffrement de bout en bout peut cacher le contenu aux intermediaires, sans faire disparaitre tous les indices. Le service doit encore acheminer le message et peut connaitre quels comptes communiquent et quand.",
-        "Une recherche va vers un moteur qui compare ta requete a un index geant. Un email passe par des serveurs de courrier. Le geste visible est simple, mais les parcours invisibles different."
+        "Il n'existe pas un fil TikTok universel : le systeme classe des videos pour chaque profil.",
+        "Temps de visionnage, relectures, likes, recherches et passages rapides deviennent des signaux.",
+        "Le systeme predit tes reactions sans comprendre toutes tes raisons, et ses erreurs peuvent retrecir ton horizon."
       ],
-      mission: ["Envoie un message test et observe envoi, livraison puis lecture.", "Liste le contenu puis cinq metadonnees possibles.", "Compare le parcours d'un message, d'un email et d'une recherche."],
-      reflection: "Sans lire tes messages, que peut-on comprendre en connaissant qui tu contactes, quand et a quelle frequence ?",
-      ability: "Capacite debloquee · Data Tracker",
-      quiz: { question: "Laquelle de ces informations est une metadonnee ?", options: ["La phrase du message", "L'heure d'envoi et la taille du fichier", "L'emotion du lecteur", "Le sens secret de la discussion"], correctIndex: 1, explanation: "Une metadonnee decrit le contexte ou le trajet du contenu." }
+      mission: ["Choisis un sujet educatif precis.", "Pendant dix minutes, regarde les contenus utiles jusqu'au bout et ignore le divertissement.", "Observe demain si ton fil a change."],
+      reflection: "Aujourd'hui, j'ai decouvert que TikTok...",
+      ability: "Capacite debloquee · Algorithm Investigator",
+      quiz: { question: "Qui entraine progressivement ton fil ?", options: ["Le hasard uniquement", "Tes actions repetees fournissent des signaux", "La batterie", "Un seul createur"], correctIndex: 1, explanation: "Tes reactions alimentent une boucle de prediction et de recommandation." }
     }),
     academyLesson({
-      id: "jumeau-numerique", order: 3, title: "Le jumeau numerique que tu n'as jamais cree",
-      hook: "Une plateforme peut-elle te connaitre sans jamais te poser de question ?",
-      story: "Amina ne remplit aucun questionnaire. Pourtant, son ecran montre bientot danse, baskets et examens. Chaque recherche, pause, retour en arriere, position approximative et achat ajoute une piece a un portrait statistique: pas une copie parfaite d'Amina, mais un modele qui tente de predire son prochain geste.",
-      image: twinImage, imageAlt: "Un jeune face a un jumeau numerique compose de recherches, positions, achats, relations et habitudes",
+      id: "inside-whatsapp", order: 3, title: "Inside WhatsApp : que se passe-t-il après Envoyer ?",
+      hook: "Un message chiffre est-il automatiquement un message sans trace ?",
+      story: "Amina envoie une photo dans un groupe WhatsApp et voit deux coches bleues. Le texte et l'image sont proteges pendant le trajet, mais le service doit quand meme livrer les donnees, connaitre certains elements du compte, gerer les appareils, les groupes, les sauvegardes et les signalements. L'enquete consiste a separer ce qui est protege, ce qui est traite, et ce qui peut encore etre copie par les personnes.",
+      image: messageImage, imageAlt: "Un message WhatsApp voyage entre deux telephones a travers un tunnel chiffre et des serveurs",
       discoveries: [
-        "Les donnees declarees sont celles que tu fournis. Les donnees observees viennent de ton comportement. Les donnees deduites sont des hypotheses sur tes interets, habitudes ou intentions.",
-        "Une prediction n'a pas besoin d'etre toujours vraie pour etre rentable. Si elle augmente un peu la probabilite que tu regardes, cliques ou achetes, elle a deja de la valeur a grande echelle.",
-        "Ton jumeau numerique est fragmente entre plusieurs entreprises. Des identifiants, partenaires publicitaires ou connexions de compte peuvent rapprocher certaines pieces du puzzle."
+        "WhatsApp est un service de messagerie : il relie ton numero, ton application, tes contacts autorises, Internet, ses serveurs et les appareils des personnes avec qui tu communiques.",
+        "Le chiffrement de bout en bout protege le contenu des messages personnels pendant le trajet. WhatsApp aide a livrer le message, mais ne devrait pas pouvoir lire le texte ou la photo chiffre entre les appareils.",
+        "La confidentialite ne concerne pas seulement le contenu : numero, profil, contacts autorises, groupes, heures d'utilisation, adresse IP, appareil, sauvegardes, conversations avec des entreprises, signalements et copies peuvent encore compter."
       ],
-      mission: ["Consulte la personnalisation publicitaire d'un service et note trois interets supposes.", "Classe cinq exemples en donnees declarees, observees ou deduites.", "Corrige une hypothese fausse et observe les recommandations plusieurs jours."],
-      reflection: "Qu'est-ce qui te represente le mieux: ce que tu dis aimer ou ce que tu fais lorsque personne ne semble regarder ?",
-      ability: "Capacite debloquee · Profile Detective",
-      quiz: { question: "Quelle donnee est deduite ?", options: ["Ton email saisi", "Un interet pour le football estime depuis ton temps de visionnage", "La photo publiee", "Le numero fourni"], correctIndex: 1, explanation: "Une donnee deduite est une conclusion calculee a partir de signaux." }
+      mission: ["Dessine le trajet d'un message non sensible : telephone, reseau, serveurs, destinataire.", "Liste trois donnees necessaires au fonctionnement qui ne sont pas le contenu du message.", "Identifie trois situations ou le message peut sortir de ton controle : capture, transfert, sauvegarde, groupe ou entreprise."],
+      reflection: "Apres cette lecon, quelle difference fais-tu entre contenu protege et traces autour du contenu ?",
+      ability: "Capacite debloquee · WhatsApp Privacy Mapper",
+      quiz: { question: "Quelle phrase explique le mieux WhatsApp ?", options: ["Le chiffrement efface toute trace", "Le contenu des messages personnels est protege, mais le service traite encore des informations de fonctionnement", "WhatsApp fonctionne sans numero ni appareil", "Une coche bleue prouve que le message est vrai"], correctIndex: 1, explanation: "Le chiffrement protege le contenu, tandis que certaines informations de compte, appareil, usage et livraison restent necessaires au service." }
     }),
     academyLesson({
-      id: "prix-du-gratuit", order: 4, title: "Quel est le prix du gratuit ?",
+      id: "inside-facebook", order: 4, title: "Inside Facebook : qui décide de ce qui apparaît en premier ?",
       hook: "Si une application coute des millions a faire fonctionner mais ne te demande pas d'argent, qui paie la facture ?",
       story: "Pendant qu'Eric regarde une video, une vente aux encheres publicitaire automatisee peut se jouer en une fraction de seconde. Les annonceurs ne demandent pas forcement son nom: ils veulent atteindre un profil susceptible de reagir. Son attention devient l'espace vendu.",
       image: twinImage, imageAlt: "Des comportements alimentent un profil utilise dans un ecosysteme publicitaire",
@@ -97,10 +97,10 @@ export const moduleOne: ProgramModule = {
       mission: ["Choisis trois services gratuits et trouve comment chacun gagne de l'argent.", "Observe une publicite et propose trois raisons possibles de son apparition.", "Pendant dix minutes, compte les mecanismes qui prolongent la session."],
       reflection: "Quand une plateforme optimise ton temps d'ecran, ses objectifs et les tiens sont-ils toujours les memes ?",
       ability: "Capacite debloquee · Economy Decoder",
-      quiz: { question: "Pourquoi les donnees comportementales ont-elles de la valeur publicitaire ?", options: ["Elles remplacent Internet", "Elles aident a predire quelle audience reagira", "Elles rendent toute prediction vraie", "Elles effacent les couts"], correctIndex: 1, explanation: "Predire l'attention ou l'action aide a cibler une audience." }
+      quiz: { question: "Pourquoi une publication apparaît-elle en premier ?", options: ["Elle est forcément vraie", "Son score prédit est élevé pour les objectifs du fil", "Elle est toujours la plus ancienne", "Un ami choisit chaque position"], correctIndex: 1, explanation: "Le fil classe les publications selon des signaux et des réactions prédites." }
     }),
     academyLesson({
-      id: "ecosystemes", order: 5, title: "Une application n'est jamais seule",
+      id: "inside-instagram", order: 5, title: "Inside Instagram : comment sait-il ce qui t'inspire ?",
       hook: "Pourquoi tes photos, cartes, videos et sauvegardes semblent-elles se reconnaitre entre plusieurs appareils ?",
       story: "Nadia change de telephone. Apres une seule connexion, contacts, photos, documents et preferences reapparaissent. Elle est entree dans un ecosysteme ou identite, stockage, applications, paiements et appareils cooperent.",
       image: messageImage, imageAlt: "Plusieurs appareils et services relies a des serveurs par un ecosysteme",
@@ -112,10 +112,10 @@ export const moduleOne: ProgramModule = {
       mission: ["Dessine un ecosysteme: services, appareils, donnees et paiements.", "Liste les applications ou tu utilises 'Se connecter avec...' et verifie leurs autorisations.", "Imagine quitter cet ecosysteme: que serait-il difficile de recuperer ?"],
       reflection: "A quel moment le confort d'un ecosysteme devient-il une dependance ?",
       ability: "Capacite debloquee · System Thinker",
-      quiz: { question: "Qu'est-ce qu'un ecosysteme numerique ?", options: ["Une application sans compte", "Des produits et services relies par une identite, des donnees et des interfaces", "Un fichier hors ligne", "Un cable seul"], correctIndex: 1, explanation: "L'ecosysteme vient des connexions entre services, comptes et appareils." }
+      quiz: { question: "Que représente principalement la page Explore ?", options: ["Toute ta personnalité", "Une prédiction de tes intérêts à partir de signaux", "Une liste identique pour tous", "Uniquement les comptes suivis"], correctIndex: 1, explanation: "Explore classe des contenus à partir de tes actions et d'indices visuels." }
     }),
     academyLesson({
-      id: "machine-a-recommandations", order: 6, title: "Pourquoi deux personnes ne voient jamais le meme Internet",
+      id: "inside-google", order: 6, title: "Inside Google : comment cherche-t-il si vite ?",
       hook: "Ton ami et toi ouvrez la meme plateforme. Pourquoi vos ecrans racontent-ils deux mondes differents ?",
       story: "Deux recrues regardent la meme video. L'une reste jusqu'au bout; l'autre quitte apres trois secondes. Le lendemain, leurs fils divergent. Le systeme n'a pas lu leurs pensees: il a teste, mesure puis reclasse des contenus selon leurs reactions probables.",
       image: algorithmImage, imageAlt: "Deux jeunes recoivent des fils differents produits par un moteur de recommandation",
@@ -127,10 +127,10 @@ export const moduleOne: ProgramModule = {
       mission: ["Compare ton accueil video avec celui d'un proche sans copier ses donnees privees.", "Cherchez un meme sujet puis notez dix recommandations differentes.", "Sors volontairement du fil et trouve une source opposee ou independante."],
       reflection: "Combien de tes opinions viennent de tes choix, et combien de ce qui a ete place devant toi ?",
       ability: "Capacite debloquee · Algorithm Observer",
-      quiz: { question: "Pourquoi deux fils deviennent-ils differents ?", options: ["Internet change au hasard", "Les systemes classent selon des signaux et objectifs propres a chaque profil", "Un employe choisit chaque video", "Ils sont toujours identiques"], correctIndex: 1, explanation: "Les interactions alimentent une boucle de personnalisation." }
+      quiz: { question: "Pourquoi Google répond-il sans parcourir tout le Web à chaque recherche ?", options: ["Il connaît déjà toutes les réponses", "Il interroge un index préparé", "Il choisit au hasard", "Le navigateur invente les pages"], correctIndex: 1, explanation: "Des robots découvrent les pages en amont et les organisent dans un index." }
     }),
     academyLesson({
-      id: "traces-et-copies", order: 7, title: "Supprime ne veut pas toujours dire disparu",
+      id: "inside-ai-chatbots", order: 7, title: "Inside AI Chatbots : l'IA connaît-elle ses réponses ?",
       hook: "Tu supprimes une photo dix secondes apres l'avoir publiee. Combien de copies peuvent deja exister ?",
       story: "Joel efface une photo regrettee. Mais un ami a fait une capture, un appareil l'a telechargee, une sauvegarde existe et un moteur a peut-etre cree un cache. Supprimer reste utile, mais cela retire une copie sous ton controle, pas toutes les copies du monde.",
       image: footprintImage, imageAlt: "Une photo se duplique en capture, sauvegarde, cache, telechargement et version modifiee",
@@ -142,10 +142,10 @@ export const moduleOne: ProgramModule = {
       mission: ["Cherche ton nom ou un ancien pseudonyme entre guillemets.", "Consulte les informations d'une photo non sensible sans la publier.", "Dessine son arbre de copies: appareil, capture, sauvegarde, cache et partage."],
       reflection: "Quelle version de toi souhaites-tu laisser aux personnes et systemes qui verront tes traces plus tard ?",
       ability: "Capacite debloquee · Footprint Investigator",
-      quiz: { question: "Pourquoi une publication supprimee peut-elle encore circuler ?", options: ["Toute suppression est fausse", "Captures, caches, sauvegardes et telechargements ont pu creer d'autres copies", "Le DNS publie les photos", "Le navigateur interdit la suppression"], correctIndex: 1, explanation: "Supprimer l'original ne rappelle pas les copies deja creees." }
+      quiz: { question: "Pourquoi un chatbot peut-il donner une fausse réponse convaincante ?", options: ["Il veut toujours mentir", "Il prédit du langage plausible sans garantir chaque fait", "Il ne traite aucun texte", "Il consulte toujours une mauvaise page"], correctIndex: 1, explanation: "La fluidité vient de la prédiction linguistique et ne constitue pas une preuve d'exactitude." }
     }),
     academyLesson({
-      id: "identite-et-futur", order: 8, title: "Qui seras-tu dans le monde numerique de demain ?",
+      id: "your-digital-shadow", order: 8, title: "Your Digital Shadow : combien Internet sait-il de toi ?",
       hook: "Si une IA peut fabriquer ta voix ou ton visage, qu'est-ce qui prouve encore que tu es vraiment toi ?",
       story: "Derniere salle de l'Academie. Une video montre une personne connue prononcant une phrase choquante. Tout semble reel, mais chaque element a ete genere. Dans un monde ou creer devient facile, verifier l'origine, le contexte et la reputation devient essentiel.",
       image: footprintImage, imageAlt: "Identite numerique composee d'images originales, copiees et transformees par intelligence artificielle",
@@ -157,7 +157,29 @@ export const moduleOne: ProgramModule = {
       mission: ["Trouve un contenu IA clairement signale et liste les indices disponibles.", "Recherche la source originale d'une image virale.", "Ecris trois principes pour ton identite numerique et une action pour chacun."],
       reflection: "Dans dix ans, que voudrais-tu que ton historique numerique raconte de tes choix et de tes competences ?",
       ability: "Capacite debloquee · Digital Explorer",
-      quiz: { question: "Face a une video realiste mais surprenante, quel reflexe est solide ?", options: ["Croire car l'image est nette", "Verifier origine, contexte, date et sources independantes", "Partager avant qu'elle disparaisse", "Se fier aux vues"], correctIndex: 1, explanation: "A l'ere des deepfakes, provenance et corroboration comptent plus que l'apparence." }
+      quiz: { question: "Quel exemple est une empreinte numérique passive ?", options: ["Publier une photo", "Un site mesure la durée de ta visite", "Écrire un commentaire", "Remplir ta bio"], correctIndex: 1, explanation: "La collecte technique en arrière-plan produit une trace passive." }
+    }),
+    academyLesson({
+      id: "business-of-internet", order: 9, title: "The Business of the Internet : qui paie le gratuit ?",
+      hook: "Si tu ne paies pas l'application, qui finance les serveurs, les équipes et le service ?",
+      story: "L'enquête suit l'argent derrière les interfaces gratuites et révèle comment publicité, abonnement, commission, freemium et économie de l'attention influencent le design.",
+      image: twinImage, imageAlt: "Un jeune suit les flux d'attention et d'argent derrière une application gratuite",
+      discoveries: ["Tout service numérique possède des coûts.", "L'attention et la prédiction d'audience peuvent avoir une valeur économique.", "L'objectif commercial d'une plateforme n'est pas toujours celui de la personne qui l'utilise."],
+      mission: ["Choisis une application gratuite.", "Identifie ses sources de revenus.", "Relie trois choix d'interface à son modèle économique."],
+      reflection: "L'objectif de cette application et le tien sont-ils alignés ?",
+      ability: "Capacité débloquée · Economy Decoder",
+      quiz: { question: "Quel réflexe aide à comprendre un service gratuit ?", options: ["Supposer qu'il n'a aucun coût", "Identifier qui paie et quel comportement rapporte", "Cliquer sur toutes les publicités", "Ignorer son modèle économique"], correctIndex: 1, explanation: "Le modèle économique éclaire les choix de conception et les comportements encouragés." }
+    }),
+    academyLesson({
+      id: "conscious-digital-citizen", order: 10, title: "Becoming a Conscious Digital Citizen",
+      hook: "Maintenant que tu vois derrière l'écran, comment choisiras-tu d'y vivre ?",
+      story: "La dernière enquête transforme les mécanismes découverts en principes personnels : intention, vérification, consentement, protection des données, diversité des sources, droits et responsabilités.",
+      image: "/images/module-1/lesson-1/two-worlds.png", imageAlt: "Une jeune Africaine choisit consciemment son chemin entre plusieurs espaces numériques",
+      discoveries: ["Une intention transforme une habitude en choix.", "Publier, commenter et partager ont des conséquences pour les autres.", "Les droits numériques permettent aussi de contrôler, corriger, signaler et contester."],
+      mission: ["Écris cinq engagements commençant par Je.", "Ajoute une action mesurable à chacun.", "Applique le premier dès aujourd'hui."],
+      reflection: "Quel citoyen numérique veux-tu devenir ?",
+      ability: "Capacité débloquée · Conscious Digital Citizen",
+      quiz: { question: "Quel principe résume le mieux le Module 1 ?", options: ["Tout croire", "Observer, vérifier et agir avec intention", "Quitter toute technologie", "Toujours suivre la majorité"], correctIndex: 1, explanation: "Une citoyenneté numérique consciente combine compréhension, vérification, choix et responsabilité." }
     })
   ],
   quiz: [
@@ -168,6 +190,8 @@ export const moduleOne: ProgramModule = {
     { id: "algorithm-objective", question: "Une recommandation placee en premier est-elle forcement la plus vraie ?", options: ["Toujours", "Non, elle est classee selon les signaux et l'objectif du systeme", "Oui si populaire", "Oui si personnalisee"], correctIndex: 1, explanation: "Le classement optimise un objectif, pas la verite.", points: 10 },
     { id: "passive-footprint", question: "Quel exemple est une empreinte passive ?", options: ["Publier une video", "Un site enregistre l'appareil et la duree de visite", "Ecrire une bio", "Envoyer un commentaire"], correctIndex: 1, explanation: "La collecte technique en arriere-plan produit une trace passive.", points: 10 },
     { id: "deepfake-verification", question: "Comment verifier un contenu potentiellement genere ?", options: ["Regarder les likes", "Verifier source, contexte, date et confirmations independantes", "Lire le premier commentaire", "Le partager"], correctIndex: 1, explanation: "La provenance et la corroboration resistent mieux aux faux plausibles.", points: 10 },
+    { id: "business-model", question: "Pourquoi identifier le modele economique d'une application gratuite est-il utile ?", options: ["Cela n'a aucun interet", "Cela eclaire pourquoi certains choix de conception encouragent certains comportements", "Cela change le prix de l'application", "Cela supprime la publicite"], correctIndex: 1, explanation: "Comprendre qui paie et comment aide a repérer pourquoi une application est conçue d'une certaine façon.", points: 10 },
+    { id: "conscious-citizen", question: "Quel reflexe resume le mieux une citoyennete numerique consciente ?", options: ["Croire tout ce qui circule", "Observer, verifier et agir avec intention", "Eviter toute technologie", "Suivre systematiquement la majorite"], correctIndex: 1, explanation: "Observer, verifier et agir avec intention relie tous les mecanismes decouverts dans le module.", points: 10 },
     { id: "final-model", question: "Que se passe-t-il vraiment derriere un clic ?", options: ["De la magie", "Infrastructure, traitement, donnees, modeles et influence se succedent", "Aucune trace", "Le telephone agit seul"], correctIndex: 1, explanation: "Ce modele relie infrastructure, donnees, economie, algorithmes et humains.", points: 20 }
   ]
 };

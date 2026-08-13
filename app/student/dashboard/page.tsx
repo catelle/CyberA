@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, Lock, Play, Star } from "lucide-react";
+import { ArrowRight, CheckCircle2, Lock, Play, Star, Zap } from "lucide-react";
 
 import { MascotCoach } from "@/components/gamified/CyberMascot";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { requireRole } from "@/lib/auth/guards";
-import { getStudentStatusSummary, listProgramModulesForStudent } from "@/lib/db/cybera";
+import { getStrikeEligibility, getStudentStatusSummary, listProgramModulesForStudent } from "@/lib/db/cybera";
 import { getDictionary } from "@/lib/i18n/dictionary";
 import { getProgramCompletionPercent } from "@/lib/program";
 
@@ -23,9 +23,10 @@ const statusStyles = {
 export default async function StudentDashboardPage() {
   const user = await requireRole(["student"]);
   const t = getDictionary(user.language);
-  const [modules, studentStatus] = await Promise.all([
+  const [modules, studentStatus, strikeEligibility] = await Promise.all([
     listProgramModulesForStudent(user.supabaseUserId),
-    getStudentStatusSummary(user.supabaseUserId)
+    getStudentStatusSummary(user.supabaseUserId),
+    getStrikeEligibility(user.supabaseUserId)
   ]);
   const completion = getProgramCompletionPercent(modules);
   const readyModule = modules.find((module) => module.status === "ready");
@@ -189,6 +190,33 @@ export default async function StudentDashboardPage() {
               <p className="mt-2 text-2xl font-extrabold tracking-[-0.025em] text-on-surface">{value}</p>
             </Link>
           ))}
+        </section>
+
+        <section className="grid gap-4 overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-[0_8px_24px_rgba(15,23,42,0.05)] sm:grid-cols-[auto_1fr_auto] sm:items-center sm:p-6">
+          <div className="grid h-14 w-14 place-items-center rounded-xl bg-tertiary-fixed text-tertiary">
+            <Zap aria-hidden className="h-7 w-7" />
+          </div>
+          <div>
+            <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-tertiary">Bonus optionnel</p>
+            <h3 className="mt-1 font-display text-lg font-extrabold text-on-surface">Strike : 10 questions, +50 XP</h3>
+            <p className="mt-1 text-sm font-medium text-slate-600">
+              {strikeEligibility.eligible
+                ? "Un mini-quiz rapide pour reviser et grimper au classement, quand tu veux."
+                : "Termine au moins une lecon pour debloquer ce bonus."}
+            </p>
+          </div>
+          {strikeEligibility.eligible ? (
+            <Link
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-extrabold text-white shadow-[0_10px_24px_rgba(181,18,63,0.2)] transition hover:bg-[#981137] sm:w-fit"
+              href="/student/strike"
+            >
+              Lancer <ArrowRight aria-hidden className="h-4 w-4" />
+            </Link>
+          ) : (
+            <span className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 px-5 text-sm font-extrabold text-slate-400">
+              Verrouille
+            </span>
+          )}
         </section>
       </div>
     </DashboardShell>

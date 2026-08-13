@@ -4,12 +4,13 @@ import { z } from "zod";
 import { requireApiRole, jsonError } from "@/lib/api/authz";
 import { createSupabaseAdminClient } from "@/lib/auth/supabase-server";
 import { getModuleById } from "@/lib/program";
+import { getLessonQuizBank } from "@/lib/curriculum/lesson-quiz-banks";
 
 const moduleProgressSchema = z.object({
   progressVersion: z.literal(3).optional(),
   moduleId: z.string().trim().min(1),
   lessonsRead: z.array(z.string()).default([]),
-  lessonQuizAnswers: z.record(z.coerce.number().int()).default({}),
+  lessonQuizAnswers: z.record(z.record(z.coerce.number().int())).default({}),
   quizAnswers: z.record(z.coerce.number().int()).default({}),
   quizScore: z.coerce.number().int().min(0).max(100).optional(),
   passed: z.coerce.boolean().optional(),
@@ -191,11 +192,17 @@ export async function POST(request: Request) {
   const lessonsRead = Array.from(
     new Set(parsed.data.lessonsRead.filter((lessonId) => validLessonIds.has(lessonId)))
   );
-  const verifiedLessonsRead = lessonsRead.filter(
-    (lessonId) =>
-      parsed.data.lessonQuizAnswers[lessonId] ===
-      resolvedModule.lessonCorrectAnswers[lessonId]
-  );
+  let verifiedLessonsRead = lessonsRead.filter((lessonId) => {
+    const submitted = parsed.data.lessonQuizAnswers[lessonId] ?? {};
+    const bank = getLessonQuizBank(lessonId);
+    if (bank?.length) {
+      const correctCount = bank.filter(
+        (question, index) => submitted[question.id ?? String(index)] === question.correctIndex
+      ).length;
+      return correctCount >= Math.ceil(bank.length * 0.7);
+    }
+    return submitted["0"] === resolvedModule.lessonCorrectAnswers[lessonId];
+  });
   const [{ data: storedProgress }, { data: storedLessons }] = await Promise.all([
     supabase
       .from("module_progress")

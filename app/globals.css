@@ -5,6 +5,324 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  .scene-label {
+    @apply text-xs font-black uppercase tracking-[0.25em] text-primary;
+  }
+
+  .scene-title {
+    @apply mt-3 font-display text-3xl font-black leading-tight text-brand-ink sm:text-4xl;
+  }
+
+  .lesson-scene { animation: lesson-scene-enter 500ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .lesson-opening-image { animation: lesson-cinematic-zoom 18s ease-out both; }
+  .lesson-image { animation: lesson-image-float 7s ease-in-out infinite; }
+  .lesson-stagger { animation: lesson-card-rise 550ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .lesson-stagger:nth-child(2) { animation-delay: 120ms; }
+  .lesson-stagger:nth-child(3) { animation-delay: 240ms; }
+  .lesson-stagger:nth-child(4) { animation-delay: 360ms; }
+  .lesson-route-arrow { animation: lesson-route-pulse 1.4s ease-in-out infinite; }
+  .lesson-unlock { animation: lesson-unlock 900ms cubic-bezier(0.22, 1, 0.36, 1) both, lesson-glow 2.4s ease-in-out 900ms infinite; }
+}
+
+@keyframes lesson-scene-enter {
+  from { opacity: 0; transform: translateY(18px) scale(0.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes lesson-cinematic-zoom {
+  from { transform: scale(1); }
+  to { transform: scale(1.09); }
+}
+
+@keyframes lesson-image-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+
+@keyframes lesson-card-rise {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes lesson-route-pulse {
+  0%, 100% { opacity: 0.35; transform: translateX(-3px); }
+  50% { opacity: 1; transform: translateX(3px); }
+}
+
+@keyframes lesson-unlock {
+  from { opacity: 0; transform: scale(0.45) rotate(-18deg); }
+  to { opacity: 1; transform: scale(1) rotate(0); }
+}
+
+@keyframes lesson-glow {
+  0%, 100% { box-shadow: 0 0 35px rgba(34, 211, 238, 0.2); }
+  50% { box-shadow: 0 0 70px rgba(34, 211, 238, 0.48); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lesson-scene,
+  .lesson-opening-image,
+  .lesson-image,
+  .lesson-stagger,
+  .lesson-route-arrow,
+  .lesson-unlock { animation: none !important; }
+}
+
+/* Lesson experience uses the CyberAmbassador brand: burgundy, rose and graphite. */
+.cyber-lesson .text-cyan-300 { color: #fda4af !important; }
+.cyber-lesson .text-cyan-100,
+.cyber-lesson .text-cyan-50 { color: #fff1f2 !important; }
+.cyber-lesson .text-violet-300,
+.cyber-lesson .text-violet-200 { color: #fecdd3 !important; }
+.cyber-lesson .bg-cyan-300 { background-color: #e11d48 !important; }
+.cyber-lesson .bg-cyan-300\/10 { background-color: rgb(225 29 72 / 0.12) !important; }
+.cyber-lesson .bg-violet-300\/10 { background-color: rgb(181 18 63 / 0.14) !important; }
+.cyber-lesson .border-cyan-300 { border-color: #e11d48 !important; }
+.cyber-lesson .border-cyan-300\/25,
+.cyber-lesson .border-cyan-300\/30 { border-color: rgb(253 164 175 / 0.38) !important; }
+.cyber-lesson .border-violet-300\/25 { border-color: rgb(225 29 72 / 0.35) !important; }
+.cyber-lesson .from-cyan-400 { --tw-gradient-from: #b5123f var(--tw-gradient-from-position) !important; }
+.cyber-lesson .to-violet-500 { --tw-gradient-to: #e11d48 var(--tw-gradient-to-position) !important; }
+.cyber-lesson .from-cyan-300 { --tw-gradient-from: #fda4af var(--tw-gradient-from-position) !important; }
+.cyber-lesson .to-violet-300 { --tw-gradient-to: #e11d48 var(--tw-gradient-to-position) !important; }
+
+/* Lesson 1 shares the same light learning canvas and card hierarchy as later lessons. */
+.cyber-lesson-light { background: #f8fafc; color: #27313d; }
+.cyber-lesson-light .lesson-scene { color: #27313d; }
+.cyber-lesson-light .lesson-scene > section:not(.lesson-opening-scene) {
+  margin: 1.5rem auto;
+  width: min(calc(100% - 2rem), 64rem);
+  min-height: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 4px 0 #cbd5e1;
+}
+.cyber-lesson-light .lesson-scene .text-white { color: #172033 !important; }
+.cyber-lesson-light .lesson-scene .text-white\/75,
+.cyber-lesson-light .lesson-scene .text-white\/72,
+.cyber-lesson-light .lesson-scene .text-white\/70,
+.cyber-lesson-light .lesson-scene .text-white\/65,
+.cyber-lesson-light .lesson-scene .text-white\/60,
+.cyber-lesson-light .lesson-scene .text-white\/55,
+.cyber-lesson-light .lesson-scene .text-white\/45 { color: #64748b !important; }
+.cyber-lesson-light .lesson-image { aspect-ratio: 16 / 6; border-color: #e2e8f0; border-radius: 1rem; animation: none; box-shadow: 0 10px 28px rgb(15 23 42 / .12); }
+.cyber-lesson-light .lesson-scene .bg-white\/5,
+.cyber-lesson-light .lesson-scene .bg-slate-950\/30,
+.cyber-lesson-light .lesson-scene .bg-slate-950\/35 { background: #fff !important; }
+.cyber-lesson-light .lesson-scene .border-white\/10,
+.cyber-lesson-light .lesson-scene .border-white\/15 { border-color: #cbd5e1 !important; }
+
+.signal-track::before {
+  content: "";
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  top: 23px;
+  height: 2px;
+  background: linear-gradient(90deg, #fda4af, #e11d48, #fda4af);
+  box-shadow: 0 0 14px rgb(225 29 72 / 0.65);
+}
+
+.signal-packet {
+  position: absolute;
+  z-index: 20;
+  top: 13px;
+  left: 7%;
+  color: #fff1f2;
+  filter: drop-shadow(0 0 8px #e11d48);
+  animation: signal-travel 4.8s linear infinite;
+}
+
+@keyframes signal-travel {
+  0% { left: 7%; transform: scale(0.75); }
+  45% { transform: scale(1.35); }
+  100% { left: 90%; transform: scale(0.75); }
+}
+
+.mascot-toast {
+  border-color: #b5123f;
+  animation: mascot-toast-in 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.mascot-toast-celebrate {
+  box-shadow: 0 18px 50px rgb(181 18 63 / 0.28);
+}
+
+.mascot-toast-sad {
+  border-color: #586062;
+}
+
+@keyframes mascot-toast-in {
+  from { opacity: 0; transform: translateY(-24px) scale(0.92); }
+  65% { transform: translateY(4px) scale(1.02); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.deep-scene-item {
+  animation: deep-item-arrive 650ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.deep-scene-arrow {
+  animation: lesson-route-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes deep-item-arrive {
+  from { opacity: 0; transform: translateY(14px) scale(0.92); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .signal-packet { animation: none; left: 48%; }
+}
+
+/* Inside TikTok: cinematic data language. Blue=data, pink=action, gold=discovery, purple=AI. */
+.inside-tiktok-stage {
+  background:
+    radial-gradient(circle at 12% 12%, rgb(56 189 248 / 0.12), transparent 24%),
+    radial-gradient(circle at 82% 18%, rgb(192 132 252 / 0.12), transparent 24%),
+    linear-gradient(135deg, #fff8f8 0%, #fff 50%, #f9f2fa 100%);
+}
+
+.inside-tiktok-visual::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(rgb(255 255 255 / 0.025) 1px, transparent 1px), linear-gradient(90deg, rgb(255 255 255 / 0.025) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: linear-gradient(to bottom, black, transparent 82%);
+}
+
+.inside-tiktok-camera { animation: tiktok-camera-breathe 18s ease-in-out infinite alternate; }
+
+.tiktok-particle {
+  --particle-x: 50%;
+  --particle-size: 4px;
+  --particle-delay: 0s;
+  position: absolute;
+  left: var(--particle-x);
+  bottom: -12px;
+  width: var(--particle-size);
+  height: var(--particle-size);
+  border-radius: 999px;
+  background: #fb7185;
+  box-shadow: 0 0 12px #fb7185;
+  opacity: 0;
+  animation: tiktok-particle-rise 8s linear var(--particle-delay) infinite;
+}
+
+.tiktok-particle:nth-child(3n) { background: #38bdf8; box-shadow: 0 0 12px #38bdf8; }
+.tiktok-particle:nth-child(4n) { background: #c084fc; box-shadow: 0 0 12px #c084fc; }
+
+.tiktok-hud {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border: 1px solid rgb(255 255 255 / 0.22);
+  border-radius: 999px;
+  background: rgb(8 13 34 / 0.68);
+  color: white;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  opacity: 0;
+  transform: translateY(10px) scale(0.95);
+  backdrop-filter: blur(10px);
+  transition: opacity 500ms ease, transform 500ms cubic-bezier(.22, 1, .36, 1);
+}
+
+.tiktok-hud.is-visible { opacity: 1; transform: translateY(0) scale(1); }
+
+.tiktok-signal-path {
+  position: absolute;
+  left: 18%;
+  top: 49%;
+  width: 58%;
+  height: 2px;
+  overflow: hidden;
+  opacity: 0;
+  background: linear-gradient(90deg, transparent, #38bdf8 20%, #c084fc 80%, transparent);
+  filter: drop-shadow(0 0 7px #38bdf8);
+  transform: rotate(-7deg) scaleX(0);
+  transform-origin: left;
+  transition: opacity 400ms ease, transform 900ms cubic-bezier(.22, 1, .36, 1);
+}
+
+.tiktok-signal-path.is-active { opacity: 0.95; transform: rotate(-7deg) scaleX(1); }
+.tiktok-signal-path span { position: absolute; top: -3px; width: 8px; height: 8px; border-radius: 999px; background: white; box-shadow: 0 0 14px #38bdf8; animation: tiktok-signal-travel 2.6s linear infinite; }
+
+.tiktok-ai-core {
+  position: absolute;
+  right: 12%;
+  top: 40%;
+  display: grid;
+  width: 64px;
+  height: 64px;
+  place-items: center;
+  border: 1px solid rgb(192 132 252 / 0.45);
+  border-radius: 999px;
+  background: rgb(28 17 55 / 0.68);
+  color: #d8b4fe;
+  opacity: 0.42;
+  box-shadow: 0 0 20px rgb(192 132 252 / 0.2), inset 0 0 16px rgb(192 132 252 / 0.14);
+  backdrop-filter: blur(8px);
+  transition: opacity 500ms ease, box-shadow 500ms ease;
+}
+
+.tiktok-ai-core i { position: absolute; inset: -10px; border: 1px solid rgb(192 132 252 / 0.2); border-radius: inherit; }
+.tiktok-ai-core i:nth-child(3) { inset: -20px; }
+.tiktok-ai-core i:nth-child(4) { inset: -30px; }
+.tiktok-ai-core.is-thinking { opacity: 1; box-shadow: 0 0 42px rgb(192 132 252 / 0.7), inset 0 0 24px rgb(192 132 252 / 0.35); animation: tiktok-core-think 2.2s ease-in-out infinite; }
+.tiktok-ai-core.is-thinking i { animation: tiktok-ring-pulse 2.2s ease-out infinite; }
+.tiktok-ai-core.is-thinking i:nth-child(3) { animation-delay: 400ms; }
+.tiktok-ai-core.is-thinking i:nth-child(4) { animation-delay: 800ms; }
+
+.lesson-beat-enter { animation: lesson-beat-enter 480ms cubic-bezier(.22, 1, .36, 1) both; }
+.evidence-card { animation: evidence-secured 650ms cubic-bezier(.22, 1, .36, 1) both; }
+
+@keyframes tiktok-camera-breathe {
+  from { transform: scale(1.03) translate3d(-0.6%, 0, 0); }
+  to { transform: scale(1.11) translate3d(1.2%, -0.8%, 0); }
+}
+
+@keyframes tiktok-particle-rise {
+  0% { opacity: 0; transform: translate3d(0, 0, 0) scale(0.7); }
+  12% { opacity: 0.8; }
+  80% { opacity: 0.5; }
+  100% { opacity: 0; transform: translate3d(18px, -620px, 0) scale(1.3); }
+}
+
+@keyframes tiktok-signal-travel { from { left: -4%; } to { left: 104%; } }
+@keyframes tiktok-core-think { 50% { transform: scale(1.07); } }
+@keyframes tiktok-ring-pulse { from { opacity: 0.8; transform: scale(0.72); } to { opacity: 0; transform: scale(1.32); } }
+@keyframes lesson-beat-enter { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes evidence-secured { from { opacity: 0; transform: translateY(12px) scale(.98); box-shadow: 0 0 0 rgb(244 201 93 / 0); } to { opacity: 1; transform: translateY(0) scale(1); box-shadow: 0 0 28px rgb(244 201 93 / .14); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .inside-tiktok-camera,
+  .tiktok-particle,
+  .tiktok-signal-path span,
+  .tiktok-ai-core,
+  .tiktok-ai-core i,
+  .lesson-beat-enter,
+  .evidence-card { animation: none !important; }
+  .inside-tiktok-camera { transform: none; }
+  .tiktok-particle { display: none; }
+}
+
+.investigation-camera { animation: investigation-camera 18s ease-in-out infinite alternate; }
+.investigation-grid { background-image: linear-gradient(currentColor 1px, transparent 1px), linear-gradient(90deg, currentColor 1px, transparent 1px); background-size: 38px 38px; mask-image: radial-gradient(circle, black, transparent 80%); }
+.investigation-node { position: absolute; width: 7px; height: 7px; border-radius: 999px; box-shadow: 0 0 18px currentColor; animation: investigation-node 2.4s ease-in-out infinite; }
+.investigation-route { position: absolute; left: 8%; right: 8%; top: 45%; height: 2px; filter: drop-shadow(0 0 8px currentColor); animation: investigation-route 3.4s ease-in-out infinite; }
+@keyframes investigation-camera { from { transform: scale(1.03) translateX(-1%); } to { transform: scale(1.1) translateX(1%); } }
+@keyframes investigation-node { 50% { opacity: .3; transform: scale(.65); } }
+@keyframes investigation-route { 0%, 100% { opacity: .25; transform: scaleX(.75); } 50% { opacity: 1; transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) { .investigation-camera, .investigation-node, .investigation-route { animation: none !important; } }
+
 :root {
   color-scheme: light;
   --brand-red: #b5123f;
@@ -212,9 +530,11 @@ a {
 
 .cyber-mascot-body {
   animation: mascot-float 4s ease-in-out infinite;
-  background: linear-gradient(145deg, #ffffff 0 45%, #fff1f2 45% 72%, #e11d48 72% 100%);
+  background:
+    radial-gradient(circle at 28% 18%, rgba(255, 255, 255, 0.95) 0 12%, transparent 13%),
+    linear-gradient(145deg, #ffffff 0 42%, #fff1f2 42% 70%, #e11d48 70% 100%);
   border: 2px solid #41484a;
-  border-radius: 24% 24% 32% 32%;
+  border-radius: 34% 34% 38% 38%;
   box-shadow:
     0 4px 0 #41484a,
     0 12px 24px rgba(25, 28, 30, 0.12),
@@ -249,11 +569,11 @@ a {
 }
 
 .cyber-mascot-face {
-  background: linear-gradient(135deg, #191c1e, #41484a);
+  background: linear-gradient(135deg, #111827, #30394a);
   border: 2px solid #191c1e;
-  border-radius: calc(var(--mascot-size) * 0.09);
+  border-radius: calc(var(--mascot-size) * 0.13);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
-  height: calc(var(--mascot-size) * 0.32);
+  height: calc(var(--mascot-size) * 0.34);
   left: 50%;
   position: absolute;
   top: calc(var(--mascot-size) * 0.21);
@@ -263,13 +583,13 @@ a {
 
 .cyber-mascot-eye {
   animation: mascot-blink 4.5s ease-in-out infinite;
-  background: #fda4af;
-  border-radius: 2px;
-  box-shadow: 0 0 7px rgba(225, 29, 72, 0.65);
-  height: calc(var(--mascot-size) * 0.045);
+  background: #ffd6df;
+  border-radius: 999px;
+  box-shadow: 0 0 9px rgba(225, 29, 72, 0.75);
+  height: calc(var(--mascot-size) * 0.075);
   position: absolute;
-  top: 34%;
-  width: calc(var(--mascot-size) * 0.12);
+  top: 30%;
+  width: calc(var(--mascot-size) * 0.105);
 }
 
 .cyber-mascot-eye-left {
@@ -281,10 +601,12 @@ a {
 }
 
 .cyber-mascot-smile {
-  background: #e11d48;
-  border-radius: 999px;
-  bottom: 21%;
-  height: 2px;
+  background: transparent;
+  border: 3px solid #fda4af;
+  border-top: 0;
+  border-radius: 0 0 999px 999px;
+  bottom: 16%;
+  height: calc(var(--mascot-size) * 0.07);
   left: 50%;
   position: absolute;
   transform: translateX(-50%);
@@ -307,6 +629,38 @@ a {
   position: absolute;
   transform: translateX(-50%);
   width: calc(var(--mascot-size) * 0.24);
+}
+
+.cyber-mascot-heart {
+  background: #ffffff;
+  border: 2px solid #41484a;
+  border-radius: 999px;
+  bottom: calc(var(--mascot-size) * 0.08);
+  box-shadow: inset 0 -3px 0 rgba(181, 18, 63, 0.18);
+  height: calc(var(--mascot-size) * 0.12);
+  position: absolute;
+  right: calc(var(--mascot-size) * 0.18);
+  width: calc(var(--mascot-size) * 0.12);
+}
+
+.cyber-mascot-heart::before,
+.cyber-mascot-heart::after {
+  background: #e11d48;
+  border-radius: 999px 999px 0 0;
+  content: "";
+  height: 55%;
+  left: 30%;
+  position: absolute;
+  top: 25%;
+  transform: rotate(-45deg);
+  transform-origin: 0 100%;
+  width: 32%;
+}
+
+.cyber-mascot-heart::after {
+  left: 48%;
+  transform: rotate(45deg);
+  transform-origin: 100% 100%;
 }
 
 .cyber-mascot-arm,
@@ -340,10 +694,43 @@ a {
   transform: rotate(-12deg);
 }
 
+.cyber-mascot-focus .cyber-mascot-eye {
+  height: calc(var(--mascot-size) * 0.06);
+  width: calc(var(--mascot-size) * 0.13);
+}
+
+.cyber-mascot-sad .cyber-mascot-body {
+  animation: mascot-sad 700ms ease-in-out both;
+}
+
+.cyber-mascot-sad .cyber-mascot-smile {
+  background: transparent;
+  border: 2px solid #fda4af;
+  border-bottom: 0;
+  border-radius: 999px 999px 0 0;
+  bottom: 12%;
+  height: calc(var(--mascot-size) * 0.08);
+}
+
+.cyber-mascot-sad .cyber-mascot-eye {
+  transform: rotate(8deg);
+}
+
+.cyber-mascot-sad .cyber-mascot-eye-right {
+  transform: rotate(-8deg);
+}
+
+@keyframes mascot-sad {
+  0% { transform: translateX(0); }
+  30% { transform: translateX(-4px) rotate(-2deg); }
+  60% { transform: translateX(4px) rotate(2deg); }
+  100% { transform: translateX(0); }
+}
+
 .cyber-mascot-celebrate .cyber-mascot-body::after {
   animation: sparkle-pop 1.3s ease-in-out infinite;
-  color: #e11d48;
-  content: "+";
+  color: #f59e0b;
+  content: "★";
   font-size: calc(var(--mascot-size) * 0.34);
   font-weight: 900;
   position: absolute;

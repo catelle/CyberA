@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { CyberMascot, MascotCoach } from "@/components/gamified/CyberMascot";
 import { cacheModuleForOffline, saveQuizProgress } from "@/lib/offline/db";
+import { playCelebrate, playCorrect, playLessonOpen, playWrong } from "@/lib/sounds";
 import type { ProgramModule } from "@/lib/program";
 
 type QuizEngineProps = {
@@ -43,6 +44,7 @@ export function QuizEngine({ module, userId }: QuizEngineProps) {
 
   useEffect(() => {
     cacheModuleForOffline(module).catch(() => undefined);
+    playLessonOpen();
   }, [module]);
 
   async function completeQuiz(nextAnswers: Record<string, number>) {
@@ -83,6 +85,7 @@ export function QuizEngine({ module, userId }: QuizEngineProps) {
       router.replace(`/student/modules/${module.id}`);
       return;
     }
+    if (nextPassed) playCelebrate();
     setStatus(
       completedModule
         ? "Progression enregistree localement. Les points seront synchronises en ligne."
@@ -95,14 +98,12 @@ export function QuizEngine({ module, userId }: QuizEngineProps) {
   }
 
   async function handleNext() {
-    if (selectedIndex === null) {
-      return;
-    }
+    if (selectedIndex === null) return;
 
-    const nextAnswers = {
-      ...answers,
-      [currentQuestion.id]: selectedIndex
-    };
+    const isCorrect = selectedIndex === currentQuestion.correctIndex;
+    if (isCorrect) playCorrect(); else playWrong();
+
+    const nextAnswers = { ...answers, [currentQuestion.id]: selectedIndex };
     setAnswers(nextAnswers);
 
     if (currentIndex === module.quiz.length - 1) {

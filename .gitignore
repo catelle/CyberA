@@ -16,3 +16,5 @@ tsconfig.tsbuildinfo
 .yarn/install-state.gz
 
 .DS_Store
+.vercel
+.env*

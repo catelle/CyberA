@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ArrowRight, BookOpen, CheckCircle2, Clock, Lock, Trophy } from "lucide-react";
 
 import { MascotCoach } from "@/components/gamified/CyberMascot";
@@ -7,6 +7,7 @@ import { DashboardShell } from "@/components/layout/DashboardShell";
 import { requireRole } from "@/lib/auth/guards";
 import {
   getPublishedProgramModuleById,
+  isModuleUnlockedForStudent,
   listCompletedLessonIdsForStudent
 } from "@/lib/db/cybera";
 
@@ -35,6 +36,10 @@ export default async function StudentModuleDetailPage({ params }: ModulePageProp
     notFound();
   }
 
+  if (user.role === "student" && !(await isModuleUnlockedForStudent(user.supabaseUserId, selectedModule.order))) {
+    redirect("/student/modules?locked=1");
+  }
+
   const completedLessonIds = new Set(
     user.role === "student"
       ? await listCompletedLessonIdsForStudent(
@@ -51,25 +56,32 @@ export default async function StudentModuleDetailPage({ params }: ModulePageProp
   const firstLesson = selectedModule.lessons.find(
     (lesson) => !completedLessonIds.has(lesson.id)
   );
+  const completedCount = completedLessonIds.size;
+  const completionPercent = selectedModule.lessons.length
+    ? Math.round((completedCount / selectedModule.lessons.length) * 100)
+    : 0;
 
   return (
     <DashboardShell user={user} title={selectedModule.title}>
       <div className="grid gap-5 sm:gap-6">
-        <section className="grid gap-4 rounded-lg border-2 border-secondary bg-white p-4 shadow-[0_4px_0_0_rgba(88,96,98,1)] sm:p-5 lg:grid-cols-[1fr_21rem] lg:items-center">
-          <div className="min-w-0">
-            <p className="text-sm font-black uppercase text-tertiary">
+        <section className="rounded-2xl border-2 border-primary bg-white px-5 py-10 text-center text-brand-ink shadow-[0_8px_0_0_#586062] sm:px-10 sm:py-14">
+          <div className="mx-auto max-w-4xl">
+            <p className="text-sm font-black uppercase tracking-[.2em] text-primary">
               Module {selectedModule.order}
             </p>
-            <h2 className="mt-2 break-words font-display text-2xl font-black leading-tight text-brand-ink sm:text-3xl">
+            <h1 className="mt-3 break-words font-display text-4xl font-black leading-tight sm:text-6xl">
+              {selectedModule.title}
+            </h1>
+            <h2 className="mt-4 font-display text-xl font-black text-brand-blue sm:text-2xl">
               {selectedModule.subtitle}
             </h2>
-            <p className="mt-3 max-w-2xl text-sm font-semibold leading-7 text-slate-600 sm:text-base">
+            <p className="mx-auto mt-4 max-w-3xl text-base font-semibold leading-8 text-slate-600 sm:text-lg">
               {selectedModule.summary}
             </p>
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row sm:flex-wrap">
               {firstLesson ? (
                 <Link
-                  className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border-2 border-secondary bg-brand-blue px-4 font-black text-white shadow-[0_4px_0_0_rgba(88,96,98,1)] transition hover:bg-brand-ink sm:w-fit"
+                  className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-lg border-2 border-secondary bg-primary px-6 font-black text-white shadow-[0_4px_0_0_#ffcc32] transition hover:bg-[#8f1237] sm:w-fit"
                   href={`/student/modules/${selectedModule.id}/lesson/${firstLesson.id}`}
                 >
                   Continuer
@@ -92,11 +104,9 @@ export default async function StudentModuleDetailPage({ params }: ModulePageProp
               ) : null}
             </div>
           </div>
-          <MascotCoach mascotMood="focus">
-            Une petite lecon a la fois. Chaque etape valide un reflexe concret.
-          </MascotCoach>
         </section>
 
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
         <section className="grid gap-4">
           {selectedModule.lessons.map((lesson, index) => {
             const isCompleted = completedLessonIds.has(lesson.id);
@@ -104,7 +114,7 @@ export default async function StudentModuleDetailPage({ params }: ModulePageProp
             return (
               <Link
                 className={
-                  "mission-card grid gap-3 rounded-lg border-2 border-secondary p-4 shadow-[0_4px_0_0_rgba(88,96,98,1)] transition hover:-translate-y-1 hover:shadow-[0_7px_0_0_rgba(88,96,98,1)] sm:grid-cols-[4.5rem_1fr_auto] sm:items-center " +
+                  "mission-card grid gap-3 rounded-xl border border-slate-200 p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg sm:grid-cols-[4.5rem_1fr_auto] sm:items-center " +
                   (isCompleted ? "bg-[#e8fff2]" : "bg-white")
                 }
                 href={`/student/modules/${selectedModule.id}/lesson/${lesson.id}`}
@@ -153,6 +163,14 @@ export default async function StudentModuleDetailPage({ params }: ModulePageProp
             );
           })}
         </section>
+        <aside className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm lg:sticky lg:top-6">
+          <div className="grid aspect-[4/3] place-items-center rounded-lg border-2 border-primary bg-white text-primary"><Trophy className="h-20 w-20" /></div>
+          <p className="mt-5 font-display text-xl font-black text-brand-ink">{completedCount} sur {selectedModule.lessons.length} leçons terminées</p>
+          <div className="mt-4 h-2 overflow-hidden rounded-full border border-rose-200 bg-rose-50"><div className="h-full rounded-full bg-primary" style={{ width: `${completionPercent}%` }} /></div>
+          <p className="mt-2 text-right text-sm font-black text-slate-500">{completionPercent}%</p>
+          <div className="mt-5 border-t border-slate-200 pt-5"><MascotCoach mascotMood="focus">Une leçon à la fois. Chaque étape validée te rapproche du module suivant.</MascotCoach></div>
+        </aside>
+        </div>
       </div>
     </DashboardShell>
   );

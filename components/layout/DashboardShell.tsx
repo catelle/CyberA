@@ -11,6 +11,7 @@ import {
   Link2,
   Megaphone,
   MessageCircle,
+  PackageOpen,
   ShieldAlert,
   Sparkles,
   Trophy,
@@ -62,6 +63,7 @@ export function DashboardShell({ user, title, children }: DashboardShellProps) {
           ]
         : [
             { href: "/student/dashboard", label: "Accueil", Icon: Home },
+            { href: "/student/kit", label: "Mon Kit", Icon: PackageOpen },
             { href: "/student/modules", label: "Modules", Icon: BookOpen },
             { href: "/student/challenges", label: "Defis", Icon: ClipboardCheck },
             { href: "/student/leaderboard", label: "Classement", Icon: Trophy },

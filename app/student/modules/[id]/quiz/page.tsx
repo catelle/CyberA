@@ -5,6 +5,7 @@ import { QuizEngine } from "@/components/quiz/QuizEngine";
 import { requireRole } from "@/lib/auth/guards";
 import {
   getPublishedProgramModuleById,
+  isModuleUnlockedForStudent,
   listCompletedLessonIdsForStudent
 } from "@/lib/db/cybera";
 
@@ -20,6 +21,10 @@ export default async function QuizPage({ params }: QuizPageProps) {
 
   if (!programModule) {
     notFound();
+  }
+
+  if (!(await isModuleUnlockedForStudent(user.supabaseUserId, programModule.week))) {
+    redirect("/student/modules?locked=1");
   }
 
   const completedLessonIds = await listCompletedLessonIdsForStudent(

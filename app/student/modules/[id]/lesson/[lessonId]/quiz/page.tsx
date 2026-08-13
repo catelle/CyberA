@@ -1,9 +1,12 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+
+/* eslint-disable react/no-unescaped-entities -- French learning copy uses apostrophes. */
 
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { LessonQuiz } from "@/components/quiz/LessonQuiz";
 import { requireRole } from "@/lib/auth/guards";
-import { getPublishedProgramModuleById } from "@/lib/db/cybera";
+import { getPublishedProgramModuleById, isModuleUnlockedForStudent } from "@/lib/db/cybera";
+import { getLessonQuizBank } from "@/lib/curriculum/lesson-quiz-banks";
 
 type LessonQuizPageProps = {
   params: {
@@ -16,10 +19,17 @@ export default async function LessonQuizPage({ params }: LessonQuizPageProps) {
   const user = await requireRole(["student"]);
   const programModule = await getPublishedProgramModuleById(params.id);
   const lesson = programModule?.lessons.find((item) => item.id === params.lessonId);
+  const nextLesson = programModule?.lessons
+    .filter((item) => item.order > (lesson?.order ?? Number.MAX_SAFE_INTEGER))
+    .sort((a, b) => a.order - b.order)[0];
   const moduleTitle = programModule?.title;
 
-  if (!lesson || !moduleTitle) {
+  if (!lesson || !moduleTitle || !programModule) {
     notFound();
+  }
+
+  if (!(await isModuleUnlockedForStudent(user.supabaseUserId, programModule.week))) {
+    redirect("/student/modules?locked=1");
   }
 
   return (
@@ -32,6 +42,8 @@ export default async function LessonQuizPage({ params }: LessonQuizPageProps) {
         <LessonQuiz
           lessonId={params.lessonId}
           moduleId={params.id}
+          nextLesson={nextLesson ? { id: nextLesson.id, title: nextLesson.title } : undefined}
+          questions={getLessonQuizBank(lesson.id)}
           quiz={lesson.quiz}
           userId={user.supabaseUserId}
         />

@@ -38,7 +38,7 @@ export type LocalProgress = {
   userId: string;
   moduleId: string;
   lessonsRead: string[];
-  lessonQuizAnswers: Record<string, number>;
+  lessonQuizAnswers: Record<string, Record<string, number>>;
   quizAnswers: Record<string, number>;
   quizScore?: number;
   passed?: boolean;
@@ -135,12 +135,12 @@ export async function saveLessonProgress({
   userId,
   moduleId,
   lessonId,
-  selectedIndex
+  answers
 }: {
   userId: string;
   moduleId: string;
   lessonId: string;
-  selectedIndex: number;
+  answers: Record<string, number>;
 }) {
   const stored = await offlineDb.localProgress.get(moduleId);
   const previous =
@@ -161,7 +161,7 @@ export async function saveLessonProgress({
       lessonsRead,
       lessonQuizAnswers: {
         ...(previous?.lessonQuizAnswers ?? {}),
-        [lessonId]: selectedIndex
+        [lessonId]: answers
       },
       quizAnswers: previous?.quizAnswers ?? {},
       quizScore: previous?.quizScore,

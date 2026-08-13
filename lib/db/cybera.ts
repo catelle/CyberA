@@ -7,6 +7,7 @@ import {
   type ProgramModule,
   type WeeklyChallenge
 } from "@/lib/program";
+import { lessonQuizBanks } from "@/lib/curriculum/lesson-quiz-banks";
 
 export type ModuleRow = {
   id: string;
@@ -118,7 +119,7 @@ function joinedValue<T>(value: T | T[] | null | undefined): T | null {
   return Array.isArray(value) ? value[0] ?? null : value ?? null;
 }
 
-async function calculateVerifiedXp(userIds?: string[]) {
+async function calculateVerifiedXp(userIds?: string[], sinceIso?: string) {
   const supabase = createSupabaseAdminClient();
   let moduleQuery = supabase
     .from("module_progress")
@@ -136,16 +137,30 @@ async function calculateVerifiedXp(userIds?: string[]) {
     .from("parent_challenges")
     .select("child_id, points_awarded")
     .eq("status", "approved");
+  let strikeQuery = supabase
+    .from("strike_attempts")
+    .select("user_id, points_awarded")
+    .eq("status", "submitted")
+    .eq("passed", true);
 
   if (userIds?.length) {
     moduleQuery = moduleQuery.in("user_id", userIds);
     challengeQuery = challengeQuery.in("user_id", userIds);
     capstoneQuery = capstoneQuery.in("user_id", userIds);
     parentChallengeQuery = parentChallengeQuery.in("child_id", userIds);
+    strikeQuery = strikeQuery.in("user_id", userIds);
   }
 
-  const [{ data: modules }, { data: challenges }, { data: capstones }, { data: parentChallenges }] =
-    await Promise.all([moduleQuery, challengeQuery, capstoneQuery, parentChallengeQuery]);
+  if (sinceIso) {
+    moduleQuery = moduleQuery.gte("completed_at", sinceIso);
+    challengeQuery = challengeQuery.gte("reviewed_at", sinceIso);
+    capstoneQuery = capstoneQuery.gte("reviewed_at", sinceIso);
+    parentChallengeQuery = parentChallengeQuery.gte("reviewed_at", sinceIso);
+    strikeQuery = strikeQuery.gte("submitted_at", sinceIso);
+  }
+
+  const [{ data: modules }, { data: challenges }, { data: capstones }, { data: parentChallenges }, { data: strikes }] =
+    await Promise.all([moduleQuery, challengeQuery, capstoneQuery, parentChallengeQuery, strikeQuery]);
   const totals = new Map<string, number>();
   const add = (userId: string | null, points: number) => {
     if (!userId) return;
@@ -156,7 +171,55 @@ async function calculateVerifiedXp(userIds?: string[]) {
   (challenges ?? []).forEach((row) => add(row.user_id, row.points_awarded ?? 0));
   (capstones ?? []).forEach((row) => add(row.user_id, 500));
   (parentChallenges ?? []).forEach((row) => add(row.child_id, row.points_awarded ?? 0));
+  (strikes ?? []).forEach((row) => add(row.user_id, row.points_awarded ?? 0));
   return totals;
+}
+
+export async function isModuleUnlockedForStudent(userId: string, moduleWeek: number): Promise<boolean> {
+  if (moduleWeek <= 1) return true;
+
+  const supabase = createSupabaseAdminClient();
+  const { data: previousModules } = await supabase
+    .from("modules")
+    .select("id, order_index")
+    .lt("order_index", moduleWeek)
+    .eq("is_published", true)
+    .order("order_index", { ascending: true })
+    .returns<{ id: string; order_index: number }[]>();
+
+  // A curriculum configuration gap must never expose a later module.
+  if (!previousModules || previousModules.length !== moduleWeek - 1) return false;
+
+  const { data: progressRows } = await supabase
+    .from("module_progress")
+    .select("module_id, status")
+    .eq("user_id", userId)
+    .in("module_id", previousModules.map((module) => module.id))
+    .returns<{ module_id: string; status: string }[]>();
+
+  const completedIds = new Set(
+    (progressRows ?? [])
+      .filter((row) => row.status === "completed")
+      .map((row) => row.module_id)
+  );
+  return previousModules.every((module) => completedIds.has(module.id));
+}
+
+export async function getStrikeEligibility(userId: string) {
+  const supabase = createSupabaseAdminClient();
+  const { data } = await supabase
+    .from("lesson_progress")
+    .select("lesson_id")
+    .eq("user_id", userId)
+    .returns<{ lesson_id: string }[]>();
+
+  const completedLessonIds = Array.from(new Set((data ?? []).map((row) => row.lesson_id)));
+  const poolSize = completedLessonIds.reduce(
+    (sum, lessonId) => sum + (lessonQuizBanks[lessonId]?.length ?? 0),
+    0
+  );
+
+  return { eligible: poolSize >= 10, poolSize };
 }
 
 export async function getParentChildActivityDetail(parentId: string, childId: string) {
@@ -652,6 +715,44 @@ export async function listCohortsFromDatabase() {
   }));
 }
 
+export async function getCyberaFellowKit(userId: string) {
+  const supabase = createSupabaseAdminClient();
+  const [profileResult, modules, challengeResult, capstoneResult] = await Promise.all([
+    supabase
+      .from("ambassador_profiles")
+      .select("modules_completed, certified_at, cohorts(name, start_date)")
+      .eq("user_id", userId)
+      .maybeSingle(),
+    listProgramModulesForStudent(userId),
+    supabase.from("challenge_submissions").select("id, status").eq("user_id", userId),
+    supabase.from("capstone_projects").select("id, status, submitted_at").eq("user_id", userId).maybeSingle()
+  ]);
+  const profile = profileResult.data as {
+    modules_completed?: number | null;
+    certified_at?: string | null;
+    cohorts?: { name?: string | null; start_date?: string | null } | Array<{ name?: string | null; start_date?: string | null }> | null;
+  } | null;
+  const cohort = joinedValue(profile?.cohorts) as { name?: string | null; start_date?: string | null } | null;
+  const completedModules = modules.filter((module) => module.progressPercent >= 100).length;
+  const lessonsTotal = modules.reduce((total, module) => total + module.lessons.length, 0);
+  const lessonsCompleted = modules.reduce((total, module) => total + Math.round((module.progressPercent / 100) * module.lessons.length), 0);
+  const challengeSubmissions = challengeResult.data ?? [];
+  const capstone = capstoneResult.data;
+
+  return {
+    fellowshipName: cohort?.name?.trim() || null,
+    cohortStartDate: cohort?.start_date ?? null,
+    completedModules,
+    moduleCount: modules.length,
+    lessonsCompleted,
+    lessonsTotal,
+    hasChallengeActivity: challengeSubmissions.length > 0,
+    hasApprovedChallenge: challengeSubmissions.some((item) => item.status === "approved"),
+    capstoneSubmitted: Boolean(capstone?.submitted_at || capstone?.id),
+    certified: Boolean(profile?.certified_at)
+  };
+}
+
 export async function listCapstoneProjectsFromDatabase() {
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase
@@ -889,7 +990,21 @@ export async function listProgramModulesForStudent(
     ? databaseCurriculum.modules.map((databaseModule) => {
         const converted = databaseModuleToProgramModule(databaseModule);
         const curated = programModules.find((module) => module.week === converted.week);
-        return converted.week === 1 && curated ? { ...curated, id: converted.id } : converted;
+        if ((converted.week === 1 || converted.week === 2) && curated) {
+          return { ...curated, id: converted.id };
+        }
+        return curated
+          ? {
+              ...converted,
+              id: converted.id,
+              title: curated.title,
+              subtitle: curated.subtitle,
+              summary: curated.summary,
+              color: curated.color,
+              icon: curated.icon,
+              outcomes: curated.outcomes
+            }
+          : converted;
       })
     : programModules;
   const [
@@ -975,7 +1090,21 @@ export async function getPublishedProgramModuleById(moduleId: string) {
   if (!selectedModule) return null;
   const converted = databaseModuleToProgramModule(selectedModule);
   const curated = programModules.find((module) => module.week === converted.week);
-  return converted.week === 1 && curated ? { ...curated, id: converted.id } : converted;
+  if ((converted.week === 1 || converted.week === 2) && curated) {
+    return { ...curated, id: converted.id };
+  }
+  return curated
+    ? {
+        ...converted,
+        id: converted.id,
+        title: curated.title,
+        subtitle: curated.subtitle,
+        summary: curated.summary,
+        color: curated.color,
+        icon: curated.icon,
+        outcomes: curated.outcomes
+      }
+    : converted;
 }
 
 export async function listCompletedLessonIdsForStudent(
@@ -1500,13 +1629,15 @@ export async function listParentReportsForUser(parentId: string) {
   }));
 }
 
-export async function listLeaderboard() {
+export async function listLeaderboard(currentUserId?: string) {
   const supabase = createSupabaseAdminClient();
+  const sevenDaysAgoIso = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const [
     { data, error },
     { data: progress },
     { count: publishedModuleCount },
-    verifiedXp
+    verifiedXp,
+    weeklyXp
   ] = await Promise.all([
     supabase
       .from("ambassador_profiles")
@@ -1520,7 +1651,8 @@ export async function listLeaderboard() {
       .from("modules")
       .select("id", { count: "exact", head: true })
       .eq("is_published", true),
-    calculateVerifiedXp()
+    calculateVerifiedXp(),
+    calculateVerifiedXp(undefined, sevenDaysAgoIso)
   ]);
 
   if (error || !data) return [];
@@ -1549,9 +1681,9 @@ export async function listLeaderboard() {
         points: verifiedXp.get(entry.user_id) ?? 0,
         performanceScore,
         modulesCompleted: entry.modules_completed ?? 0,
-        weeklyPoints: 0,
+        weeklyPoints: weeklyXp.get(entry.user_id) ?? 0,
         cohort: entry.cohorts?.name ?? "Cohorte",
-        isCurrentUser: false
+        isCurrentUser: currentUserId ? entry.user_id === currentUserId : false
       };
     })
     .sort(

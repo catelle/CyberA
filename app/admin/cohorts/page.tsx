@@ -1,6 +1,7 @@
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { requireRole } from "@/lib/auth/guards";
 import { listCohortsFromDatabase } from "@/lib/db/cybera";
+import { CohortNameForm } from "@/components/admin/CohortNameForm";
 
 export default async function AdminCohortsPage() {
   const user = await requireRole(["admin"]);
@@ -30,6 +31,7 @@ export default async function AdminCohortsPage() {
             <p className="mt-3 text-sm font-bold text-slate-500">
               {cohort.enrolled}/{cohort.max_size} inscrits
             </p>
+            <CohortNameForm id={cohort.id} name={cohort.name} />
           </article>
         ))}
       </section>

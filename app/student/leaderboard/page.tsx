@@ -1,10 +1,16 @@
+import Link from "next/link";
+import { ArrowRight, Zap } from "lucide-react";
+
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { requireRole } from "@/lib/auth/guards";
-import { listLeaderboard } from "@/lib/db/cybera";
+import { getStrikeEligibility, listLeaderboard } from "@/lib/db/cybera";
 
 export default async function LeaderboardPage() {
   const user = await requireRole(["student"]);
-  const leaderboardEntries = await listLeaderboard();
+  const [leaderboardEntries, strikeEligibility] = await Promise.all([
+    listLeaderboard(user.supabaseUserId),
+    getStrikeEligibility(user.supabaseUserId)
+  ]);
 
   return (
     <DashboardShell user={user} title="Classement">
@@ -16,6 +22,28 @@ export default async function LeaderboardPage() {
           <h2 className="mt-2 text-2xl font-black text-brand-ink">
             Progression des eleves
           </h2>
+        </section>
+
+        <section className="grid gap-4 overflow-hidden rounded-lg border-2 border-secondary bg-white p-4 shadow-[0_4px_0_0_rgba(88,96,98,1)] sm:grid-cols-[auto_1fr_auto] sm:items-center sm:p-5">
+          <div className="grid h-12 w-12 place-items-center rounded-lg bg-tertiary-fixed text-tertiary">
+            <Zap aria-hidden className="h-6 w-6" />
+          </div>
+          <div>
+            <h3 className="font-black text-brand-ink">Strike : gagne 50 XP bonus</h3>
+            <p className="text-sm font-semibold text-slate-600">
+              {strikeEligibility.eligible
+                ? "10 questions au hasard sur ce que tu as deja appris. Optionnel, retentable a volonte."
+                : "Termine au moins une lecon pour debloquer ce bonus."}
+            </p>
+          </div>
+          {strikeEligibility.eligible ? (
+            <Link
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border-2 border-secondary bg-brand-blue px-5 font-black text-white shadow-[0_4px_0_0_rgba(88,96,98,1)] transition hover:bg-brand-ink sm:w-fit"
+              href="/student/strike"
+            >
+              Lancer <ArrowRight aria-hidden className="h-4 w-4" />
+            </Link>
+          ) : null}
         </section>
 
         <section className="overflow-hidden rounded-lg bg-white shadow-sm">
@@ -42,6 +70,9 @@ export default async function LeaderboardPage() {
                 </p>
                 <p className="text-xs font-bold text-slate-500">
                   {entry.points} pts recompense
+                </p>
+                <p className="text-xs font-bold text-slate-400">
+                  {entry.weeklyPoints} pts cette semaine
                 </p>
               </div>
             </div>

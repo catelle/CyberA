@@ -1,8 +1,13 @@
+"use client";
+
+import { useEffect } from "react";
 import type { ReactNode } from "react";
+
+import { playCoachAppear } from "@/lib/sounds";
 
 type CyberMascotProps = {
   className?: string;
-  mood?: "cheer" | "focus" | "celebrate";
+  mood?: "cheer" | "focus" | "celebrate" | "sad";
   size?: "sm" | "md" | "lg";
 };
 
@@ -40,6 +45,7 @@ export function CyberMascot({
           <span className="cyber-mascot-smile" />
         </div>
         <div className="cyber-mascot-badge">C</div>
+        <div className="cyber-mascot-heart" />
         <div className="cyber-mascot-arm cyber-mascot-arm-left" />
         <div className="cyber-mascot-arm cyber-mascot-arm-right" />
         <div className="cyber-mascot-foot cyber-mascot-foot-left" />
@@ -54,6 +60,10 @@ export function MascotCoach({
   eyebrow = "Coach Cyber",
   mascotMood = "cheer"
 }: MascotCoachProps) {
+  useEffect(() => {
+    playCoachAppear();
+  }, []);
+
   return (
     <aside className="grid gap-3 sm:grid-cols-[auto_1fr] sm:items-center">
       <CyberMascot mood={mascotMood} size="sm" />

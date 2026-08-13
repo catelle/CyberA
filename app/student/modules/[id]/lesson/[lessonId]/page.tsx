@@ -1,12 +1,18 @@
 import Link from "next/link";
 import Image from "next/image";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ArrowRight, CheckCircle2, ShieldAlert, Sparkles } from "lucide-react";
 
 import { MascotCoach } from "@/components/gamified/CyberMascot";
+import { WelcomeBehindScreen } from "@/components/lesson/WelcomeBehindScreen";
+import { InsideTikTokLesson } from "@/components/lesson/InsideTikTokLesson";
+import { ModuleOneInvestigationLesson } from "@/components/lesson/ModuleOneInvestigationLesson";
+import { LessonAudio } from "@/components/lesson/LessonAudio";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { requireRole } from "@/lib/auth/guards";
-import { getPublishedProgramModuleById } from "@/lib/db/cybera";
+import { getPublishedProgramModuleById, isModuleUnlockedForStudent } from "@/lib/db/cybera";
+import { moduleOneInvestigations } from "@/lib/curriculum/module-one-investigations";
+import { moduleTwoInvestigations } from "@/lib/curriculum/module-two-investigations";
 
 type LessonPageProps = {
   params: {
@@ -26,8 +32,49 @@ export default async function LessonPage({ params }: LessonPageProps) {
     notFound();
   }
 
+  if (user.role === "student" && !(await isModuleUnlockedForStudent(user.supabaseUserId, selectedModule.week))) {
+    redirect("/student/modules?locked=1");
+  }
+
+  // Published modules use database UUIDs, while lesson slugs remain stable.
+  // Detect this bespoke experience by its lesson slug rather than the module id.
+  if (lesson.id === "ou-est-internet") {
+    return (
+      <DashboardShell user={user} title={lesson.title}>
+        <WelcomeBehindScreen canComplete={user.role === "student"} lessonId={lesson.id} moduleId={selectedModule.id} />
+      </DashboardShell>
+    );
+  }
+
+  if (lesson.id === "apres-envoyer") {
+    return (
+      <DashboardShell user={user} title="Inside TikTok">
+        <InsideTikTokLesson canComplete={user.role === "student"} lessonId={lesson.id} moduleId={selectedModule.id} />
+      </DashboardShell>
+    );
+  }
+
+  const investigation = moduleOneInvestigations[lesson.id];
+  if (investigation) {
+    return (
+      <DashboardShell user={user} title={investigation.title}>
+        <ModuleOneInvestigationLesson canComplete={user.role === "student"} lesson={investigation} moduleId={selectedModule.id} />
+      </DashboardShell>
+    );
+  }
+
+  const survivalInvestigation = moduleTwoInvestigations[lesson.id];
+  if (selectedModule.week === 2 && survivalInvestigation) {
+    return (
+      <DashboardShell user={user} title={survivalInvestigation.title}>
+        <ModuleOneInvestigationLesson canComplete={user.role === "student"} lesson={survivalInvestigation} moduleId={selectedModule.id} startImmediately />
+      </DashboardShell>
+    );
+  }
+
   return (
     <DashboardShell user={user} title={lesson.title}>
+      <LessonAudio />
       <article className="grid gap-5 rounded-lg border-2 border-secondary bg-white p-4 shadow-[0_4px_0_0_rgba(88,96,98,1)] sm:p-5">
         <div className="grid gap-4 lg:grid-cols-[1fr_21rem] lg:items-center">
           <div className="min-w-0">

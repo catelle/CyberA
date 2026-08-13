@@ -4,7 +4,7 @@ import { ArrowRight, CheckCircle2, Lock, Play, Star } from "lucide-react";
 import { MascotCoach } from "@/components/gamified/CyberMascot";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { requireRole } from "@/lib/auth/guards";
-import { listProgramModulesForStudent } from "@/lib/db/cybera";
+import { isModuleUnlockedForStudent, listProgramModulesForStudent } from "@/lib/db/cybera";
 
 const statusLabels = {
   ready: "Disponible",
@@ -18,13 +18,26 @@ const statusStyles = {
   planned: "bg-slate-100 text-slate-500"
 };
 
-export default async function StudentModulesPage() {
+type StudentModulesPageProps = {
+  searchParams: { locked?: string };
+};
+
+export default async function StudentModulesPage({ searchParams }: StudentModulesPageProps) {
   const user = await requireRole(["student"]);
   const modules = await listProgramModulesForStudent(user.supabaseUserId);
+  const unlockFlags = await Promise.all(
+    modules.map((module) => isModuleUnlockedForStudent(user.supabaseUserId, module.week))
+  );
 
   return (
     <DashboardShell user={user} title="Modules">
       <div className="grid gap-5 sm:gap-6">
+        {searchParams.locked ? (
+          <section className="rounded-lg border-2 border-secondary bg-[#fff4c2] p-4 font-bold text-brand-ink shadow-[0_4px_0_0_rgba(88,96,98,1)]">
+            Termine d&apos;abord le module précédent pour débloquer celui-ci.
+          </section>
+        ) : null}
+
         <section className="grid gap-4 rounded-lg border-2 border-secondary bg-white p-4 shadow-[0_4px_0_0_rgba(88,96,98,1)] sm:p-5 lg:grid-cols-[1fr_22rem] lg:items-center">
           <div className="min-w-0">
             <p className="text-sm font-black uppercase text-tertiary">Parcours</p>
@@ -43,8 +56,9 @@ export default async function StudentModulesPage() {
 
         <section className="grid gap-4">
           {modules.map((module, index) => {
-            const isReady = module.status === "ready";
-            const Icon = isReady ? Play : module.status === "next" ? Star : Lock;
+            const isUnlocked = unlockFlags[index];
+            const isReady = module.status === "ready" && isUnlocked;
+            const Icon = !isUnlocked ? Lock : isReady ? Play : module.status === "next" ? Star : Lock;
 
             return (
               <article
@@ -72,10 +86,10 @@ export default async function StudentModulesPage() {
                     <span
                       className={
                         "rounded-full px-3 py-1 text-xs font-black uppercase " +
-                        statusStyles[module.status]
+                        (isUnlocked ? statusStyles[module.status] : statusStyles.planned)
                       }
                     >
-                      {statusLabels[module.status]}
+                      {isUnlocked ? statusLabels[module.status] : statusLabels.planned}
                     </span>
                     {isReady ? (
                       <CheckCircle2 aria-hidden className="h-5 w-5 text-[#069b70]" />
@@ -109,13 +123,20 @@ export default async function StudentModulesPage() {
                   <p className="text-center text-sm font-black text-secondary lg:text-right">
                     {module.progressPercent}%
                   </p>
-                  <Link
-                    className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border-2 border-secondary bg-brand-blue px-4 font-black text-white shadow-[0_4px_0_0_rgba(88,96,98,1)] transition hover:bg-brand-ink"
-                    href={`/student/modules/${module.id}`}
-                  >
-                    Ouvrir
-                    <ArrowRight aria-hidden className="h-4 w-4" />
-                  </Link>
+                  {isUnlocked ? (
+                    <Link
+                      className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border-2 border-secondary bg-brand-blue px-4 font-black text-white shadow-[0_4px_0_0_rgba(88,96,98,1)] transition hover:bg-brand-ink"
+                      href={`/student/modules/${module.id}`}
+                    >
+                      Ouvrir
+                      <ArrowRight aria-hidden className="h-4 w-4" />
+                    </Link>
+                  ) : (
+                    <span className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border-2 border-secondary bg-slate-100 px-4 font-black text-slate-400">
+                      <Lock aria-hidden className="h-4 w-4" />
+                      Verrouille
+                    </span>
+                  )}
                 </div>
               </article>
             );
