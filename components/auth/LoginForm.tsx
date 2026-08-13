@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 
 import { createSupabaseBrowserClient } from "@/lib/auth/supabase-client";
 import { dashboardForRole } from "@/lib/auth/roles";
@@ -16,6 +17,7 @@ export function LoginForm() {
   const [status, setStatus] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const t = getDictionary(language);
 
@@ -121,15 +123,27 @@ export function LoginForm() {
 
       <div className="field">
         <label htmlFor="password">{t.password}</label>
-        <input
-          autoComplete="current-password"
-          id="password"
-          name="password"
-          required
-          type="password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-        />
+        <div className="relative">
+          <input
+            autoComplete="current-password"
+            className="w-full pr-12"
+            id="password"
+            name="password"
+            required
+            type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+          />
+          <button
+            aria-label={showPassword ? (language === "fr" ? "Masquer le mot de passe" : "Hide password") : (language === "fr" ? "Afficher le mot de passe" : "Show password")}
+            aria-pressed={showPassword}
+            className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-slate-600 transition hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-primary"
+            onClick={() => setShowPassword((visible) => !visible)}
+            type="button"
+          >
+            {showPassword ? <EyeOff aria-hidden className="h-5 w-5" /> : <Eye aria-hidden className="h-5 w-5" />}
+          </button>
+        </div>
       </div>
 
       {status ? (
