@@ -14,6 +14,9 @@ export function InstallPrompt() {
   useEffect(() => {
     function handleBeforeInstallPrompt(event: Event) {
       event.preventDefault();
+      if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+        return;
+      }
       setPromptEvent(event as BeforeInstallPromptEvent);
     }
 

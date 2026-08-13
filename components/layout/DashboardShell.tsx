@@ -23,6 +23,7 @@ import {
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { RewardPopup } from "@/components/gamified/RewardPopup";
 import { DashboardTour } from "@/components/layout/DashboardTour";
+import { AccountLanguageToggle } from "@/components/layout/AccountLanguageToggle";
 import { getDictionary } from "@/lib/i18n/dictionary";
 import type { SafeUser } from "@/types/auth";
 
@@ -40,6 +41,7 @@ type NavItem = {
 
 export function DashboardShell({ user, title, children }: DashboardShellProps) {
   const t = getDictionary(user.language);
+  const en = user.language === "en";
   const navItems: NavItem[] =
     user.role === "admin"
       ? [
@@ -62,14 +64,14 @@ export function DashboardShell({ user, title, children }: DashboardShellProps) {
             { href: "/parent/link", label: "Lien enfant", Icon: Link2 }
           ]
         : [
-            { href: "/student/dashboard", label: "Accueil", Icon: Home },
-            { href: "/student/kit", label: "Mon Kit", Icon: PackageOpen },
+            { href: "/student/dashboard", label: en ? "Home" : "Accueil", Icon: Home },
+            { href: "/student/kit", label: en ? "My Kit" : "Mon Kit", Icon: PackageOpen },
             { href: "/student/modules", label: "Modules", Icon: BookOpen },
-            { href: "/student/challenges", label: "Defis", Icon: ClipboardCheck },
-            { href: "/student/leaderboard", label: "Classement", Icon: Trophy },
+            { href: "/student/challenges", label: en ? "Challenges" : "Défis", Icon: ClipboardCheck },
+            { href: "/student/leaderboard", label: en ? "Leaderboard" : "Classement", Icon: Trophy },
             { href: "/student/forum", label: "Forum", Icon: MessageCircle },
             { href: "/student/notifications", label: "Notifications", Icon: Megaphone },
-            { href: "/student/profile", label: "Profil", Icon: User }
+            { href: "/student/profile", label: en ? "Profile" : "Profil", Icon: User }
           ];
   const mobileNavItems =
     user.role === "admin" ? navItems.slice(0, 4) : navItems.slice(0, 5);
@@ -102,7 +104,7 @@ export function DashboardShell({ user, title, children }: DashboardShellProps) {
                   CyberAmbassadeurs
                 </p>
                 <p className="truncate text-[0.65rem] font-bold uppercase tracking-[0.16em] text-slate-500">
-                  Espace d&apos;apprentissage
+                  {en ? "Learning space" : "Espace d'apprentissage"}
                 </p>
               </div>
             </div>
@@ -164,7 +166,7 @@ export function DashboardShell({ user, title, children }: DashboardShellProps) {
                     <p className="text-xs font-black uppercase tracking-wider text-primary">{roleLabel}</p>
                     <p className="mt-1 truncate font-black text-brand-ink">{user.profile.fullName}</p>
                     <Link className="mt-4 flex min-h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-black text-white" href={profileHref}>
-                      Voir mon profil
+                      {en ? "View my profile" : "Voir mon profil"}
                     </Link>
                     <div className="mt-3 border-t border-slate-200 pt-3">
                       <LogoutButton label={t.logout} />
@@ -173,11 +175,12 @@ export function DashboardShell({ user, title, children }: DashboardShellProps) {
                 </details>
               ) : null}
               <div className="col-span-2 flex flex-wrap items-center gap-2 lg:col-span-1 lg:justify-end">
+                <AccountLanguageToggle initialLanguage={user.language} />
                 {isStudent ? (
                   <>
                     <Link className="flex min-h-9 items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 text-xs font-extrabold text-amber-950 transition hover:border-primary" href="/student/status">
                       <Flame aria-hidden className="h-4 w-4 text-primary" />
-                      Ma serie
+                      {en ? "My streak" : "Ma série"}
                     </Link>
                     <Link className="flex min-h-9 items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-3 text-xs font-extrabold text-cyan-950 transition hover:border-tertiary" href="/student/status">
                       <Sparkles aria-hidden className="h-4 w-4 text-tertiary" />

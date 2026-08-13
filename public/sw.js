@@ -1,5 +1,5 @@
-const CACHE_NAME = "cyberambassador-shell-v2";
-const SHELL_ASSETS = ["/", "/manifest.json", "/icons/icon-192.png", "/icons/icon-512.png"];
+const CACHE_NAME = "cyberambassador-shell-v3";
+const SHELL_ASSETS = ["/login?source=pwa", "/manifest.json", "/icons/icon-192.png", "/icons/icon-512.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -27,7 +27,7 @@ self.addEventListener("fetch", (event) => {
   }
 
   if (request.mode === "navigate") {
-    event.respondWith(fetch(request).catch(() => caches.match("/")));
+    event.respondWith(fetch(request).catch(() => caches.match("/login?source=pwa")));
     return;
   }
 
