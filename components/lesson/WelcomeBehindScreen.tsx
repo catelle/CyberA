@@ -133,7 +133,9 @@ export function WelcomeBehindScreen({
   const [toast, setToast] = useState<{ message: string; mood: "celebrate" | "sad" } | null>(null);
   const [completedDeepScenes, setCompletedDeepScenes] = useState<Set<number>>(new Set());
   const [readyPillars, setReadyPillars] = useState<Set<number>>(new Set());
-  const total = 20;
+  const [hasRestoredProgress, setHasRestoredProgress] = useState(false);
+  const total = 30;
+  const progressStorageKey = `cybera:lesson-one:${moduleId}:${lessonId}:progress`;
   const progress = ((step + 1) / total) * 100;
   const title = useMemo(
     () =>
@@ -160,6 +162,40 @@ export function WelcomeBehindScreen({
     startAmbientLoop();
     return () => stopAmbientLoop();
   }, []);
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(progressStorageKey) ?? "null");
+      if (saved) {
+        setStep(Math.min(total - 1, Math.max(0, Number(saved.step) || 0)));
+        setWorldSortComplete(Boolean(saved.worldSortComplete));
+        setGuess(typeof saved.guess === "number" ? saved.guess : null);
+        setServices(typeof saved.services === "string" ? saved.services : "");
+        setCheckpointOne(typeof saved.checkpointOne === "number" ? saved.checkpointOne : null);
+        setCheckpointTwo(typeof saved.checkpointTwo === "number" ? saved.checkpointTwo : null);
+        setCompletedDeepScenes(new Set(Array.isArray(saved.completedDeepScenes) ? saved.completedDeepScenes : []));
+        setReadyPillars(new Set(Array.isArray(saved.readyPillars) ? saved.readyPillars : []));
+      }
+    } catch {
+      // A damaged local entry must never block the lesson.
+    } finally {
+      setHasRestoredProgress(true);
+    }
+  }, [progressStorageKey]);
+
+  useEffect(() => {
+    if (!hasRestoredProgress) return;
+    window.localStorage.setItem(progressStorageKey, JSON.stringify({
+      step,
+      worldSortComplete,
+      guess,
+      services,
+      checkpointOne,
+      checkpointTwo,
+      completedDeepScenes: [...completedDeepScenes],
+      readyPillars: [...readyPillars],
+    }));
+  }, [checkpointOne, checkpointTwo, completedDeepScenes, guess, hasRestoredProgress, progressStorageKey, readyPillars, services, step, worldSortComplete]);
 
   useEffect(() => {
     if (step === 0) {
@@ -407,7 +443,7 @@ export function WelcomeBehindScreen({
               </h2>
               <div className="mt-6 space-y-4 text-lg font-semibold leading-8 text-white/70">
                 <p>Tu prends une photo. Tu l'envoies à un proche. Puis ton téléphone s'éteint.</p>
-                <p className="text-xl font-black text-rose-200">Quelques secondes plus tard, ton proche la reçoit quand même. Comment est-ce possible ?</p>
+                <p className="text-xl font-black text-primary">Quelques secondes plus tard, ton proche la reçoit quand même. Comment est-ce possible ?</p>
                 <p>Une copie a quitté ton appareil avant qu'il ne s'éteigne. Quelque chose d'autre a poursuivi le travail.</p>
                 <p>Le téléphone est donc comme une <strong className="text-white">porte</strong> : tu vois la poignée, mais pas les couloirs, les salles et les personnes qui travaillent derrière.</p>
               </div>
@@ -712,7 +748,7 @@ export function WelcomeBehindScreen({
               <div className="rounded-xl bg-white/5 p-4"><span className="text-2xl">🔎</span><p className="mt-2 font-black">Trouver</p><p className="text-xs text-white/50">recherche, carte, météo</p></div>
               <div className="rounded-xl bg-white/5 p-4"><span className="text-2xl">🎬</span><p className="mt-2 font-black">Regarder ou écouter</p><p className="text-xs text-white/50">vidéo, musique, direct</p></div>
             </div>
-            <p className="mx-auto mt-5 max-w-xl font-black text-rose-200">Maintenant que le mot est clair : quels services as-tu utilisés aujourd'hui, et quel travail chacun a-t-il fait pour toi ?</p>
+            <p className="mx-auto mt-5 max-w-xl font-black text-primary">Maintenant que le mot est clair : quels services as-tu utilisés aujourd'hui, et quel travail chacun a-t-il fait pour toi ?</p>
             <label
               className="mt-8 text-left text-sm font-black text-cyan-100"
               htmlFor="services"
@@ -731,7 +767,7 @@ export function WelcomeBehindScreen({
               value={services}
             />
             <div className="mt-7 rounded-2xl border border-amber-200/25 bg-amber-200/10 p-5 text-left">
-              <p className="font-black text-amber-100">
+              <p className="font-black text-amber-900">
                 Mission pour la prochaine heure
               </p>
               <p className="mt-2 leading-7 text-white/70">
@@ -922,7 +958,7 @@ function DeepJourneyScene({
           <div className="mt-6 flex flex-wrap items-center justify-center gap-2 rounded-2xl border border-rose-300/25 bg-[#100f12] p-5">
             {scene.visual.map((item, index) => (
               <div className="flex items-center gap-2" key={`${item}-${index}`}>
-                <span className="deep-scene-item rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-center font-black">{item}</span>
+                <span className="deep-scene-item lesson-dark-text rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-center font-black">{item}</span>
                 {index < scene.visual.length - 1 ? <ArrowRight className="deep-scene-arrow h-5 w-5 text-rose-300" /> : null}
               </div>
             ))}
@@ -941,7 +977,7 @@ function DeepJourneyScene({
           <div className="mt-3 grid gap-2">{scene.options.map((option, index) => <button className={`rounded-xl border-2 p-3 text-left text-sm font-bold transition ${answer === index ? index === scene.correctIndex ? "border-emerald-500 bg-emerald-50 text-emerald-800" : "border-primary bg-rose-50 text-primary" : "border-slate-300 bg-white text-slate-700 hover:border-primary"}`} key={option} onClick={() => { setAnswer(index); if (index === scene.correctIndex) onCorrect(); else onWrong(); }} type="button">{String.fromCharCode(65 + index)}. {option}</button>)}</div>
         </div>
       ) : (
-        <button className={`mt-7 self-center rounded-xl border-2 px-6 py-3 font-black transition ${completed ? "border-emerald-400 bg-emerald-400/15 text-emerald-100" : "border-rose-300 bg-rose-300/10 hover:bg-rose-300/20"}`} onClick={onCorrect} type="button">{completed ? "Découverte comprise ✓" : "J'ai compris cette découverte"}</button>
+        <button className={`mt-7 self-center rounded-xl border-2 px-6 py-3 font-black transition ${completed ? "border-emerald-500 bg-emerald-100 text-emerald-900" : "border-rose-300 bg-rose-50 text-brand-ink hover:bg-rose-100"}`} onClick={onCorrect} type="button">{completed ? "Découverte comprise ✓" : "J'ai compris cette découverte"}</button>
       )}
     </section>
   );
@@ -991,7 +1027,7 @@ function WorldSortActivity({ onComplete, onMistake }: { onComplete: () => void; 
       <div className="flex min-h-24 flex-wrap justify-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-4">
         {remaining.map((item) => (
           <button
-            className={`cursor-grab rounded-xl border-2 px-4 py-3 text-left font-black text-white transition active:cursor-grabbing ${selected === item.id ? "border-primary bg-primary shadow-[0_3px_0_0_#586062]" : "border-[#586062] bg-[#25292a] hover:border-primary"}`}
+            className={`lesson-dark-text cursor-grab rounded-xl border-2 px-4 py-3 text-left font-black transition active:cursor-grabbing ${selected === item.id ? "border-primary bg-primary shadow-[0_3px_0_0_#586062]" : "border-[#586062] bg-[#25292a] hover:border-primary"}`}
             draggable
             key={item.id}
             onClick={() => setSelected(item.id)}
