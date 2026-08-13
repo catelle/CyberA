@@ -7,20 +7,21 @@ import { getStrikeEligibility, listLeaderboard } from "@/lib/db/cybera";
 
 export default async function LeaderboardPage() {
   const user = await requireRole(["student"]);
+  const en = user.language === "en";
   const [leaderboardEntries, strikeEligibility] = await Promise.all([
     listLeaderboard(user.supabaseUserId),
     getStrikeEligibility(user.supabaseUserId)
   ]);
 
   return (
-    <DashboardShell user={user} title="Classement">
+    <DashboardShell user={user} title={en ? "Leaderboard" : "Classement"}>
       <div className="grid gap-5">
         <section className="rounded-lg bg-white p-5 shadow-sm">
           <p className="text-sm font-black uppercase text-brand-gold">
-            Cohorte / National / Semaine
+            {en ? "Cohort / National / Week" : "Cohorte / National / Semaine"}
           </p>
           <h2 className="mt-2 text-2xl font-black text-brand-ink">
-            Progression des eleves
+            {en ? "Student progress" : "Progression des élèves"}
           </h2>
         </section>
 
@@ -29,11 +30,11 @@ export default async function LeaderboardPage() {
             <Zap aria-hidden className="h-6 w-6" />
           </div>
           <div>
-            <h3 className="font-black text-brand-ink">Strike : gagne 50 XP bonus</h3>
+            <h3 className="font-black text-brand-ink">{en ? "Strike: earn 50 bonus XP" : "Strike : gagne 50 XP bonus"}</h3>
             <p className="text-sm font-semibold text-slate-600">
               {strikeEligibility.eligible
-                ? "10 questions au hasard sur ce que tu as deja appris. Optionnel, retentable a volonte."
-                : "Termine au moins une lecon pour debloquer ce bonus."}
+                ? en ? "10 random questions about what you have learned. Optional and retryable." : "10 questions au hasard sur ce que tu as déjà appris. Optionnel, retentable à volonté."
+                : en ? "Complete at least one lesson to unlock this bonus." : "Termine au moins une leçon pour débloquer ce bonus."}
             </p>
           </div>
           {strikeEligibility.eligible ? (
@@ -41,7 +42,7 @@ export default async function LeaderboardPage() {
               className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border-2 border-secondary bg-brand-blue px-5 font-black text-white shadow-[0_4px_0_0_rgba(88,96,98,1)] transition hover:bg-brand-ink sm:w-fit"
               href="/student/strike"
             >
-              Lancer <ArrowRight aria-hidden className="h-4 w-4" />
+              {en ? "Start" : "Lancer"} <ArrowRight aria-hidden className="h-4 w-4" />
             </Link>
           ) : null}
         </section>
@@ -69,10 +70,10 @@ export default async function LeaderboardPage() {
                   {entry.performanceScore}% performance
                 </p>
                 <p className="text-xs font-bold text-slate-500">
-                  {entry.points} pts recompense
+                  {entry.points} {en ? "reward points" : "pts de récompense"}
                 </p>
                 <p className="text-xs font-bold text-slate-400">
-                  {entry.weeklyPoints} pts cette semaine
+                  {entry.weeklyPoints} {en ? "points this week" : "pts cette semaine"}
                 </p>
               </div>
             </div>

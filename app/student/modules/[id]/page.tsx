@@ -19,6 +19,7 @@ type ModulePageProps = {
 
 export default async function StudentModuleDetailPage({ params }: ModulePageProps) {
   const user = await requireRole(["student", "admin"]);
+  const en = user.language === "en";
   const programModule = await getPublishedProgramModuleById(params.id);
   const selectedModule = programModule
     ? {
@@ -84,7 +85,7 @@ export default async function StudentModuleDetailPage({ params }: ModulePageProp
                   className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-lg border-2 border-secondary bg-primary px-6 font-black text-white shadow-[0_4px_0_0_#ffcc32] transition hover:bg-[#8f1237] sm:w-fit"
                   href={`/student/modules/${selectedModule.id}/lesson/${firstLesson.id}`}
                 >
-                  Continuer
+                  {en ? "Continue" : "Continuer"}
                   <ArrowRight aria-hidden className="h-4 w-4" />
                 </Link>
               ) : null}
@@ -93,13 +94,13 @@ export default async function StudentModuleDetailPage({ params }: ModulePageProp
                   className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border-2 border-secondary bg-[#fff4c2] px-4 font-black text-brand-blue shadow-[0_4px_0_0_rgba(88,96,98,1)] transition hover:bg-primary-fixed sm:w-fit"
                   href={`/student/modules/${selectedModule.id}/quiz`}
                 >
-                  Terminer avec le quiz
+                  {en ? "Finish with the quiz" : "Terminer avec le quiz"}
                   <Trophy aria-hidden className="h-4 w-4" />
                 </Link>
               ) : selectedModule.hasModuleQuiz ? (
                 <span className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border-2 border-secondary bg-slate-100 px-4 font-black text-slate-500 shadow-[0_4px_0_0_rgba(88,96,98,1)] sm:w-fit">
                   <Lock aria-hidden className="h-4 w-4" />
-                  Quiz apres les lecons
+                  {en ? "Quiz after the lessons" : "Quiz après les leçons"}
                 </span>
               ) : null}
             </div>
@@ -137,7 +138,7 @@ export default async function StudentModuleDetailPage({ params }: ModulePageProp
               </span>
               <div className="min-w-0">
                 <p className="text-sm font-black text-brand-gold">
-                  Lecon {lesson.order}
+                  {en ? "Lesson" : "Leçon"} {lesson.order}
                 </p>
                 <h3 className="mt-1 break-words font-display font-black text-brand-blue">
                   {lesson.title}
@@ -152,7 +153,7 @@ export default async function StudentModuleDetailPage({ params }: ModulePageProp
                       : "bg-slate-100 text-slate-500")
                   }
                 >
-                  {isCompleted ? "Terminee" : "A faire"}
+                  {isCompleted ? (en ? "Completed" : "Terminée") : (en ? "To do" : "À faire")}
                 </span>
                 <span className="flex items-center gap-1 text-slate-500">
                   <Clock aria-hidden className="h-4 w-4" />

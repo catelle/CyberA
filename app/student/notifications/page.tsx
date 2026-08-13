@@ -9,6 +9,7 @@ export default async function NotificationsPage() {
   return (
     <DashboardShell user={user} title="Notifications">
       <section className="grid gap-3">
+        {notifications.length === 0 ? <p className="rounded-xl bg-white p-5 text-slate-500">{user.language === "en" ? "No notifications yet." : "Aucune notification pour le moment."}</p> : null}
         {notifications.map((notification: any) => (
           <article
             className={

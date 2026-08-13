@@ -24,6 +24,7 @@ type StudentModulesPageProps = {
 
 export default async function StudentModulesPage({ searchParams }: StudentModulesPageProps) {
   const user = await requireRole(["student"]);
+  const en = user.language === "en";
   const modules = await listProgramModulesForStudent(user.supabaseUserId);
   const unlockFlags = await Promise.all(
     modules.map((module) => isModuleUnlockedForStudent(user.supabaseUserId, module.week))
@@ -34,7 +35,7 @@ export default async function StudentModulesPage({ searchParams }: StudentModule
       <div className="grid gap-5 sm:gap-6">
         {searchParams.locked ? (
           <section className="rounded-lg border-2 border-secondary bg-[#fff4c2] p-4 font-bold text-brand-ink shadow-[0_4px_0_0_rgba(88,96,98,1)]">
-            Termine d&apos;abord le module précédent pour débloquer celui-ci.
+            {en ? "Complete the previous module first to unlock this one." : "Termine d'abord le module précédent pour débloquer celui-ci."}
           </section>
         ) : null}
 
@@ -42,15 +43,14 @@ export default async function StudentModulesPage({ searchParams }: StudentModule
           <div className="min-w-0">
             <p className="text-sm font-black uppercase text-tertiary">Parcours</p>
             <h2 className="mt-2 break-words font-display text-2xl font-black leading-tight text-brand-ink sm:text-3xl">
-              4 modules pour devenir CyberAmbassadeur
+              {en ? "4 modules to become a CyberAmbassador" : "4 modules pour devenir CyberAmbassadeur"}
             </h2>
             <p className="mt-3 max-w-2xl text-sm font-semibold leading-7 text-slate-600 sm:text-base">
-              Les lecons restent courtes, pratiques et pensees pour etre relues hors
-              connexion apres leur premiere ouverture.
+              {en ? "Lessons are short, practical, and available for offline review after their first opening." : "Les leçons restent courtes, pratiques et pensées pour être relues hors connexion après leur première ouverture."}
             </p>
           </div>
           <MascotCoach mascotMood="focus">
-            Choisis une mission, termine les mini-lecons, puis vise le quiz a 70%.
+            {en ? "Choose a mission, complete its lessons, then aim for 70% on the quiz." : "Choisis une mission, termine les mini-leçons, puis vise 70 % au quiz."}
           </MascotCoach>
         </section>
 
