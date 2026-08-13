@@ -991,7 +991,7 @@ function WorldSortActivity({ onComplete, onMistake }: { onComplete: () => void; 
       <div className="flex min-h-24 flex-wrap justify-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-4">
         {remaining.map((item) => (
           <button
-            className={`cursor-grab rounded-xl border-2 px-4 py-3 text-left font-black transition active:cursor-grabbing ${selected === item.id ? "border-rose-300 bg-rose-300/15" : "border-white/15 bg-[#25292a] hover:border-rose-300/60"}`}
+            className={`cursor-grab rounded-xl border-2 px-4 py-3 text-left font-black text-white transition active:cursor-grabbing ${selected === item.id ? "border-primary bg-primary shadow-[0_3px_0_0_#586062]" : "border-[#586062] bg-[#25292a] hover:border-primary"}`}
             draggable
             key={item.id}
             onClick={() => setSelected(item.id)}
@@ -1013,15 +1013,15 @@ function WorldSortActivity({ onComplete, onMistake }: { onComplete: () => void; 
             onDrop={(event) => drop(event, world)}
             type="button"
           >
-            <span className="text-xs font-black uppercase tracking-widest text-white/50">Dépose ici</span>
+            <span className="text-xs font-black uppercase tracking-widest text-slate-500">Dépose ici</span>
             <h3 className="mt-1 text-xl font-black">{world === "physical" ? "🌍 Monde physique" : "✨ Monde numérique"}</h3>
             <div className="mt-4 flex flex-wrap gap-2">
-              {worldItems.filter((item) => placements[item.id] === world).map((item) => <span className="rounded-lg bg-white/10 px-3 py-2 text-sm font-bold" key={item.id}>{item.icon} {item.label}</span>)}
+              {worldItems.filter((item) => placements[item.id] === world).map((item) => <span className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-brand-ink" key={item.id}>{item.icon} {item.label}</span>)}
             </div>
           </button>
         ))}
       </div>
-      <p className="mt-4 min-h-6 text-center text-sm font-semibold text-rose-200" role="status">{feedback}</p>
+      <p className="mt-4 min-h-6 text-center text-sm font-semibold text-primary" role="status">{feedback}</p>
     </div>
   );
 }
