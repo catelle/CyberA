@@ -9,11 +9,11 @@ const BRAND_INK = "#111827";
 const BRAND_MUTED = "#667085";
 
 const regularFont = PImage.registerFont(
-  "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+  join(process.cwd(), "public/fonts/DejaVuSans.ttf"),
   "CyberA Regular"
 );
 const boldFont = PImage.registerFont(
-  "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+  join(process.cwd(), "public/fonts/DejaVuSans-Bold.ttf"),
   "CyberA Bold"
 );
 regularFont.loadSync();
