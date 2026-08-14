@@ -3,6 +3,7 @@ import { Award, Download, GraduationCap } from "lucide-react";
 import { requireRole } from "@/lib/auth/guards";
 import { getStudentProfileStats, listProgramModulesForStudent } from "@/lib/db/cybera";
 import { getProgramCompletionPercent } from "@/lib/program";
+import { ChangePasswordForm } from "@/components/auth/ChangePasswordForm";
 
 export default async function ProfilePage() {
   const user = await requireRole(["student"]);
@@ -82,6 +83,8 @@ export default async function ProfilePage() {
             </div>
           ) : null}
         </section>
+
+        <ChangePasswordForm language={user.language} />
 
         <section className="rounded-lg bg-white p-5 shadow-sm lg:col-span-2">
           <div className="flex items-center gap-3">
