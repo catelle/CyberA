@@ -6,6 +6,7 @@ import { CheckCircle2, RotateCcw, XCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { CyberMascot, MascotCoach } from "@/components/gamified/CyberMascot";
+import { ModuleFeedbackForm } from "@/components/forms/ModuleFeedbackForm";
 import { cacheModuleForOffline, saveQuizProgress } from "@/lib/offline/db";
 import { playCelebrate, playCorrect, playLessonOpen, playWrong } from "@/lib/sounds";
 import type { ProgramModule } from "@/lib/program";
@@ -138,7 +139,8 @@ export function QuizEngine({ module, userId, preview = false }: QuizEngineProps)
 
   if (isComplete) {
     return (
-      <section className="grid gap-5 rounded-lg border-2 border-secondary bg-white p-4 shadow-[0_4px_0_0_rgba(88,96,98,1)] sm:p-5">
+      <div className="grid gap-5">
+        <section className="grid gap-5 rounded-lg border-2 border-secondary bg-white p-4 shadow-[0_4px_0_0_rgba(88,96,98,1)] sm:p-5">
         <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
           <div className="min-w-0">
             <p className="text-sm font-black uppercase text-tertiary">Resultat</p>
@@ -183,7 +185,9 @@ export function QuizEngine({ module, userId, preview = false }: QuizEngineProps)
             {preview ? "Retour au module" : "Voir le defi"}
           </Link>
         </div>
-      </section>
+        </section>
+        {moduleCompleted && !preview ? <ModuleFeedbackForm moduleId={module.id} /> : null}
+      </div>
     );
   }
 

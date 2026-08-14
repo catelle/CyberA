@@ -1,6 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Award, ClipboardCheck, MessageCircle, Trophy, UsersRound } from "lucide-react";
+import { ArrowRight, Award, ClipboardCheck, MessageCircle, Star, Trophy, UsersRound } from "lucide-react";
+import { listApprovedTestimonials } from "@/lib/db/module-feedback";
+
+export const dynamic = "force-dynamic";
 
 const homepageModules = [
   {
@@ -56,7 +59,8 @@ const platformHighlights = [
   }
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const testimonials = await listApprovedTestimonials();
   return (
     <main className="min-h-screen bg-background font-body-md text-on-background">
       <section className="relative min-h-[92vh] overflow-hidden bg-brand-ink text-white">
@@ -149,6 +153,25 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {testimonials.length > 0 ? (
+        <section className="bg-white py-16" id="temoignages">
+          <div className="mx-auto max-w-7xl px-5">
+            <p className="text-sm font-black uppercase text-primary">Temoignages</p>
+            <h2 className="mt-2 font-display text-3xl font-black text-on-surface">Ce que les jeunes pensent du parcours</h2>
+            <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {testimonials.map((testimonial) => (
+                <article className="rounded-xl border-2 border-secondary bg-background p-5 shadow-[0_4px_0_0_rgba(88,96,98,1)]" key={testimonial.id}>
+                  <div className="flex gap-1" aria-label={`${testimonial.rating} etoiles`}>{[1,2,3,4,5].map((star) => <Star className={star <= testimonial.rating ? "h-5 w-5 fill-brand-gold text-brand-gold" : "h-5 w-5 text-slate-300"} key={star} />)}</div>
+                  <blockquote className="mt-4 font-semibold leading-7 text-secondary">“{testimonial.feedback}”</blockquote>
+                  <p className="mt-4 font-black text-primary">{testimonial.firstName}</p>
+                  <p className="text-xs font-bold text-slate-500">{testimonial.moduleTitle}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       <section className="bg-background py-16" id="programme">
         <div className="mx-auto max-w-7xl px-5">

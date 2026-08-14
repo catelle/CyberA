@@ -55,7 +55,8 @@ export function DashboardShell({ user, title, children }: DashboardShellProps) {
           { href: "/admin/cohorts", label: "Cohortes", Icon: UsersRound },
           { href: "/admin/modules", label: "Modules", Icon: Layers },
           { href: "/student/modules", label: "Espace eleve", Icon: BookOpen },
-          { href: "/admin/notifications", label: "Notifications", Icon: Megaphone }
+          { href: "/admin/notifications", label: "Notifications", Icon: Megaphone },
+          { href: "/admin/feedback", label: "Temoignages", Icon: MessageCircle }
         ]
       : user.role === "facilitator"
         ? [
