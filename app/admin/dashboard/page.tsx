@@ -27,7 +27,7 @@ function describeLocation(path: string | null) {
 }
 
 export default async function AdminDashboardPage() {
-  const user = await requireRole(["admin"]);
+  const user = await requireRole(["admin", "facilitator"]);
   const t = getDictionary(user.language);
   const [counts, metrics, modules, cohorts, students] = await Promise.all([
     getSupabaseUserRoleCounts(),

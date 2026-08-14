@@ -21,7 +21,7 @@ type ModuleTimeRow = {
 };
 
 export async function POST(request: Request) {
-  const auth = await requireApiRole(["student", "parent", "admin"]);
+  const auth = await requireApiRole(["student", "parent", "admin", "facilitator"]);
   if (!auth.ok) return auth.response;
 
   const payload = await request.json().catch(() => null);

@@ -19,7 +19,7 @@ type ModulePageProps = {
 };
 
 export default async function StudentModuleDetailPage({ params }: ModulePageProps) {
-  const user = await requireRole(["student", "admin"]);
+  const user = await requireRole(["student", "admin", "facilitator"]);
   const en = user.language === "en";
   const programModule = await getPublishedProgramModuleById(params.id);
   const selectedModule = programModule
@@ -42,7 +42,7 @@ export default async function StudentModuleDetailPage({ params }: ModulePageProp
     redirect("/student/modules?locked=1");
   }
 
-  const isPreview = user.role === "admin";
+  const isPreview = user.role === "admin" || user.role === "facilitator";
   const completedLessonIds = new Set(
     user.role === "student"
       ? await listCompletedLessonIdsForStudent(

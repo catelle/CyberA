@@ -24,9 +24,9 @@ type StudentModulesPageProps = {
 };
 
 export default async function StudentModulesPage({ searchParams }: StudentModulesPageProps) {
-  const user = await requireRole(["student", "admin"]);
+  const user = await requireRole(["student", "admin", "facilitator"]);
   const en = user.language === "en";
-  const isPreview = user.role === "admin";
+  const isPreview = user.role === "admin" || user.role === "facilitator";
   const modules = await listProgramModulesForStudent(user.supabaseUserId);
   // Admins review the parcours as a whole, so sequencing never hides a module.
   const unlockFlags = await Promise.all(

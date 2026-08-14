@@ -57,6 +57,12 @@ export function DashboardShell({ user, title, children }: DashboardShellProps) {
           { href: "/student/modules", label: "Espace eleve", Icon: BookOpen },
           { href: "/admin/notifications", label: "Notifications", Icon: Megaphone }
         ]
+      : user.role === "facilitator"
+        ? [
+            { href: "/admin/dashboard", label: "Dashboard", Icon: Home },
+            { href: "/admin/ambassadors", label: "Eleves", Icon: UsersRound },
+            { href: "/student/modules", label: "Espace eleve", Icon: BookOpen }
+          ]
       : user.role === "parent"
         ? [
             { href: "/parent/dashboard", label: "Accueil", Icon: Home },
@@ -76,10 +82,14 @@ export function DashboardShell({ user, title, children }: DashboardShellProps) {
             { href: "/student/profile", label: en ? "Profile" : "Profil", Icon: User }
           ];
   const mobileNavItems =
-    user.role === "admin" ? navItems.slice(0, 4) : navItems.slice(0, 5);
+    user.role === "admin" || user.role === "facilitator"
+      ? navItems.slice(0, 4)
+      : navItems.slice(0, 5);
   const roleLabel =
     user.role === "admin"
       ? "Admin LVL 99"
+      : user.role === "facilitator"
+        ? "Facilitateur"
       : user.role === "parent"
         ? "Parent allié"
         : "Cyber-Éclaireur";
@@ -95,7 +105,7 @@ export function DashboardShell({ user, title, children }: DashboardShellProps) {
       }
     >
       <div className="dashboard-layout flex min-h-screen flex-col lg:flex-row">
-        <aside className={`dashboard-sidebar ${user.role === "admin" ? "" : "hidden lg:block"} border-b border-slate-200 bg-white/95 px-3 py-3 text-on-surface backdrop-blur sm:px-4 lg:sticky lg:top-0 lg:h-screen lg:w-64 lg:border-b-0 lg:border-r lg:px-5 lg:py-6`}>
+        <aside className={`dashboard-sidebar ${user.role === "admin" || user.role === "facilitator" ? "" : "hidden lg:block"} border-b border-slate-200 bg-white/95 px-3 py-3 text-on-surface backdrop-blur sm:px-4 lg:sticky lg:top-0 lg:h-screen lg:w-64 lg:border-b-0 lg:border-r lg:px-5 lg:py-6`}>
           <div className="flex items-center justify-between gap-4 lg:block">
             <div className="flex min-w-0 items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary font-display text-lg font-black text-white shadow-[0_8px_20px_rgba(181,18,63,0.2)]">
@@ -159,7 +169,7 @@ export function DashboardShell({ user, title, children }: DashboardShellProps) {
                   {title}
                 </h1>
               </div>
-              {user.role !== "admin" ? (
+              {user.role !== "admin" && user.role !== "facilitator" ? (
                 <details className="group relative lg:hidden">
                   <summary aria-label="Afficher mon profil" className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-full border-2 border-secondary bg-primary font-display text-lg font-black text-white shadow-[0_3px_0_0_rgba(88,96,98,1)] marker:content-none">
                     {user.profile.fullName.slice(0, 1).toUpperCase()}
@@ -207,13 +217,13 @@ export function DashboardShell({ user, title, children }: DashboardShellProps) {
 
       <PresenceHeartbeat />
 
-      {user.role !== "admin" ? (
+      {user.role !== "admin" && user.role !== "facilitator" ? (
         <DashboardTour role={user.role} userId={user.id} />
       ) : null}
 
       {isStudent ? <RewardPopup userId={user.supabaseUserId} /> : null}
 
-      {user.role !== "admin" ? (
+      {user.role !== "admin" && user.role !== "facilitator" ? (
         <nav className="dashboard-mobile-nav fixed inset-x-3 bottom-3 z-40 grid grid-cols-5 rounded-2xl border border-slate-200 bg-white/95 p-1.5 shadow-[0_14px_36px_rgba(15,23,42,0.16)] backdrop-blur lg:hidden">
           {mobileNavItems.map(({ Icon, ...item }) => (
             <Link

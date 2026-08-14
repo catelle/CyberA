@@ -31,7 +31,7 @@ const changePasswordSchema = z
   });
 
 export async function POST(request: NextRequest) {
-  const auth = await requireApiRole(["student", "parent", "admin"]);
+  const auth = await requireApiRole(["student", "parent", "admin", "facilitator"]);
   if (!auth.ok) return auth.response;
 
   const parsed = changePasswordSchema.safeParse(await request.json().catch(() => null));

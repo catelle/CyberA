@@ -17,8 +17,8 @@ type LessonQuizPageProps = {
 };
 
 export default async function LessonQuizPage({ params }: LessonQuizPageProps) {
-  const user = await requireRole(["student", "admin"]);
-  const isPreview = user.role === "admin";
+  const user = await requireRole(["student", "admin", "facilitator"]);
+  const isPreview = user.role === "admin" || user.role === "facilitator";
   const programModule = await getPublishedProgramModuleById(params.id);
   const lesson = programModule?.lessons.find((item) => item.id === params.lessonId);
   const nextLesson = programModule?.lessons

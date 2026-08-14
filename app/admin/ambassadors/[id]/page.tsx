@@ -42,7 +42,7 @@ function formatDate(value: string | null) {
 }
 
 export default async function StudentActivityPage({ params }: StudentActivityPageProps) {
-  const user = await requireRole(["admin"]);
+  const user = await requireRole(["admin", "facilitator"]);
   const detail = await getAdminStudentActivityDetail(params.id);
 
   if (!detail) {
@@ -170,9 +170,9 @@ export default async function StudentActivityPage({ params }: StudentActivityPag
                     <p className="mt-4 rounded-lg bg-emerald-50 p-3 text-sm font-black text-emerald-800">
                       Progression approuvee le {formatDate(module.approvedAt)}. Le module 2 est accessible.
                     </p>
-                  ) : (
+                  ) : user.role === "admin" ? (
                     <AdminProgressApprovalButton progressId={module.id} />
-                  )
+                  ) : null
                 ) : null}
               </article>
             ))}

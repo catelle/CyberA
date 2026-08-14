@@ -8,14 +8,14 @@ import { formatDuration, formatRelativeTime } from "@/lib/format/duration";
 import { AdminStudentInvitationForm } from "@/components/forms/AdminStudentInvitationForm";
 
 export default async function AdminAmbassadorsPage() {
-  const user = await requireRole(["admin"]);
+  const user = await requireRole(["admin", "facilitator"]);
   const students = await listAdminStudents();
   const onlineCount = students.filter((student) => student.presence.isOnline).length;
 
   return (
     <DashboardShell user={user} title="Eleves">
       <div className="grid gap-6">
-      <AdminStudentInvitationForm />
+      {user.role === "admin" ? <AdminStudentInvitationForm /> : null}
 
       <section className="rounded-lg bg-white p-4 shadow-sm">
         <p className="text-sm font-bold text-slate-500">

@@ -23,8 +23,8 @@ type LessonPageProps = {
 };
 
 export default async function LessonPage({ params }: LessonPageProps) {
-  const user = await requireRole(["student", "admin"]);
-  const isPreview = user.role === "admin";
+  const user = await requireRole(["student", "admin", "facilitator"]);
+  const isPreview = user.role === "admin" || user.role === "facilitator";
   const selectedModule = await getPublishedProgramModuleById(params.id);
   const lesson = selectedModule?.lessons.find(
     (item) => item.id === params.lessonId

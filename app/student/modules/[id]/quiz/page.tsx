@@ -17,8 +17,8 @@ type QuizPageProps = {
 };
 
 export default async function QuizPage({ params }: QuizPageProps) {
-  const user = await requireRole(["student", "admin"]);
-  const isPreview = user.role === "admin";
+  const user = await requireRole(["student", "admin", "facilitator"]);
+  const isPreview = user.role === "admin" || user.role === "facilitator";
   const programModule = await getPublishedProgramModuleById(params.id);
 
   if (!programModule) {
