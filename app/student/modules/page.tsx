@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, CheckCircle2, Lock, Play, Star } from "lucide-react";
 
 import { MascotCoach } from "@/components/gamified/CyberMascot";
+import { LearningSpacePreviewNotice } from "@/components/lesson/LearningSpacePreviewNotice";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { requireRole } from "@/lib/auth/guards";
 import { isModuleUnlockedForStudent, listProgramModulesForStudent } from "@/lib/db/cybera";
@@ -23,19 +24,24 @@ type StudentModulesPageProps = {
 };
 
 export default async function StudentModulesPage({ searchParams }: StudentModulesPageProps) {
-  const user = await requireRole(["student"]);
+  const user = await requireRole(["student", "admin"]);
   const en = user.language === "en";
+  const isPreview = user.role === "admin";
   const modules = await listProgramModulesForStudent(user.supabaseUserId);
+  // Admins review the parcours as a whole, so sequencing never hides a module.
   const unlockFlags = await Promise.all(
-    modules.map((module) => isModuleUnlockedForStudent(user.supabaseUserId, module.week))
+    modules.map((module) =>
+      isPreview ? Promise.resolve(true) : isModuleUnlockedForStudent(user.supabaseUserId, module.week)
+    )
   );
 
   return (
     <DashboardShell user={user} title="Modules">
       <div className="grid gap-5 sm:gap-6">
+        {isPreview ? <LearningSpacePreviewNotice /> : null}
         {searchParams.locked ? (
           <section className="rounded-lg border-2 border-secondary bg-[#fff4c2] p-4 font-bold text-brand-ink shadow-[0_4px_0_0_rgba(88,96,98,1)]">
-            {en ? "Complete the previous module first to unlock this one." : "Termine d'abord le module précédent pour débloquer celui-ci."}
+            {en ? "Complete the previous module and wait for admin approval to unlock Module 2." : "Termine le module précédent puis attends l'approbation d'un administrateur pour débloquer le module 2."}
           </section>
         ) : null}
 

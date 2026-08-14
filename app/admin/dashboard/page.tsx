@@ -1,24 +1,47 @@
+import Link from "next/link";
+import { ArrowRight, BookOpen } from "lucide-react";
+
+import { AutoRefresh } from "@/components/admin/AutoRefresh";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { requireRole } from "@/lib/auth/guards";
 import {
   getAdminOperationalMetrics,
   getSupabaseUserRoleCounts,
+  listAdminStudents,
   listCohortsFromDatabase,
   listModulesFromDatabase
 } from "@/lib/db/cybera";
+import { formatDuration, formatRelativeTime } from "@/lib/format/duration";
 import { getDictionary } from "@/lib/i18n/dictionary";
+
+function describeLocation(path: string | null) {
+  if (!path) return "Emplacement inconnu";
+  if (path.includes("/lesson/")) return path.endsWith("/quiz") ? "Quiz de lecon" : "Lecon en cours";
+  if (path.endsWith("/quiz")) return "Quiz de module";
+  if (path.startsWith("/student/modules")) return "Espace modules";
+  if (path.startsWith("/student/challenges")) return "Defis";
+  if (path.startsWith("/student/forum")) return "Forum";
+  if (path.startsWith("/student/leaderboard")) return "Classement";
+  if (path.startsWith("/student/dashboard")) return "Accueil eleve";
+  return path;
+}
 
 export default async function AdminDashboardPage() {
   const user = await requireRole(["admin"]);
   const t = getDictionary(user.language);
-  const [counts, metrics, modules, cohorts] = await Promise.all([
+  const [counts, metrics, modules, cohorts, students] = await Promise.all([
     getSupabaseUserRoleCounts(),
     getAdminOperationalMetrics(),
     listModulesFromDatabase(),
-    listCohortsFromDatabase()
+    listCohortsFromDatabase(),
+    listAdminStudents()
   ]);
+  const connectedStudents = students
+    .filter((student) => student.presence.isOnline)
+    .sort((left, right) => left.name.localeCompare(right.name));
 
   const stats = [
+    { label: "Connectes", value: connectedStudents.length },
     { label: "Eleves", value: counts.students },
     { label: "Parents", value: counts.parents },
     { label: "Admins", value: counts.admins },
@@ -32,6 +55,7 @@ export default async function AdminDashboardPage() {
 
   return (
     <DashboardShell user={user} title={t.adminDashboard}>
+      <AutoRefresh />
       <div className="grid gap-5">
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
           {stats.map((stat) => (
@@ -40,6 +64,67 @@ export default async function AdminDashboardPage() {
               <p className="mt-2 text-4xl font-black text-brand-blue">{stat.value}</p>
             </article>
           ))}
+        </section>
+
+        <section className="rounded-lg bg-white p-5 shadow-sm">
+          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+            <div>
+              <p className="text-sm font-black uppercase text-brand-gold">En direct</p>
+              <h2 className="mt-2 text-2xl font-black text-brand-ink">
+                Eleves connectes ({connectedStudents.length})
+              </h2>
+              <p className="mt-1 text-sm font-semibold text-slate-500">
+                Actualise automatiquement chaque minute.
+              </p>
+            </div>
+            <Link
+              className="inline-flex min-h-11 w-fit items-center gap-2 rounded-lg bg-brand-blue px-4 font-black text-white transition hover:bg-brand-ink"
+              href="/student/modules"
+            >
+              <BookOpen aria-hidden className="h-4 w-4" />
+              Ouvrir l&apos;espace eleve
+            </Link>
+          </div>
+
+          <div className="mt-5 grid gap-3">
+            {connectedStudents.length === 0 ? (
+              <p className="text-sm font-semibold text-slate-500">
+                Aucun eleve connecte pour le moment.
+              </p>
+            ) : null}
+            {connectedStudents.map((student) => (
+              <Link
+                className="grid gap-3 rounded-lg border border-slate-200 p-4 transition hover:border-brand-blue sm:grid-cols-[1fr_10rem_10rem_auto] sm:items-center"
+                href={`/admin/ambassadors/${student.id}`}
+                key={student.id}
+              >
+                <div>
+                  <p className="flex items-center gap-2 font-black text-brand-blue">
+                    <span aria-hidden className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                    {student.name}
+                  </p>
+                  <p className="text-sm text-slate-600">{student.cohort}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-black text-brand-ink">
+                    {describeLocation(student.presence.lastPath)}
+                  </p>
+                  <p className="text-xs font-bold text-slate-500">
+                    {formatRelativeTime(student.presence.lastSeenAt)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm font-black text-brand-ink">
+                    {student.modulesCompleted}/{student.publishedModules} modules
+                  </p>
+                  <p className="text-xs font-bold text-slate-500">
+                    {formatDuration(student.learningSeconds)} d&apos;apprentissage
+                  </p>
+                </div>
+                <ArrowRight aria-hidden className="hidden h-4 w-4 text-slate-400 sm:block" />
+              </Link>
+            ))}
+          </div>
         </section>
 
         <section className="grid gap-4 lg:grid-cols-[1fr_22rem]">

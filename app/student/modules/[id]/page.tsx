@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { ArrowRight, BookOpen, CheckCircle2, Clock, Lock, Trophy } from "lucide-react";
 
 import { MascotCoach } from "@/components/gamified/CyberMascot";
+import { LearningSpacePreviewNotice } from "@/components/lesson/LearningSpacePreviewNotice";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { requireRole } from "@/lib/auth/guards";
 import {
@@ -41,6 +42,7 @@ export default async function StudentModuleDetailPage({ params }: ModulePageProp
     redirect("/student/modules?locked=1");
   }
 
+  const isPreview = user.role === "admin";
   const completedLessonIds = new Set(
     user.role === "student"
       ? await listCompletedLessonIdsForStudent(
@@ -65,6 +67,9 @@ export default async function StudentModuleDetailPage({ params }: ModulePageProp
   return (
     <DashboardShell user={user} title={selectedModule.title}>
       <div className="grid gap-5 sm:gap-6">
+        {isPreview ? (
+          <LearningSpacePreviewNotice detail="Ouvre chaque lecon et le quiz du module comme un eleve. Rien n'est enregistre sur ton compte admin." />
+        ) : null}
         <section className="rounded-2xl border-2 border-primary bg-white px-5 py-10 text-center text-brand-ink shadow-[0_8px_0_0_#586062] sm:px-10 sm:py-14">
           <div className="mx-auto max-w-4xl">
             <p className="text-sm font-black uppercase tracking-[.2em] text-primary">
@@ -89,7 +94,7 @@ export default async function StudentModuleDetailPage({ params }: ModulePageProp
                   <ArrowRight aria-hidden className="h-4 w-4" />
                 </Link>
               ) : null}
-              {selectedModule.hasModuleQuiz && completedEveryLesson ? (
+              {selectedModule.hasModuleQuiz && (completedEveryLesson || isPreview) ? (
                 <Link
                   className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border-2 border-secondary bg-[#fff4c2] px-4 font-black text-brand-blue shadow-[0_4px_0_0_rgba(88,96,98,1)] transition hover:bg-primary-fixed sm:w-fit"
                   href={`/student/modules/${selectedModule.id}/quiz`}

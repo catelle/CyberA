@@ -23,6 +23,7 @@ import {
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { RewardPopup } from "@/components/gamified/RewardPopup";
 import { DashboardTour } from "@/components/layout/DashboardTour";
+import { PresenceHeartbeat } from "@/components/layout/PresenceHeartbeat";
 import { AccountLanguageToggle } from "@/components/layout/AccountLanguageToggle";
 import { getDictionary } from "@/lib/i18n/dictionary";
 import type { SafeUser } from "@/types/auth";
@@ -53,6 +54,7 @@ export function DashboardShell({ user, title, children }: DashboardShellProps) {
           { href: "/admin/capstone", label: "Capstone", Icon: GraduationCap },
           { href: "/admin/cohorts", label: "Cohortes", Icon: UsersRound },
           { href: "/admin/modules", label: "Modules", Icon: Layers },
+          { href: "/student/modules", label: "Espace eleve", Icon: BookOpen },
           { href: "/admin/notifications", label: "Notifications", Icon: Megaphone }
         ]
       : user.role === "parent"
@@ -202,6 +204,8 @@ export function DashboardShell({ user, title, children }: DashboardShellProps) {
           </div>
         </section>
       </div>
+
+      <PresenceHeartbeat />
 
       {user.role !== "admin" ? (
         <DashboardTour role={user.role} userId={user.id} />

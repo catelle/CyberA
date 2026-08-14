@@ -13,9 +13,11 @@ import type { ProgramModule } from "@/lib/program";
 type QuizEngineProps = {
   module: ProgramModule;
   userId: string;
+  /** Admin walkthrough: answer everything without recording any progress. */
+  preview?: boolean;
 };
 
-export function QuizEngine({ module, userId }: QuizEngineProps) {
+export function QuizEngine({ module, userId, preview = false }: QuizEngineProps) {
   const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -58,6 +60,16 @@ export function QuizEngine({ module, userId }: QuizEngineProps) {
         sum + (nextAnswers[question.id] === question.correctIndex ? question.points : 0),
       0
     );
+
+    if (preview) {
+      setStatus(
+        "Apercu formateur: la tentative n'est pas enregistree et n'attribue aucun point."
+      );
+      setModuleCompleted(false);
+      setIsComplete(true);
+      if (nextPassed) playCelebrate();
+      return;
+    }
 
     const savedProgress = await saveQuizProgress({
       progressVersion: 3,
@@ -166,9 +178,9 @@ export function QuizEngine({ module, userId }: QuizEngineProps) {
           </button>
           <Link
             className="inline-flex min-h-12 w-full items-center justify-center rounded-lg border-2 border-secondary bg-brand-blue px-4 font-black text-white shadow-[0_4px_0_0_rgba(88,96,98,1)] transition hover:bg-brand-ink sm:w-fit"
-            href="/student/challenges"
+            href={preview ? `/student/modules/${module.id}` : "/student/challenges"}
           >
-            Voir le defi
+            {preview ? "Retour au module" : "Voir le defi"}
           </Link>
         </div>
       </section>

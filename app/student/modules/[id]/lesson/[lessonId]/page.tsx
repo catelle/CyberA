@@ -8,6 +8,7 @@ import { WelcomeBehindScreen } from "@/components/lesson/WelcomeBehindScreen";
 import { InsideTikTokLesson } from "@/components/lesson/InsideTikTokLesson";
 import { ModuleOneInvestigationLesson } from "@/components/lesson/ModuleOneInvestigationLesson";
 import { LessonAudio } from "@/components/lesson/LessonAudio";
+import { LearningSpacePreviewNotice } from "@/components/lesson/LearningSpacePreviewNotice";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { requireRole } from "@/lib/auth/guards";
 import { getPublishedProgramModuleById, isModuleUnlockedForStudent } from "@/lib/db/cybera";
@@ -23,6 +24,7 @@ type LessonPageProps = {
 
 export default async function LessonPage({ params }: LessonPageProps) {
   const user = await requireRole(["student", "admin"]);
+  const isPreview = user.role === "admin";
   const selectedModule = await getPublishedProgramModuleById(params.id);
   const lesson = selectedModule?.lessons.find(
     (item) => item.id === params.lessonId
@@ -38,9 +40,16 @@ export default async function LessonPage({ params }: LessonPageProps) {
 
   // Published modules use database UUIDs, while lesson slugs remain stable.
   // Detect this bespoke experience by its lesson slug rather than the module id.
+  const previewNotice = isPreview ? (
+    <div className="mb-5">
+      <LearningSpacePreviewNotice detail="Lecon affichee telle que l'eleve la recoit. Ta lecture n'est pas comptabilisee." />
+    </div>
+  ) : null;
+
   if (lesson.id === "ou-est-internet") {
     return (
       <DashboardShell user={user} title={lesson.title}>
+        {previewNotice}
         <WelcomeBehindScreen canComplete={user.role === "student"} lessonId={lesson.id} moduleId={selectedModule.id} />
       </DashboardShell>
     );
@@ -49,6 +58,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
   if (lesson.id === "apres-envoyer") {
     return (
       <DashboardShell user={user} title="Inside TikTok">
+        {previewNotice}
         <InsideTikTokLesson canComplete={user.role === "student"} lessonId={lesson.id} moduleId={selectedModule.id} />
       </DashboardShell>
     );
@@ -58,6 +68,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
   if (investigation) {
     return (
       <DashboardShell user={user} title={investigation.title}>
+        {previewNotice}
         <ModuleOneInvestigationLesson canComplete={user.role === "student"} lesson={investigation} moduleId={selectedModule.id} />
       </DashboardShell>
     );
@@ -67,6 +78,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
   if (selectedModule.week === 2 && survivalInvestigation) {
     return (
       <DashboardShell user={user} title={survivalInvestigation.title}>
+        {previewNotice}
         <ModuleOneInvestigationLesson canComplete={user.role === "student"} lesson={survivalInvestigation} moduleId={selectedModule.id} startImmediately />
       </DashboardShell>
     );
@@ -75,6 +87,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
   return (
     <DashboardShell user={user} title={lesson.title}>
       <LessonAudio />
+      {previewNotice}
       <article className="grid gap-5 rounded-lg border-2 border-secondary bg-white p-4 shadow-[0_4px_0_0_rgba(88,96,98,1)] sm:p-5">
         <div className="grid gap-4 lg:grid-cols-[1fr_21rem] lg:items-center">
           <div className="min-w-0">
@@ -163,15 +176,13 @@ export default async function LessonPage({ params }: LessonPageProps) {
           >
             Retour au module
           </Link>
-          {user.role === "student" ? (
-            <Link
-              className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border-2 border-secondary bg-brand-blue px-4 font-black text-white shadow-[0_4px_0_0_rgba(88,96,98,1)] transition hover:bg-brand-ink sm:w-fit"
-              href={`/student/modules/${selectedModule.id}/lesson/${lesson.id}/quiz`}
-            >
-              J&apos;ai termine la lecon
-              <ArrowRight aria-hidden className="h-4 w-4" />
-            </Link>
-          ) : null}
+          <Link
+            className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border-2 border-secondary bg-brand-blue px-4 font-black text-white shadow-[0_4px_0_0_rgba(88,96,98,1)] transition hover:bg-brand-ink sm:w-fit"
+            href={`/student/modules/${selectedModule.id}/lesson/${lesson.id}/quiz`}
+          >
+            {isPreview ? "Voir le quiz de la lecon" : "J'ai termine la lecon"}
+            <ArrowRight aria-hidden className="h-4 w-4" />
+          </Link>
         </div>
       </article>
     </DashboardShell>

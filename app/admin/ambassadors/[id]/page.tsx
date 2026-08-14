@@ -6,12 +6,15 @@ import {
   BookCheck,
   ClipboardCheck,
   Flag,
-  GraduationCap
+  GraduationCap,
+  Timer
 } from "lucide-react";
 
 import { DashboardShell } from "@/components/layout/DashboardShell";
+import { AdminProgressApprovalButton } from "@/components/forms/AdminProgressApprovalButton";
 import { requireRole } from "@/lib/auth/guards";
 import { getAdminStudentActivityDetail } from "@/lib/db/cybera";
+import { formatDuration, formatRelativeTime } from "@/lib/format/duration";
 
 type StudentActivityPageProps = {
   params: { id: string };
@@ -46,7 +49,12 @@ export default async function StudentActivityPage({ params }: StudentActivityPag
     notFound();
   }
 
+  const totalActiveSeconds = detail.moduleProgress.reduce(
+    (sum, module) => sum + module.activeSeconds,
+    0
+  );
   const summary = [
+    { label: "Temps d'apprentissage", value: formatDuration(totalActiveSeconds), Icon: Timer },
     { label: "Lecons terminees", value: detail.totals.lessonsCompleted, Icon: BookCheck },
     { label: "Tentatives de quiz", value: detail.totals.quizAttempts, Icon: ClipboardCheck },
     { label: "Defis soumis", value: detail.totals.challengesSubmitted, Icon: Award },
@@ -74,6 +82,18 @@ export default async function StudentActivityPage({ params }: StudentActivityPag
             </p>
             <p className="mt-1 text-sm text-white/70">
               Inscrit le {formatDate(detail.student.joinedAt)} · Consentement parental: {detail.student.parentalConsentGiven ? "oui" : "non"}
+            </p>
+            <p className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-sm font-bold">
+              <span
+                aria-hidden
+                className={
+                  "h-2.5 w-2.5 rounded-full " +
+                  (detail.presence.isOnline ? "bg-emerald-400" : "bg-white/40")
+                }
+              />
+              {detail.presence.isOnline
+                ? "Connecte maintenant"
+                : `Derniere connexion ${formatRelativeTime(detail.presence.lastSeenAt)}`}
             </p>
           </div>
           <div className="grid grid-cols-3 gap-3 text-center">
@@ -119,6 +139,41 @@ export default async function StudentActivityPage({ params }: StudentActivityPag
                 <p className="mt-2 text-sm font-semibold text-slate-600">
                   {module.lessonsDone} lecon(s) · Score: {module.quizScore === null ? "Pas encore passe" : `${module.quizScore}%`} · {module.quizAttempts} tentative(s) · {module.pointsEarned} point(s)
                 </p>
+                <dl className="mt-3 grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-lg bg-slate-50 p-3">
+                    <dt className="text-xs font-black uppercase text-slate-500">
+                      Temps passe dans le module
+                    </dt>
+                    <dd className="mt-1 font-black text-brand-blue">
+                      {formatDuration(module.activeSeconds)}
+                    </dd>
+                  </div>
+                  <div className="rounded-lg bg-slate-50 p-3">
+                    <dt className="text-xs font-black uppercase text-slate-500">
+                      {module.completedAt ? "Du debut a la fin" : "Depuis le debut"}
+                    </dt>
+                    <dd className="mt-1 font-black text-brand-blue">
+                      {formatDuration(module.elapsedSeconds)}
+                    </dd>
+                  </div>
+                  <div className="rounded-lg bg-slate-50 p-3">
+                    <dt className="text-xs font-black uppercase text-slate-500">
+                      {module.completedAt ? "Termine le" : "Commence le"}
+                    </dt>
+                    <dd className="mt-1 text-sm font-bold text-slate-600">
+                      {formatDate(module.completedAt ?? module.startedAt)}
+                    </dd>
+                  </div>
+                </dl>
+                {module.moduleOrder === 1 && module.status === "completed" ? (
+                  module.approvedAt ? (
+                    <p className="mt-4 rounded-lg bg-emerald-50 p-3 text-sm font-black text-emerald-800">
+                      Progression approuvee le {formatDate(module.approvedAt)}. Le module 2 est accessible.
+                    </p>
+                  ) : (
+                    <AdminProgressApprovalButton progressId={module.id} />
+                  )
+                ) : null}
               </article>
             ))}
           </div>

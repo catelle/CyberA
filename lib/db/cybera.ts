@@ -122,11 +122,39 @@ export type AdminStudentActivityDetail = {
     quizScore: number | null;
     quizAttempts: number;
     pointsEarned: number;
+    moduleOrder: number | null;
+    approvedAt: string | null;
     startedAt: string | null;
     completedAt: string | null;
+    /** Measured reading time inside the module, heartbeat by heartbeat. */
+    activeSeconds: number;
+    /** Wall-clock span between the first and the last recorded activity. */
+    elapsedSeconds: number | null;
   }>;
   activities: StudentPlatformActivity[];
+  presence: LearnerPresence;
 };
+
+export type LearnerPresence = {
+  lastSeenAt: string | null;
+  lastPath: string | null;
+  isOnline: boolean;
+};
+
+// A learner whose browser has not sent a heartbeat for this long is treated as
+// disconnected. Heartbeats are sent every minute, so this tolerates one miss.
+export const PRESENCE_ONLINE_WINDOW_SECONDS = 180;
+
+function buildPresence(row: { last_seen_at?: string | null; last_path?: string | null } | null | undefined): LearnerPresence {
+  const lastSeenAt = row?.last_seen_at ?? null;
+  return {
+    lastSeenAt,
+    lastPath: row?.last_path ?? null,
+    isOnline: lastSeenAt
+      ? Date.now() - new Date(lastSeenAt).getTime() <= PRESENCE_ONLINE_WINDOW_SECONDS * 1000
+      : false
+  };
+}
 
 function joinedValue<T>(value: T | T[] | null | undefined): T | null {
   return Array.isArray(value) ? value[0] ?? null : value ?? null;
@@ -205,17 +233,36 @@ export async function isModuleUnlockedForStudent(userId: string, moduleWeek: num
 
   const { data: progressRows } = await supabase
     .from("module_progress")
-    .select("module_id, status")
+    .select("id, module_id, status")
     .eq("user_id", userId)
     .in("module_id", previousModules.map((module) => module.id))
-    .returns<{ module_id: string; status: string }[]>();
+    .returns<{ id: string; module_id: string; status: string }[]>();
 
   const completedIds = new Set(
     (progressRows ?? [])
       .filter((row) => row.status === "completed")
       .map((row) => row.module_id)
   );
-  return previousModules.every((module) => completedIds.has(module.id));
+  if (!previousModules.every((module) => completedIds.has(module.id))) return false;
+
+  // Module 2 is the controlled transition: completing module 1 creates a
+  // pending progression that must be explicitly approved by an admin.
+  if (moduleWeek === 2) {
+    const moduleOne = previousModules.find((module) => module.order_index === 1);
+    const moduleOneProgress = (progressRows ?? []).find(
+      (row) => row.module_id === moduleOne?.id && row.status === "completed"
+    );
+    if (!moduleOneProgress) return false;
+
+    const { data: approval } = await supabase
+      .from("module_progress_approvals")
+      .select("id")
+      .eq("progress_id", moduleOneProgress.id)
+      .maybeSingle();
+    return Boolean(approval);
+  }
+
+  return true;
 }
 
 export async function getStrikeEligibility(userId: string) {
@@ -277,12 +324,16 @@ export async function getAdminStudentActivityDetail(
     { data: lessons },
     { data: challenges },
     { data: reports },
-    { data: capstones }
+    { data: capstones },
+    { data: moduleTime },
+    { data: lessonSessions },
+    { data: presenceRow },
+    { data: progressApprovals }
   ] = await Promise.all([
     supabase
       .from("module_progress")
       .select(
-        "id, status, lessons_done, quiz_score, quiz_attempts, points_earned, started_at, completed_at, modules(title, order_index)"
+        "id, module_id, status, lessons_done, quiz_score, quiz_attempts, points_earned, started_at, completed_at, modules(title, order_index)"
       )
       .eq("user_id", studentId)
       .order("started_at", { ascending: false }),
@@ -307,14 +358,49 @@ export async function getAdminStudentActivityDetail(
       .from("capstone_projects")
       .select("id, title, action_type, reach_count, status, submitted_at, reviewed_at")
       .eq("user_id", studentId)
-      .order("submitted_at", { ascending: false })
+      .order("submitted_at", { ascending: false }),
+    supabase
+      .from("module_time_spent")
+      .select("module_id, active_seconds")
+      .eq("user_id", studentId),
+    supabase
+      .from("lesson_sessions")
+      .select("module_id, active_seconds")
+      .eq("user_id", studentId),
+    supabase
+      .from("user_presence")
+      .select("last_seen_at, last_path")
+      .eq("user_id", studentId)
+      .maybeSingle(),
+    supabase
+      .from("module_progress_approvals")
+      .select("progress_id, approved_at")
+      .eq("user_id", studentId)
   ]);
+
+  // The heartbeat covers every module page; the older per-lesson sessions only
+  // covered one lesson. Taking the larger of the two keeps the legacy data
+  // useful without counting the same minutes twice.
+  const heartbeatSecondsByModule = new Map<string, number>();
+  (moduleTime ?? []).forEach((row: any) => {
+    heartbeatSecondsByModule.set(row.module_id, row.active_seconds ?? 0);
+  });
+  const sessionSecondsByModule = new Map<string, number>();
+  (lessonSessions ?? []).forEach((row: any) => {
+    sessionSecondsByModule.set(
+      row.module_id,
+      (sessionSecondsByModule.get(row.module_id) ?? 0) + (row.active_seconds ?? 0)
+    );
+  });
 
   const moduleProgress = (progress ?? []).map((row: any) => {
     const moduleInfo = joinedValue(row.modules) as {
       title?: string | null;
       order_index?: number | null;
     } | null;
+    const startedAt = row.started_at ?? null;
+    const completedAt = row.completed_at ?? null;
+    const endTime = completedAt ? new Date(completedAt).getTime() : Date.now();
 
     return {
       id: row.id,
@@ -324,8 +410,19 @@ export async function getAdminStudentActivityDetail(
       quizScore: row.quiz_score ?? null,
       quizAttempts: row.quiz_attempts ?? 0,
       pointsEarned: row.points_earned ?? 0,
-      startedAt: row.started_at ?? null,
-      completedAt: row.completed_at ?? null
+      moduleOrder: moduleInfo?.order_index ?? null,
+      approvedAt:
+        (progressApprovals ?? []).find((approval: any) => approval.progress_id === row.id)
+          ?.approved_at ?? null,
+      startedAt,
+      completedAt,
+      activeSeconds: Math.max(
+        heartbeatSecondsByModule.get(row.module_id) ?? 0,
+        sessionSecondsByModule.get(row.module_id) ?? 0
+      ),
+      elapsedSeconds: startedAt
+        ? Math.max(0, Math.round((endTime - new Date(startedAt).getTime()) / 1000))
+        : null
     };
   });
 
@@ -418,14 +515,23 @@ export async function getAdminStudentActivityDetail(
       capstonesSubmitted: capstones?.length ?? 0
     },
     moduleProgress,
-    activities
+    activities,
+    presence: buildPresence(presenceRow as any)
   };
 }
 
 export async function listAdminStudents() {
   const supabase = createSupabaseAdminClient();
   const testUserIds = await listTestAuthUserIds();
-  const [{ data, error }, { data: progress }, { count: publishedModuleCount }, verifiedXp] = await Promise.all([
+  const [
+    { data, error },
+    { data: progress },
+    { count: publishedModuleCount },
+    verifiedXp,
+    { data: presenceRows },
+    { data: moduleTime },
+    { data: completedModules }
+  ] = await Promise.all([
     supabase
       .from("users")
       .select(
@@ -442,7 +548,14 @@ export async function listAdminStudents() {
       .from("modules")
       .select("id", { count: "exact", head: true })
       .eq("is_published", true),
-    calculateVerifiedXp()
+    calculateVerifiedXp(),
+    supabase.from("user_presence").select("user_id, last_seen_at, last_path"),
+    supabase.from("module_time_spent").select("user_id, active_seconds"),
+    supabase
+      .from("module_progress")
+      .select("user_id, modules!inner(is_published)")
+      .eq("status", "completed")
+      .eq("modules.is_published", true)
   ]);
 
   if (error || !data) return [];
@@ -453,6 +566,21 @@ export async function listAdminStudents() {
     const scores = scoresByStudent.get(row.user_id) ?? [];
     scores.push(row.quiz_score);
     scoresByStudent.set(row.user_id, scores);
+  });
+
+  const presenceByStudent = new Map(
+    (presenceRows ?? []).map((row: any) => [row.user_id as string, row])
+  );
+  const learningSecondsByStudent = new Map<string, number>();
+  (moduleTime ?? []).forEach((row: any) => {
+    learningSecondsByStudent.set(
+      row.user_id,
+      (learningSecondsByStudent.get(row.user_id) ?? 0) + (row.active_seconds ?? 0)
+    );
+  });
+  const completedByStudent = new Map<string, number>();
+  (completedModules ?? []).forEach((row: any) => {
+    completedByStudent.set(row.user_id, (completedByStudent.get(row.user_id) ?? 0) + 1);
   });
 
   return data.filter((student: any) => !testUserIds.has(student.id)).map((student: any) => {
@@ -477,10 +605,16 @@ export async function listAdminStudents() {
           )
         : null,
       cohort: cohort?.name ?? "Sans cohorte",
-      joinedAt: student.created_at ?? null
+      joinedAt: student.created_at ?? null,
+      modulesCompleted: completedByStudent.get(student.id) ?? 0,
+      publishedModules: publishedModuleCount ?? 0,
+      learningSeconds: learningSecondsByStudent.get(student.id) ?? 0,
+      presence: buildPresence(presenceByStudent.get(student.id))
     };
   });
 }
+
+export type AdminStudentSummary = Awaited<ReturnType<typeof listAdminStudents>>[number];
 
 export async function getSupabaseUserRoleCounts() {
   const supabase = createSupabaseAdminClient();

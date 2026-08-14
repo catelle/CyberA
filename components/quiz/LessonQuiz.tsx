@@ -16,6 +16,8 @@ type LessonQuizProps = {
   questions?: LessonQuizQuestion[];
   quiz: LessonQuizQuestion;
   userId: string;
+  /** Admin walkthrough: answer everything without recording any progress. */
+  preview?: boolean;
 };
 
 type Phase = "question" | "review" | "result";
@@ -24,7 +26,7 @@ function questionKey(question: LessonQuizQuestion, index: number) {
   return question.id ?? String(index);
 }
 
-export function LessonQuiz({ lessonId, moduleId, nextLesson, questions, quiz, userId }: LessonQuizProps) {
+export function LessonQuiz({ lessonId, moduleId, nextLesson, questions, quiz, userId, preview = false }: LessonQuizProps) {
   const quizQuestions = questions?.length ? questions : [quiz];
   const passThreshold = Math.ceil(quizQuestions.length * 0.7);
 
@@ -85,7 +87,7 @@ export function LessonQuiz({ lessonId, moduleId, nextLesson, questions, quiz, us
     const didPass = finalCorrectCount >= passThreshold;
     setPassed(didPass);
 
-    if (!didPass) {
+    if (!didPass || preview) {
       setPhase("result");
       return;
     }
