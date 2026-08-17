@@ -36,6 +36,7 @@ export function LessonQuiz({ lessonId, moduleId, nextLesson, questions, quiz, us
   const [phase, setPhase] = useState<Phase>("question");
   const [passed, setPassed] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(6);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const currentQuestion = quizQuestions[questionIndex];
@@ -93,6 +94,7 @@ export function LessonQuiz({ lessonId, moduleId, nextLesson, questions, quiz, us
     }
 
     setIsSaving(true);
+    setSaveError(null);
     try {
       await saveLessonProgress({ userId, moduleId, lessonId, answers: finalAnswers });
       window.dispatchEvent(new CustomEvent("cybera:pending-sync-changed"));
@@ -100,6 +102,13 @@ export function LessonQuiz({ lessonId, moduleId, nextLesson, questions, quiz, us
         await syncPending();
       }
       setPhase("result");
+    } catch (error) {
+      console.error("Lesson completion failed:", error);
+      setSaveError(
+        error instanceof Error
+          ? error.message
+          : "Impossible d'enregistrer ta progression."
+      );
     } finally {
       setIsSaving(false);
     }
@@ -220,6 +229,22 @@ export function LessonQuiz({ lessonId, moduleId, nextLesson, questions, quiz, us
         )
       ) : null}
 
+      {saveError && (
+        <div
+          className="rounded-lg border-2 border-red-500 bg-red-50 p-4 font-bold text-red-800"
+          role="alert"
+        >
+          <p>Ta réponse est correcte, mais ta progression n&apos;a pas pu être enregistrée.</p>
+          <p className="mt-2 text-sm">{saveError}</p>
+          <button
+            className="mt-3 rounded-lg bg-brand-blue px-4 py-2 font-black text-white"
+            onClick={() => void goToNext()}
+            type="button"
+          >
+            Réessayer l&apos;enregistrement
+          </button>
+        </div>
+      )}
       {phase === "review" ? (
         <button
           className="inline-flex min-h-12 w-full items-center justify-center rounded-lg border-2 border-secondary bg-primary px-5 font-black text-white shadow-[0_4px_0_0_rgba(88,96,98,1)] disabled:cursor-not-allowed disabled:opacity-50 sm:w-fit"

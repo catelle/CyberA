@@ -267,6 +267,8 @@ async function runPendingSync() {
     .anyOf("queued", "syncing", "failed")
     .toArray();
 
+  let firstError: Error | null = null;
+
   for (const item of pending) {
     if (!item.id) continue;
 
@@ -297,12 +299,16 @@ async function runPendingSync() {
       await pushPendingItem(item);
       await offlineDb.pendingSync.delete(item.id);
     } catch (error) {
+      const syncError = error instanceof Error ? error : new Error("Sync failed");
       await offlineDb.pendingSync.update(item.id, {
         status: "failed",
-        lastError: error instanceof Error ? error.message : "Sync failed"
+        lastError: syncError.message,
       });
+      if (!firstError) firstError = syncError;
     }
   }
+
+  if (firstError) throw firstError;
 }
 
 export function syncPending() {

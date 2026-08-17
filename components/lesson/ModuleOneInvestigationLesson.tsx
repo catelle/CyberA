@@ -162,6 +162,7 @@ export function ModuleOneInvestigationLesson({
       window.setTimeout(() => setToast(null), 8000);
     }
     setSceneIndex((value) => value + 1);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   if (!started)
@@ -405,7 +406,7 @@ export function ModuleOneInvestigationLesson({
         <button
           className="rounded-lg border-2 border-slate-400 px-4 py-3 font-black disabled:opacity-30"
           disabled={sceneIndex === 0}
-          onClick={() => setSceneIndex((value) => value - 1)}
+          onClick={() => { setSceneIndex((value) => value - 1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
         >
           <ArrowLeft className="mr-2 inline h-4 w-4" />
           Retour
