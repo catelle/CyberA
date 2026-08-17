@@ -1,9 +1,51 @@
+export type InvestigationVisual =
+  | {
+      type: "flow";
+      items: string[];
+      caption?: string;
+    }
+  | {
+      type: "comparison";
+      left: string[];
+      right: string[];
+      leftLabel?: string;
+      rightLabel?: string;
+    }
+  | {
+      type: "warning";
+      items: string[];
+    }
+  | {
+      type: "checklist";
+      items: string[];
+    }
+  | {
+      type: "signal";
+      items: string[];
+      caption?: string;
+    }
+  | {
+      type: "timeline";
+      items: string[];
+    }
+  | {
+      type: "vs";
+      bad: string;
+      good: string;
+    }
+  | {
+      type: "phone";
+      lines: string[];
+      sender?: string;
+    };
+
 export type InvestigationScene = {
   eyebrow: string;
   title: string;
   narration: string;
   evidence: string;
   coach: string;
+  visual?: InvestigationVisual;
   question?: string;
   options?: string[];
   correct?: number;

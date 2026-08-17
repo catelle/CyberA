@@ -27,43 +27,16 @@ import {
   startAmbientLoop,
   stopAmbientLoop,
 } from "@/lib/sounds";
+import type {
+  InvestigationLesson,
+  InvestigationVisual,
+} from "@/lib/curriculum/module-one-investigations";
 
-// ─── Visual types (module 2 only) ────────────────────────────────────────────
 
-export type M2Visual =
-  | { type: "flow"; items: string[]; caption?: string }
-  | { type: "comparison"; left: string[]; right: string[]; leftLabel?: string; rightLabel?: string }
-  | { type: "warning"; items: string[] }
-  | { type: "checklist"; items: string[] }
-  | { type: "signal"; items: string[]; caption?: string }
-  | { type: "timeline"; items: string[] }
-  | { type: "vs"; bad: string; good: string }
-  | { type: "phone"; lines: string[]; sender?: string };
 
-export type M2Scene = {
-  eyebrow: string;
-  title: string;
-  narration: string;
-  evidence: string;
-  coach: string;
-  visual?: M2Visual;
-  question?: string;
-  options?: string[];
-  correct?: number;
-};
 
-export type M2Lesson = {
-  id: string;
-  title: string;
-  mystery: string;
-  atmosphere: string;
-  accent: string;
-  image: string;
-  transformation: string;
-  scenes: M2Scene[];
-  mission: string[];
-  cliffhanger: string;
-};
+
+
 
 // ─── Glossary (cybersecurity terms) ──────────────────────────────────────────
 
@@ -92,18 +65,43 @@ const glossary: [string, string][] = [
 
 // ─── Visual renderer ──────────────────────────────────────────────────────────
 
-function SceneVisual({ visual, accent }: { visual: M2Visual; accent: string }) {
-  if (visual.type === "flow") return (
+function SceneVisual({
+  visual,
+  accent,
+}: {
+  visual: InvestigationVisual;
+  accent: string;
+}) {
+  if (visual.type === "flow") {
+  return (
     <div className="mt-5 flex flex-wrap items-center justify-center gap-2 rounded-2xl border border-white/10 bg-[#0d1117] p-4">
       {visual.items.map((item, i) => (
-        <div className="flex items-center gap-2" key={i}>
-          <span className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-center font-black text-white">{item}</span>
-          {i < visual.items.length - 1 && <ArrowRight className="h-4 w-4 shrink-0" style={{ color: accent }} />}
+        <div
+          className="flex items-center gap-2 animate-[fadeSlideIn_.45s_ease-out_both]"
+          key={i}
+          style={{ animationDelay: `${i * 0.25}s` }}
+        >
+          <span className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-center font-black text-white">
+            {item}
+          </span>
+
+          {i < visual.items.length - 1 && (
+            <ArrowRight
+              className="h-4 w-4 shrink-0 animate-pulse"
+              style={{ color: accent }}
+            />
+          )}
         </div>
       ))}
-      {visual.caption && <p className="mt-3 w-full text-center text-xs font-bold text-white/50">{visual.caption}</p>}
+
+      {visual.caption && (
+        <p className="mt-3 w-full text-center text-xs font-bold text-white/50">
+          {visual.caption}
+        </p>
+      )}
     </div>
   );
+}
 
   if (visual.type === "comparison") return (
     <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -126,15 +124,22 @@ function SceneVisual({ visual, accent }: { visual: M2Visual; accent: string }) {
     </div>
   );
 
-  if (visual.type === "warning") return (
+  if (visual.type === "warning") {
+  return (
     <div className="mt-5 grid gap-2">
       {visual.items.map((item, i) => (
-        <div className="flex items-start gap-3 rounded-xl border border-red-400/30 bg-red-950/25 p-3 font-bold text-red-200" key={i}>
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-400" /><span>{item}</span>
+        <div
+          className="flex items-start gap-3 rounded-xl border border-red-400/30 bg-red-950/25 p-3 font-bold text-red-200 animate-[fadeSlideIn_.45s_ease-out_both]"
+          key={i}
+          style={{ animationDelay: `${i * 0.2}s` }}
+        >
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 animate-pulse text-red-400" />
+          <span>{item}</span>
         </div>
       ))}
     </div>
   );
+}
 
   if (visual.type === "checklist") return (
     <div className="mt-5 grid gap-2">
@@ -159,22 +164,42 @@ function SceneVisual({ visual, accent }: { visual: M2Visual; accent: string }) {
     </div>
   );
 
-  if (visual.type === "timeline") return (
+ if (visual.type === "timeline") {
+  return (
     <div className="mt-5 grid gap-1">
       {visual.items.map((item, i) => (
-        <div className="flex items-start gap-3" key={i}>
+        <div
+          className="flex items-start gap-3 animate-[fadeSlideIn_.4s_ease-out_both]"
+          key={i}
+          style={{ animationDelay: `${i * 0.3}s` }}
+        >
           <div className="flex flex-col items-center">
             <span
               className="grid h-7 w-7 shrink-0 place-items-center rounded-full border-2 text-xs font-black"
               style={{ borderColor: accent, color: accent }}
-            >{i + 1}</span>
-            {i < visual.items.length - 1 && <span className="mt-1 h-5 w-0.5 bg-white/15" />}
+            >
+              {i + 1}
+            </span>
+
+            {i < visual.items.length - 1 && (
+              <span
+                className="mt-1 h-5 w-0.5 animate-[growLine_.5s_ease-out_both]"
+                style={{
+                  backgroundColor: accent,
+                  animationDelay: `${i * 0.3 + 0.2}s`,
+                }}
+              />
+            )}
           </div>
-          <p className="pt-0.5 pb-1 font-bold leading-6 text-white/80">{item}</p>
+
+          <p className="pt-0.5 pb-1 font-bold leading-6 text-white/80">
+            {item}
+          </p>
         </div>
       ))}
     </div>
   );
+}
 
   if (visual.type === "vs") return (
     <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -199,13 +224,15 @@ function SceneVisual({ visual, accent }: { visual: M2Visual; accent: string }) {
           </div>
         )}
         <div className="space-y-2">
-          {visual.lines.map((line, i) => (
-            <div
-              className="rounded-2xl rounded-tl-sm bg-white/10 px-3 py-2 text-sm font-semibold leading-5 text-white/85"
-              key={i}
-              style={{ animationDelay: `${i * 0.2}s` }}
-            >{line}</div>
-          ))}
+         {visual.lines.map((line, i) => (
+  <div
+    className="rounded-2xl rounded-tl-sm bg-white/10 px-3 py-2 text-sm font-semibold leading-5 text-white/85 animate-[messageIn_.4s_ease-out_both]"
+    key={i}
+    style={{ animationDelay: `${i * 0.45}s` }}
+  >
+    {line}
+  </div>
+))}
         </div>
       </div>
     </div>
@@ -217,7 +244,7 @@ function SceneVisual({ visual, accent }: { visual: M2Visual; accent: string }) {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 type Props = {
-  lesson: M2Lesson;
+  lesson: InvestigationLesson;
   moduleId: string;
   canComplete: boolean;
 };
