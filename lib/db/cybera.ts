@@ -614,8 +614,6 @@ export async function listAdminStudents() {
   });
 }
 
-export type AdminStudentSummary = Awaited<ReturnType<typeof listAdminStudents>>[number];
-
 export async function getSupabaseUserRoleCounts() {
   const supabase = createSupabaseAdminClient();
   const testUserIds = await listTestAuthUserIds();
