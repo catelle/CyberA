@@ -7,6 +7,7 @@
 
 node_modules/
 .next/
+.next-dev/
 out/
 dist/
 
@@ -15,3 +16,7 @@ tsconfig.tsbuildinfo
 .yarn/install-state.gz
 
 .DS_Store
+.vercel
+.env*
+private-exports/
+supabase/.temp/

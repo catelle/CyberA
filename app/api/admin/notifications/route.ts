@@ -7,7 +7,9 @@ import { createSupabaseAdminClient } from "@/lib/auth/supabase-server";
 const broadcastSchema = z.object({
   title: z.string().trim().min(1, "Le titre est requis."),
   body: z.string().trim().min(1, "Le message est requis."),
-  audience: z.enum(["ambassadors", "parents", "all"]).default("ambassadors")
+  audience: z
+    .enum(["students", "ambassadors", "parents", "all"])
+    .default("students")
 });
 
 function validationMessage(error: z.ZodError) {
@@ -44,13 +46,14 @@ export async function POST(request: Request) {
 
   if (userError) return jsonError(userError, "Impossible de charger l'audience.");
 
+  const broadcastId = crypto.randomUUID();
   const rows =
     users?.map((user) => ({
       user_id: user.id,
       type: "broadcast",
       title: parsed.data.title,
       body: parsed.data.body,
-      data: { audience: parsed.data.audience }
+      data: { audience: parsed.data.audience, broadcast_id: broadcastId }
     })) ?? [];
 
   if (rows.length > 0) {

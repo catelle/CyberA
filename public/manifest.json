@@ -2,11 +2,12 @@
   "name": "CyberAmbassador",
   "short_name": "CyberA",
   "description": "Offline-first youth digital citizenship training platform.",
-  "start_url": "/",
+  "id": "https://cyberambassador.sykoticenter.org/",
+  "start_url": "/login?source=pwa",
   "scope": "/",
   "display": "standalone",
   "background_color": "#F8F9FA",
-  "theme_color": "#1A5276",
+  "theme_color": "#B5123F",
   "icons": [
     {
       "src": "/icons/icon-192.png",

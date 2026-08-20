@@ -1,8 +1,16 @@
+import { moduleOne } from "@/lib/curriculum/module-one";
+import { moduleTwo } from "@/lib/curriculum/module-two";
+import { moduleThreeQuiz } from "@/lib/curriculum/module-three-quiz-banks";
+import { moduleFourQuiz } from "@/lib/curriculum/module-four-quiz-banks";
+
 export type ProgramModuleStatus = "ready" | "next" | "planned";
 
 export type LessonContentBlock = {
-  type: "text" | "tip" | "warning" | "checklist";
+  type: "text" | "tip" | "warning" | "checklist" | "hook" | "story" | "discovery" | "mission" | "reflection" | "ability" | "image";
   content: string | string[];
+  src?: string;
+  alt?: string;
+  caption?: string;
 };
 
 export type ProgramLesson = {
@@ -11,6 +19,15 @@ export type ProgramLesson = {
   title: string;
   estimatedMins: number;
   content: LessonContentBlock[];
+  quiz: LessonQuizQuestion;
+};
+
+export type LessonQuizQuestion = {
+  id?: string;
+  question: string;
+  options: string[];
+  correctIndex: number;
+  explanation: string;
 };
 
 export type QuizQuestion = {
@@ -63,6 +80,14 @@ export type WeeklyChallenge = {
   deadline: string;
   requiresPhoto: boolean;
   status: "open" | "submitted" | "reviewed";
+  registrationStatus?: "available" | "registered" | "submitted" | "cooldown";
+  registrationDeadline?: string | null;
+  cooldownUntil?: string | null;
+  submissionStatus?: "pending" | "approved" | "rejected" | null;
+  reviewerNote?: string | null;
+  pointsAwarded?: number;
+  reviewedAt?: string | null;
+  parentInvitationStatus?: "invited" | "submitted" | "approved" | "rejected" | null;
 };
 
 export type LeaderboardEntry = {
@@ -71,6 +96,7 @@ export type LeaderboardEntry = {
   city: string;
   level: "junior" | "senior" | "master";
   points: number;
+  performanceScore?: number;
   weeklyPoints: number;
   cohort: string;
   isCurrentUser?: boolean;
@@ -123,6 +149,15 @@ function lesson(
   warning: string,
   checklist: string[]
 ): ProgramLesson {
+  const correctIndex = (order - 1) % 4;
+  const options = [
+    "Partager immediatement sans verifier",
+    "Ignorer les signaux d'alerte",
+    "Donner ses informations personnelles",
+    "Attendre qu'un probleme arrive"
+  ];
+  options[correctIndex] = checklist[0];
+
   return {
     id,
     order,
@@ -147,126 +182,26 @@ function lesson(
         content:
           "Avant de partager, ralentis: verifier une source prend moins de temps que reparer une erreur publique."
       }
-    ]
+    ],
+    quiz: {
+      question: `Quelle action est recommandee dans la lecon « ${title} » ?`,
+      options,
+      correctIndex,
+      explanation: `${checklist[0]} est le bon reflexe a retenir.`
+    }
   };
 }
 
 export const programModules: ProgramModule[] = [
-  {
-    id: "hygiene-numerique",
-    week: 1,
-    title: "Hygiene Numerique",
-    subtitle: "Vie privee, mots de passe et temps d'ecran",
-    summary:
-      "Installer les reflexes de base pour proteger ses comptes, ses donnees et son attention.",
-    color: "#1A5276",
-    icon: "shield",
-    outcomes: ["Regler la confidentialite", "Creer une phrase de passe", "Limiter le partage"],
-    status: "ready",
-    progressPercent: 0,
-    lessons: [
-      lesson("algorithmes", 1, "Comment les algorithmes influencent ce que tu vois", "Un fil d'actualite n'est jamais neutre: il apprend de tes clics.", [
-        "Comparer deux sources avant de croire une information",
-        "Identifier ce qui te pousse a rester connecte",
-        "Choisir une pause numerique realiste"
-      ]),
-      lesson("temps-ecran", 2, "Gerer le temps d'ecran et les habitudes", "La fatigue numerique rend les arnaques plus faciles a rater.", [
-        "Activer un rappel de pause",
-        "Retirer une notification inutile",
-        "Definir une zone sans telephone"
-      ]),
-      lesson("vie-privee", 3, "Proteger ta vie privee", "Une publication anodine peut contenir ton ecole, ton quartier ou tes habitudes.", [
-        "Verifier qui peut voir ton profil",
-        "Utiliser une phrase de passe unique",
-        "Activer la double verification"
-      ]),
-      lesson("surmenage", 4, "Reconnaitre les signaux de surmenage numerique", "Le stress en ligne peut devenir physique: sommeil, humeur, concentration.", [
-        "Nommer un signal personnel",
-        "Prevenir un adulte de confiance",
-        "Remplacer une session par une activite hors ligne"
-      ]),
-      lesson("usage-sain", 5, "Utiliser la technologie de maniere saine", "Un bon outil reste au service de ton objectif, pas l'inverse.", [
-        "Planifier un usage utile",
-        "Bloquer un contenu nuisible",
-        "Aider un ami a regler son compte"
-      ])
-    ],
-    quiz: [
-      {
-        id: "privacy-default",
-        question: "Quel reglage verifier en premier sur un nouveau reseau social ?",
-        options: ["La couleur du profil", "Qui peut voir tes publications", "Le nombre d'abonnes", "Le fond d'ecran"],
-        correctIndex: 1,
-        explanation: "La visibilite des publications limite l'exposition de tes donnees personnelles.",
-        points: 10
-      },
-      {
-        id: "password",
-        question: "Quelle option est la plus sure ?",
-        options: ["Le meme mot de passe partout", "Une phrase de passe unique", "Ta date de naissance", "Le nom de ton ecole"],
-        correctIndex: 1,
-        explanation: "Une phrase longue et unique resiste mieux aux devinettes et aux fuites.",
-        points: 10
-      }
-    ]
-  },
-  {
-    id: "e-reputation-desinformation",
-    week: 2,
-    title: "E-Reputation & Desinformation",
-    subtitle: "Empreinte numerique et verification",
-    summary:
-      "Construire une identite positive et ralentir la diffusion des fausses informations.",
-    color: "#1E8449",
-    icon: "globe",
-    outcomes: ["Verifier une information", "Proteger sa reputation", "Reagir avec respect"],
-    status: "next",
-    progressPercent: 0,
-    lessons: [
-      lesson("empreinte", 1, "Ton empreinte numerique est permanente", "Une capture d'ecran peut survivre a la suppression d'un post.", [
-        "Relire avant de publier",
-        "Eviter les details personnels",
-        "Penser a l'effet dans un an"
-      ]),
-      lesson("identite", 2, "Construire une identite numerique positive", "Ton profil peut montrer tes competences, pas seulement tes opinions.", [
-        "Mettre en avant un projet",
-        "Choisir une photo respectueuse",
-        "Retirer un contenu ambigu"
-      ]),
-      lesson("verification", 3, "Verifier avant de partager", "Une rumeur utile a partager vite est souvent une rumeur a verifier d'abord.", [
-        "Chercher la source originale",
-        "Comparer avec un media fiable",
-        "Verifier la date"
-      ]),
-      lesson("resister", 4, "Resister a la desinformation", "Les contenus qui provoquent peur ou colere cherchent souvent le partage rapide.", [
-        "Identifier l'emotion ciblee",
-        "Chercher une preuve",
-        "Ne pas relayer sans contexte"
-      ]),
-      lesson("reagir", 5, "Reagir de maniere constructive", "Corriger publiquement peut aider, humilier peut bloquer la conversation.", [
-        "Proposer une source",
-        "Rester calme",
-        "Signaler si le contenu est dangereux"
-      ])
-    ],
-    quiz: [
-      {
-        id: "verify-date",
-        question: "Pourquoi verifier la date d'une information ?",
-        options: ["Pour changer la langue", "Pour savoir si le contexte est encore vrai", "Pour augmenter les likes", "Pour masquer l'auteur"],
-        correctIndex: 1,
-        explanation: "Une information ancienne peut etre vraie mais trompeuse dans un nouveau contexte.",
-        points: 10
-      }
-    ]
-  },
+  moduleOne,
+  moduleTwo,
   {
     id: "online-scams-digital-safety",
     week: 3,
-    title: "Online Scams & Digital Safety",
-    subtitle: "Scams, phishing et aide aux victimes",
+    title: "Digital Toolbox / Outils & Pratiques",
+    subtitle: "Des capacités pratiques que tu peux réellement utiliser",
     summary:
-      "Reconnaitre les arnaques courantes au Cameroun et savoir quoi faire sans paniquer.",
+      "Passer de la théorie à l'action avec des méthodes concrètes pour vérifier, protéger, documenter et signaler.",
     color: "#B7950B",
     icon: "alert",
     outcomes: ["Reconnaitre le phishing", "Documenter les faits", "Signaler une arnaque"],
@@ -299,24 +234,15 @@ export const programModules: ProgramModule[] = [
         "Decrire les faits clairement"
       ])
     ],
-    quiz: [
-      {
-        id: "urgent-money",
-        question: "Un inconnu promet un gain rapide si tu paies des frais. Que fais-tu ?",
-        options: ["Je paie vite", "Je partage a mes amis", "Je verifie et j'en parle a un adulte", "J'envoie ma CNI"],
-        correctIndex: 2,
-        explanation: "L'urgence et les frais avant gain sont des signaux classiques de fraude.",
-        points: 10
-      }
-    ]
+    quiz: moduleThreeQuiz
   },
   {
     id: "leadership-advocacy",
     week: 4,
-    title: "Leadership & Advocacy",
-    subtitle: "Forum, action collective et capstone",
+    title: "Digital Citizenship Leadership / Leadership Citoyen Numérique",
+    subtitle: "Aider les autres à mieux naviguer dans le monde numérique",
     summary:
-      "Transformer les competences apprises en actions utiles pour sa famille, son ecole ou son quartier.",
+      "Transformer tes compétences en actions utiles pour ta famille, ton école ou ton quartier et devenir un guide responsable.",
     color: "#6C3483",
     icon: "trophy",
     outcomes: ["Animer une sensibilisation", "Signaler collectivement", "Preparer le capstone"],
@@ -349,16 +275,7 @@ export const programModules: ProgramModule[] = [
         "Mesurer les personnes touchees"
       ])
     ],
-    quiz: [
-      {
-        id: "forum-sensitive",
-        question: "Que faut-il eviter dans un rapport forum public ?",
-        options: ["Le type de menace", "La plateforme", "Un numero de telephone prive", "Une description generale"],
-        correctIndex: 2,
-        explanation: "Les informations sensibles ne doivent pas etre exposees dans le forum.",
-        points: 10
-      }
-    ]
+    quiz: moduleFourQuiz
   }
 ];
 

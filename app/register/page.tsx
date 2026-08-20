@@ -13,7 +13,7 @@ export default function RegisterPage() {
           className="rounded-xl bg-primary p-5 font-black text-white transition hover:bg-primary-container"
           href="/register/ambassador"
         >
-          Ambassadeur
+          Eleve
         </Link>
         <Link
           className="rounded-xl border-2 border-secondary bg-white p-5 font-black text-primary shadow-[0_4px_0_0_rgba(88,96,98,1)] transition hover:bg-surface-container-low"

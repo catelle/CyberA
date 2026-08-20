@@ -1,6 +1,7 @@
 "use client";
 
-import { ArrowRight, CheckCircle2, Info, X } from "lucide-react";
+import { ArrowRight, Info, PackageOpen, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import type { UserRole } from "@/types/auth";
@@ -29,8 +30,8 @@ const studentTips: TourTip[] = [
     body: "Le quiz valide le module a partir de 70%. Les points sont ajoutes une seule fois par module reussi."
   },
   {
-    title: "Continue avec les defis",
-    body: "Les defis servent a appliquer ce que tu apprends avec ta famille, ton ecole ou ta communaute."
+    title: "Consulte ton Kit CyberA",
+    body: "Retrouve ton parcours, le calendrier, tes engagements et les ressources d'aide dans Mon Kit."
   }
 ];
 
@@ -41,7 +42,7 @@ const parentTips: TourTip[] = [
   },
   {
     title: "Lie un enfant",
-    body: "Utilise le code famille donne par l'ambassadeur pour connecter son compte a ton espace parent."
+    body: "Utilise le code famille donne par l'eleve pour connecter son compte a ton espace parent."
   },
   {
     title: "Lis les rapports",
@@ -54,6 +55,7 @@ const parentTips: TourTip[] = [
 ];
 
 export function DashboardTour({ role, userId }: DashboardTourProps) {
+  const router = useRouter();
   const [isVisible, setIsVisible] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const tips = useMemo(() => {
@@ -88,6 +90,7 @@ export function DashboardTour({ role, userId }: DashboardTourProps) {
   function showNextTip() {
     if (isLastTip) {
       closeTour();
+      if (role === "student") router.push("/student/kit");
       return;
     }
 
@@ -99,17 +102,17 @@ export function DashboardTour({ role, userId }: DashboardTourProps) {
   }
 
   return (
-    <aside className="fixed bottom-8 right-8 z-50 hidden w-[min(24rem,calc(100vw-4rem))] rounded-lg border-2 border-secondary bg-white p-4 text-on-surface shadow-[0_6px_0_0_rgba(88,96,98,1)] lg:block">
+    <aside className="fixed bottom-8 right-8 z-50 hidden w-[min(31rem,calc(100vw-4rem))] rounded-xl border-2 border-secondary bg-white p-6 text-on-surface shadow-[0_8px_0_0_rgba(88,96,98,1)] lg:block">
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-secondary bg-primary text-white">
-            <Info aria-hidden className="h-5 w-5" />
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-secondary bg-primary text-white">
+            <Info aria-hidden className="h-6 w-6" />
           </span>
           <div className="min-w-0">
             <p className="text-xs font-black uppercase tracking-widest text-tertiary">
               Guide {currentIndex + 1}/{tips.length}
             </p>
-            <h2 className="mt-1 break-words font-display text-xl font-black leading-tight text-brand-ink">
+            <h2 className="mt-1 break-words font-display text-2xl font-black leading-tight text-brand-ink">
               {currentTip.title}
             </h2>
           </div>
@@ -125,7 +128,7 @@ export function DashboardTour({ role, userId }: DashboardTourProps) {
         </button>
       </div>
 
-      <p className="mt-4 text-sm font-semibold leading-6 text-slate-600">
+      <p className="mt-5 text-base font-semibold leading-7 text-slate-600">
         {currentTip.body}
       </p>
 
@@ -150,8 +153,8 @@ export function DashboardTour({ role, userId }: DashboardTourProps) {
         >
           {isLastTip ? (
             <>
-              <CheckCircle2 aria-hidden className="h-4 w-4" />
-              Terminer
+              <PackageOpen aria-hidden className="h-4 w-4" />
+              Ouvrir Mon Kit
             </>
           ) : (
             <>

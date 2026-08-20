@@ -58,6 +58,17 @@ export async function middleware(request: NextRequest) {
   );
   const isAuthPage = authPrefixes.some((prefix) => pathname.startsWith(prefix));
 
+  if (
+    user?.app_metadata?.must_set_password === true &&
+    pathname !== "/auth/set-password" &&
+    !pathname.startsWith("/api/auth/")
+  ) {
+    const passwordUrl = request.nextUrl.clone();
+    passwordUrl.pathname = "/auth/set-password";
+    passwordUrl.search = "";
+    return NextResponse.redirect(passwordUrl);
+  }
+
   if (isProtected && !user) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/login";

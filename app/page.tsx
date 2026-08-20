@@ -1,6 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Award, ClipboardCheck, MessageCircle, Trophy, UsersRound } from "lucide-react";
+import { ArrowRight, Award, ClipboardCheck, MessageCircle, Star, Trophy, UsersRound } from "lucide-react";
+import { listApprovedTestimonials } from "@/lib/db/module-feedback";
+
+export const dynamic = "force-dynamic";
 
 const homepageModules = [
   {
@@ -56,9 +59,10 @@ const platformHighlights = [
   }
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const testimonials = await listApprovedTestimonials();
   return (
-    <main className="min-h-screen bg-background font-body-md text-on-background">
+    <main className="min-h-screen w-full max-w-full overflow-x-hidden bg-background font-body-md text-on-background">
       <section className="relative min-h-[92vh] overflow-hidden bg-brand-ink text-white">
         <Image
           alt="Jeunes Cyberambassadeurs en formation"
@@ -69,19 +73,19 @@ export default function HomePage() {
         />
         <div className="absolute inset-0 bg-gradient-to-b from-brand-ink/85 via-brand-ink/60 to-brand-ink/85" />
         <div className="relative z-10 mx-auto flex min-h-[92vh] max-w-7xl flex-col px-5 py-6">
-          <header className="flex items-center justify-between gap-4 rounded-xl border-2 border-white/70 bg-white/95 px-3 py-3 text-on-surface shadow-[0_4px_0_0_rgba(88,96,98,1)]">
-            <Link className="flex items-center gap-3 font-black" href="/">
+          <header className="flex min-w-0 items-center justify-between gap-2 rounded-xl border-2 border-white/70 bg-white/95 px-3 py-3 text-on-surface shadow-[0_4px_0_0_rgba(88,96,98,1)] sm:gap-4">
+            <Link className="flex min-w-0 items-center gap-2 font-black sm:gap-3" href="/">
               <span className="flex h-10 w-10 items-center justify-center rounded-lg border-2 border-secondary bg-primary-container text-lg font-black text-white">
                 C
               </span>
-              <span className="font-display uppercase text-primary">Cyberambassadeurs</span>
+              <span className="min-w-0 truncate font-display text-sm uppercase text-primary sm:text-base">Cyberambassadeurs</span>
             </Link>
             <nav className="flex items-center gap-3 text-sm font-bold">
               <Link className="hidden text-secondary hover:text-primary sm:inline" href="#programme">
                 Programme
               </Link>
               <Link
-                className="rounded-xl bg-primary px-4 py-2 font-black text-white transition hover:bg-primary-container"
+                className="shrink-0 rounded-xl bg-primary px-3 py-2 text-xs font-black text-white transition hover:bg-primary-container sm:px-4 sm:text-sm"
                 href="/login"
               >
                 Connexion
@@ -94,7 +98,7 @@ export default function HomePage() {
               <p className="mb-4 inline-flex rounded-full border-2 border-secondary bg-primary-fixed px-4 py-2 text-sm font-black uppercase text-primary shadow-[0_2px_0_0_rgba(88,96,98,1)]">
                 Formation certifiante en 4 modules
               </p>
-              <h1 className="font-display text-4xl font-black leading-tight sm:text-6xl">
+              <h1 className="break-words font-display text-4xl font-black leading-tight sm:text-6xl">
                 Former les Cyberambassadeurs qui changent leur communaute
               </h1>
               <p className="mt-6 max-w-2xl text-lg font-semibold leading-8 text-white/90">
@@ -113,7 +117,7 @@ export default function HomePage() {
                 hebdomadaires avec preuves, un systeme de points, un classement mensuel,
                 des recompenses et un badge officiel verifiable.
               </p>
-              <div className="mt-8 flex flex-wrap gap-3">
+              <div className="mt-8 grid gap-3 sm:flex sm:flex-wrap">
                 <Link
                   className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-primary px-5 py-3 font-black text-white transition hover:bg-primary-container"
                   href="/register/student"
@@ -149,6 +153,25 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {testimonials.length > 0 ? (
+        <section className="bg-white py-16" id="temoignages">
+          <div className="mx-auto max-w-7xl px-5">
+            <p className="text-sm font-black uppercase text-primary">Temoignages</p>
+            <h2 className="mt-2 font-display text-3xl font-black text-on-surface">Ce que les jeunes pensent du parcours</h2>
+            <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {testimonials.map((testimonial) => (
+                <article className="rounded-xl border-2 border-secondary bg-background p-5 shadow-[0_4px_0_0_rgba(88,96,98,1)]" key={testimonial.id}>
+                  <div className="flex gap-1" aria-label={`${testimonial.rating} etoiles`}>{[1,2,3,4,5].map((star) => <Star className={star <= testimonial.rating ? "h-5 w-5 fill-brand-gold text-brand-gold" : "h-5 w-5 text-slate-300"} key={star} />)}</div>
+                  <blockquote className="mt-4 font-semibold leading-7 text-secondary">“{testimonial.feedback}”</blockquote>
+                  <p className="mt-4 font-black text-primary">{testimonial.firstName}</p>
+                  <p className="text-xs font-bold text-slate-500">{testimonial.moduleTitle}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       <section className="bg-background py-16" id="programme">
         <div className="mx-auto max-w-7xl px-5">

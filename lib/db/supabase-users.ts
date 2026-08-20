@@ -53,7 +53,7 @@ export async function findSupabaseAuthUserByEmail(email: string) {
 function authUserAppRole(authUser: User): SupabaseProfileRole | undefined {
   const role = authUser.app_metadata?.role;
 
-  return role === "ambassador" || role === "parent" || role === "admin"
+  return role === "ambassador" || role === "parent" || role === "admin" || role === "facilitator"
     ? role
     : undefined;
 }
@@ -61,7 +61,7 @@ function authUserAppRole(authUser: User): SupabaseProfileRole | undefined {
 function normalizeSupabaseProfileRole(
   role: string | null | undefined
 ): SupabaseProfileRole {
-  if (role === "parent" || role === "admin") {
+  if (role === "parent" || role === "admin" || role === "facilitator") {
     return role;
   }
 

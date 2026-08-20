@@ -2,10 +2,11 @@ import Link from "next/link";
 
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { requireRole } from "@/lib/auth/guards";
-import { forumReports } from "@/lib/program";
+import { listForumReportsForStudent } from "@/lib/db/cybera";
 
 export default async function ForumPage() {
   const user = await requireRole(["student"]);
+  const forumReports = await listForumReportsForStudent(user.supabaseUserId);
 
   return (
     <DashboardShell user={user} title="Forum">
@@ -29,7 +30,12 @@ export default async function ForumPage() {
         </section>
 
         <section className="grid gap-4">
-          {forumReports.map((report) => (
+          {forumReports.length === 0 ? (
+            <p className="rounded-lg bg-white p-6 text-center text-sm font-medium text-slate-500">
+              Aucun signalement envoyé.
+            </p>
+          ) : null}
+          {forumReports.map((report: any) => (
             <article className="rounded-lg bg-white p-5 shadow-sm" key={report.id}>
               <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-start">
                 <div>
@@ -40,20 +46,18 @@ export default async function ForumPage() {
                     {report.description}
                   </h3>
                   <p className="mt-2 text-sm font-bold text-slate-500">
-                    Cible: {report.target}
+                    Cible: {report.target_url ?? "Non renseignée"}
                   </p>
                 </div>
                 <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-black uppercase text-slate-500">
                   {report.status}
                 </span>
               </div>
-              {report.actionInstructions ? (
+              {report.admin_note ? (
                 <div className="mt-4 grid gap-2 rounded-lg bg-brand-sky p-4">
-                  {report.actionInstructions.map((instruction) => (
-                    <p className="text-sm font-bold text-brand-blue" key={instruction}>
-                      {instruction}
-                    </p>
-                  ))}
+                  <p className="text-sm font-bold text-brand-blue">
+                    {report.admin_note}
+                  </p>
                 </div>
               ) : null}
             </article>
