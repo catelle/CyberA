@@ -5,6 +5,29 @@
 @tailwind components;
 @tailwind utilities;
 
+html, body { width: 100%; max-width: 100%; overflow-x: clip; }
+img, video, canvas, svg { max-width: 100%; }
+.lesson-concept-illustration img { animation: concept-illustration-breathe 12s ease-in-out infinite alternate; }
+
+@keyframes concept-illustration-breathe {
+  from { transform: scale(1); }
+  to { transform: scale(1.045); }
+}
+
+.concept-track-line { animation: concept-line-energy 1.8s ease-in-out infinite; }
+.concept-step-active { animation: concept-step-pop 520ms cubic-bezier(.2,.9,.3,1.35) both; }
+
+@keyframes concept-line-energy {
+  0%, 100% { opacity: .3; box-shadow: 0 0 4px currentColor; }
+  50% { opacity: 1; box-shadow: 0 0 18px currentColor; }
+}
+
+@keyframes concept-step-pop {
+  0% { transform: scale(.65) rotate(-8deg); }
+  70% { transform: scale(1.18) rotate(3deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+
 @layer components {
   .scene-label {
     @apply text-xs font-black uppercase tracking-[0.25em] text-primary;
@@ -67,6 +90,8 @@
   .lesson-stagger,
   .lesson-route-arrow,
   .lesson-unlock { animation: none !important; }
+  .lesson-concept-illustration img { animation: none !important; }
+  .concept-track-line, .concept-step-active { animation: none !important; }
 }
 
 /* Lesson experience uses the CyberAmbassador brand: burgundy, rose and graphite. */
@@ -211,11 +236,22 @@
   .dashboard-layout { display: block !important; }
   .dashboard-sidebar { display: none !important; }
   .dashboard-content { padding-inline: clamp(.5rem, 2vw, 1rem) !important; }
-  .dashboard-mobile-nav { display: grid !important; }
+  .dashboard-mobile-nav { display: flex !important; }
   .cyber-lesson { border-radius: 1rem; }
 }
 
+.dashboard-mobile-logout button {
+  min-height: 3.5rem;
+  width: 100%;
+  padding-inline: .5rem;
+  border: 0;
+  box-shadow: none;
+  font-size: .68rem;
+}
+
 @media (max-width: 640px) {
+  .dashboard-content { width: 100%; max-width: 100%; overflow-x: hidden; }
+  .lesson-concept-illustration { aspect-ratio: 4 / 3; }
   .cyber-lesson-light .lesson-investigation-header,
   .cyber-lesson-light .lesson-investigation-footer { padding-inline: .75rem; }
   .cyber-lesson-light .lesson-scene > section:not(.lesson-opening-scene) {

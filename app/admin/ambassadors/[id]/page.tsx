@@ -165,10 +165,10 @@ export default async function StudentActivityPage({ params }: StudentActivityPag
                     </dd>
                   </div>
                 </dl>
-                {module.moduleOrder === 1 && module.status === "completed" ? (
+                {module.status === "completed" ? (
                   module.approvedAt ? (
                     <p className="mt-4 rounded-lg bg-emerald-50 p-3 text-sm font-black text-emerald-800">
-                      Progression approuvee le {formatDate(module.approvedAt)}. Le module 2 est accessible.
+                      Progression approuvee le {formatDate(module.approvedAt)}. Le module suivant est accessible.
                     </p>
                   ) : user.role === "admin" ? (
                     <AdminProgressApprovalButton progressId={module.id} />

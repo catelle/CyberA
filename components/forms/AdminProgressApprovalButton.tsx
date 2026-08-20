@@ -46,7 +46,7 @@ export function AdminProgressApprovalButton({
         type="button"
       >
         <Check aria-hidden size={18} />
-        {isSubmitting ? "Approbation..." : "Approuver l'acces au module 2"}
+        {isSubmitting ? "Approbation..." : "Approuver l'acces au module suivant"}
       </button>
     </div>
   );

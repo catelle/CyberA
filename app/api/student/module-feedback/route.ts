@@ -8,8 +8,12 @@ import { getModuleById } from "@/lib/program";
 const feedbackSchema = z.object({
   moduleId: z.string().trim().min(1),
   rating: z.coerce.number().int().min(1).max(5),
+  understandingRating: z.coerce.number().int().min(1).max(5),
+  usefulnessRating: z.coerce.number().int().min(1).max(5),
+  pace: z.enum(["too_slow", "just_right", "too_fast"]),
   feedback: z.string().trim().min(20).max(1000),
-  publishConsent: z.literal(true)
+  suggestions: z.string().trim().max(1000).optional().default(""),
+  publishConsent: z.boolean().default(false)
 });
 
 export async function POST(request: Request) {
@@ -19,7 +23,7 @@ export async function POST(request: Request) {
   const parsed = feedbackSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json(
-      { message: "Ajoute une note, un avis d'au moins 20 caracteres et ton autorisation de publication." },
+      { message: "Reponds aux questions et ajoute une impression d'au moins 20 caracteres." },
       { status: 400 }
     );
   }
@@ -59,8 +63,12 @@ export async function POST(request: Request) {
       user_id: auth.user.supabaseUserId,
       module_id: databaseModuleId,
       rating: parsed.data.rating,
+      understanding_rating: parsed.data.understandingRating,
+      usefulness_rating: parsed.data.usefulnessRating,
+      pace: parsed.data.pace,
       feedback: parsed.data.feedback,
-      publish_consent: true,
+      suggestions: parsed.data.suggestions || null,
+      publish_consent: parsed.data.publishConsent,
       status: "pending",
       reviewed_by: null,
       reviewed_at: null,
@@ -69,6 +77,13 @@ export async function POST(request: Request) {
     { onConflict: "user_id,module_id" }
   );
   if (error) return jsonError(error, "Impossible d'enregistrer ton avis.");
+
+  await supabase
+    .from("notifications")
+    .update({ read: true })
+    .eq("user_id", auth.user.supabaseUserId)
+    .eq("type", "module_feedback_request")
+    .contains("data", { module_id: databaseModuleId });
 
   return NextResponse.json({ message: "Merci ! Ton avis a ete envoye pour validation." });
 }

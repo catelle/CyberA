@@ -7,6 +7,7 @@ import { MascotCoach } from "@/components/gamified/CyberMascot";
 import { WelcomeBehindScreen } from "@/components/lesson/WelcomeBehindScreen";
 import { InsideTikTokLesson } from "@/components/lesson/InsideTikTokLesson";
 import { ModuleOneInvestigationLesson } from "@/components/lesson/ModuleOneInvestigationLesson";
+import { ModuleTwoInvestigationLesson } from "@/components/lesson/ModuleTwoInvestigationLesson";
 import { LessonAudio } from "@/components/lesson/LessonAudio";
 import { LearningSpacePreviewNotice } from "@/components/lesson/LearningSpacePreviewNotice";
 import { DashboardShell } from "@/components/layout/DashboardShell";
@@ -79,7 +80,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
     return (
       <DashboardShell user={user} title={survivalInvestigation.title}>
         {previewNotice}
-        <ModuleOneInvestigationLesson canComplete={user.role === "student"} lesson={survivalInvestigation} moduleId={selectedModule.id} startImmediately />
+        <ModuleTwoInvestigationLesson canComplete={user.role === "student"} lesson={survivalInvestigation} moduleId={selectedModule.id} />
       </DashboardShell>
     );
   }

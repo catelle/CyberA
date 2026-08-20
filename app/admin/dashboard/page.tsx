@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { ArrowRight, BookOpen } from "lucide-react";
+import { ArrowRight, BookOpen, ClipboardCheck } from "lucide-react";
 
 import { AutoRefresh } from "@/components/admin/AutoRefresh";
+import { AdminProgressApprovalButton } from "@/components/forms/AdminProgressApprovalButton";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { requireRole } from "@/lib/auth/guards";
 import {
@@ -9,6 +10,7 @@ import {
   getSupabaseUserRoleCounts,
   listAdminStudents,
   listCohortsFromDatabase,
+  listPendingModuleApprovals,
   listModulesFromDatabase
 } from "@/lib/db/cybera";
 import { formatDuration, formatRelativeTime } from "@/lib/format/duration";
@@ -29,12 +31,13 @@ function describeLocation(path: string | null) {
 export default async function AdminDashboardPage() {
   const user = await requireRole(["admin", "facilitator"]);
   const t = getDictionary(user.language);
-  const [counts, metrics, modules, cohorts, students] = await Promise.all([
+  const [counts, metrics, modules, cohorts, students, pendingApprovals] = await Promise.all([
     getSupabaseUserRoleCounts(),
     getAdminOperationalMetrics(),
     listModulesFromDatabase(),
     listCohortsFromDatabase(),
-    listAdminStudents()
+    listAdminStudents(),
+    listPendingModuleApprovals()
   ]);
   const connectedStudents = students
     .filter((student) => student.presence.isOnline)
@@ -47,6 +50,7 @@ export default async function AdminDashboardPage() {
     { label: "Admins", value: counts.admins },
     { label: "Certifies", value: metrics.certifiedAmbassadors },
     { label: "Soumissions", value: metrics.pendingChallengeSubmissions },
+    { label: "Acces modules", value: pendingApprovals.length },
     { label: "Forum", value: metrics.pendingForumReports },
     { label: "Cohortes", value: metrics.activeCohorts },
     { label: "Liens parents", value: metrics.parentAccountsLinked },
@@ -64,6 +68,40 @@ export default async function AdminDashboardPage() {
               <p className="mt-2 text-4xl font-black text-brand-blue">{stat.value}</p>
             </article>
           ))}
+        </section>
+
+        <section className="rounded-lg border-2 border-amber-300 bg-amber-50 p-4 shadow-sm sm:p-5">
+          <div className="flex items-start gap-3">
+            <ClipboardCheck aria-hidden className="mt-1 h-6 w-6 shrink-0 text-amber-700" />
+            <div className="min-w-0">
+              <p className="text-sm font-black uppercase text-amber-700">Approbations requises</p>
+              <h2 className="mt-1 break-words text-2xl font-black text-brand-ink">
+                Demandes d&apos;acces au module suivant ({pendingApprovals.length})
+              </h2>
+            </div>
+          </div>
+          <div className="mt-5 grid gap-3">
+            {pendingApprovals.length === 0 ? (
+              <p className="font-semibold text-slate-600">Aucune demande en attente.</p>
+            ) : null}
+            {pendingApprovals.map((approval) => (
+              <article className="grid min-w-0 gap-3 rounded-lg border border-amber-200 bg-white p-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center" key={approval.progressId}>
+                <div className="min-w-0">
+                  <Link className="break-words font-black text-brand-blue hover:underline" href={`/admin/ambassadors/${approval.studentId}`}>
+                    {approval.studentName}
+                  </Link>
+                  <p className="mt-1 text-sm font-semibold text-slate-600">
+                    {approval.moduleTitle} termine · demande l&apos;acces au module {approval.moduleOrder + 1}
+                  </p>
+                </div>
+                {user.role === "admin" ? (
+                  <AdminProgressApprovalButton progressId={approval.progressId} />
+                ) : (
+                  <span className="text-sm font-bold text-amber-800">Validation admin requise</span>
+                )}
+              </article>
+            ))}
+          </div>
         </section>
 
         <section className="rounded-lg bg-white p-5 shadow-sm">

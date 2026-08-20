@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound, redirect } from "next/navigation";
 import { ArrowRight, BookOpen, CheckCircle2, Clock, Lock, Trophy } from "lucide-react";
 
@@ -170,7 +171,13 @@ export default async function StudentModuleDetailPage({ params }: ModulePageProp
           })}
         </section>
         <aside className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm lg:sticky lg:top-6">
-          <div className="grid aspect-[4/3] place-items-center rounded-lg border-2 border-primary bg-white text-primary"><Trophy className="h-20 w-20" /></div>
+          {selectedModule.order === 2 ? (
+            <div className="relative aspect-[4/3] overflow-hidden rounded-lg border-2 border-primary bg-slate-950">
+              <Image alt="Guide visuel de survie numerique" className="object-cover" fill sizes="(min-width: 1024px) 20rem, 100vw" src="/images/module-2/digital-survival-guide.png" />
+            </div>
+          ) : (
+            <div className="grid aspect-[4/3] place-items-center rounded-lg border-2 border-primary bg-white text-primary"><Trophy className="h-20 w-20" /></div>
+          )}
           <p className="mt-5 font-display text-xl font-black text-brand-ink">{completedCount} sur {selectedModule.lessons.length} leçons terminées</p>
           <div className="mt-4 h-2 overflow-hidden rounded-full border border-rose-200 bg-rose-50"><div className="h-full rounded-full bg-primary" style={{ width: `${completionPercent}%` }} /></div>
           <p className="mt-2 text-right text-sm font-black text-slate-500">{completionPercent}%</p>

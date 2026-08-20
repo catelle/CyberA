@@ -135,6 +135,15 @@ export type AdminStudentActivityDetail = {
   presence: LearnerPresence;
 };
 
+export type PendingModuleApproval = {
+  progressId: string;
+  studentId: string;
+  studentName: string;
+  moduleTitle: string;
+  moduleOrder: number;
+  completedAt: string | null;
+};
+
 export type LearnerPresence = {
   lastSeenAt: string | null;
   lastPath: string | null;
@@ -245,24 +254,56 @@ export async function isModuleUnlockedForStudent(userId: string, moduleWeek: num
   );
   if (!previousModules.every((module) => completedIds.has(module.id))) return false;
 
-  // Module 2 is the controlled transition: completing module 1 creates a
-  // pending progression that must be explicitly approved by an admin.
-  if (moduleWeek === 2) {
-    const moduleOne = previousModules.find((module) => module.order_index === 1);
-    const moduleOneProgress = (progressRows ?? []).find(
-      (row) => row.module_id === moduleOne?.id && row.status === "completed"
+  // Every transition is controlled: each earlier module must be completed and
+  // explicitly approved before a learner can enter the next one.
+  const completedProgress = (progressRows ?? []).filter(
+    (row) => row.status === "completed"
+  );
+  const { data: approvals } = await supabase
+    .from("module_progress_approvals")
+    .select("progress_id")
+    .in("progress_id", completedProgress.map((row) => row.id))
+    .returns<{ progress_id: string }[]>();
+  const approvedProgressIds = new Set(
+    (approvals ?? []).map((approval) => approval.progress_id)
+  );
+
+  return previousModules.every((module) => {
+    const moduleProgress = completedProgress.find(
+      (row) => row.module_id === module.id
     );
-    if (!moduleOneProgress) return false;
+    return Boolean(moduleProgress && approvedProgressIds.has(moduleProgress.id));
+  });
+}
 
-    const { data: approval } = await supabase
-      .from("module_progress_approvals")
-      .select("id")
-      .eq("progress_id", moduleOneProgress.id)
-      .maybeSingle();
-    return Boolean(approval);
-  }
+export async function listPendingModuleApprovals(): Promise<PendingModuleApproval[]> {
+  const supabase = createSupabaseAdminClient();
+  const [{ data: completed }, { data: approvals }] = await Promise.all([
+    supabase
+      .from("module_progress")
+      .select("id, user_id, completed_at, modules(title, order_index), users(full_name)")
+      .eq("status", "completed")
+      .order("completed_at", { ascending: true }),
+    supabase.from("module_progress_approvals").select("progress_id")
+  ]);
+  const approvedIds = new Set(
+    (approvals ?? []).map((approval: any) => approval.progress_id)
+  );
 
-  return true;
+  return (completed ?? [])
+    .filter((row: any) => !approvedIds.has(row.id))
+    .map((row: any) => {
+      const moduleInfo = joinedValue(row.modules) as { title?: string; order_index?: number } | null;
+      const student = joinedValue(row.users) as { full_name?: string } | null;
+      return {
+        progressId: row.id,
+        studentId: row.user_id,
+        studentName: student?.full_name ?? "Eleve",
+        moduleTitle: moduleInfo?.title ?? `Module ${moduleInfo?.order_index ?? ""}`.trim(),
+        moduleOrder: moduleInfo?.order_index ?? 0,
+        completedAt: row.completed_at ?? null
+      };
+    });
 }
 
 export async function getStrikeEligibility(userId: string) {
@@ -1711,6 +1752,56 @@ export async function listNotificationsForUser(userId: string) {
     .order("created_at", { ascending: false });
 
   return error || !data ? [] : data;
+}
+
+export async function countUnreadNotificationsForUser(userId: string) {
+  const supabase = createSupabaseAdminClient();
+  const { count, error } = await supabase
+    .from("notifications")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("read", false);
+  return error ? 0 : count ?? 0;
+}
+
+export async function ensureModuleFeedbackNotifications(userId: string) {
+  const supabase = createSupabaseAdminClient();
+  const [{ data: completed }, { data: feedback }, { data: reminders }] = await Promise.all([
+    supabase
+      .from("module_progress")
+      .select("module_id, modules(title, order_index)")
+      .eq("user_id", userId)
+      .eq("status", "completed"),
+    supabase.from("module_feedback").select("module_id").eq("user_id", userId),
+    supabase
+      .from("notifications")
+      .select("data")
+      .eq("user_id", userId)
+      .eq("type", "module_feedback_request")
+  ]);
+  const evaluatedIds = new Set((feedback ?? []).map((row: any) => row.module_id));
+  const remindedIds = new Set((reminders ?? []).map((row: any) => row.data?.module_id));
+  const missing = (completed ?? []).filter(
+    (row: any) => !evaluatedIds.has(row.module_id) && !remindedIds.has(row.module_id)
+  );
+  if (!missing.length) return;
+
+  await supabase.from("notifications").insert(
+    missing.map((row: any) => {
+      const moduleInfo = joinedValue(row.modules) as { title?: string; order_index?: number } | null;
+      return {
+        user_id: userId,
+        type: "module_feedback_request",
+        title: `Ton avis sur le module ${moduleInfo?.order_index ?? ""}`.trim(),
+        body: "Tu as termine ce module. Aide-nous a ameliorer la plateforme en repondant a quelques questions.",
+        data: {
+          module_id: row.module_id,
+          action_href: `/student/modules/${row.module_id}/feedback`,
+          module_title: moduleInfo?.title ?? "Module"
+        }
+      };
+    })
+  );
 }
 
 export async function listAdminBroadcasts() {

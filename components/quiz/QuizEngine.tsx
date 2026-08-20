@@ -25,6 +25,7 @@ export function QuizEngine({ module, userId, preview = false }: QuizEngineProps)
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [isComplete, setIsComplete] = useState(false);
   const [moduleCompleted, setModuleCompleted] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
 
   const currentQuestion = module.quiz[currentIndex];
@@ -107,6 +108,7 @@ export function QuizEngine({ module, userId, preview = false }: QuizEngineProps)
           : "Tentative enregistree localement. Tu peux recommencer pour atteindre 70%."
     );
     setModuleCompleted(completedModule);
+    setFeedbackOpen(completedModule);
     setIsComplete(true);
   }
 
@@ -186,7 +188,16 @@ export function QuizEngine({ module, userId, preview = false }: QuizEngineProps)
           </Link>
         </div>
         </section>
-        {moduleCompleted && !preview ? <ModuleFeedbackForm moduleId={module.id} /> : null}
+        {moduleCompleted && !preview && feedbackOpen ? (
+          <div className="fixed inset-0 z-[250] grid place-items-center overflow-y-auto bg-slate-950/70 p-3 backdrop-blur-sm sm:p-6" role="dialog" aria-modal="true" aria-label="Evaluation du module">
+            <div className="my-auto w-full max-w-2xl">
+              <div className="mb-3 flex justify-end">
+                <button className="rounded-lg bg-white px-4 py-2 text-sm font-black text-brand-blue" onClick={() => setFeedbackOpen(false)} type="button">Plus tard</button>
+              </div>
+              <ModuleFeedbackForm moduleId={module.id} onSubmitted={() => window.setTimeout(() => setFeedbackOpen(false), 1200)} />
+            </div>
+          </div>
+        ) : null}
       </div>
     );
   }

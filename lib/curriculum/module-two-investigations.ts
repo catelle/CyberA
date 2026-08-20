@@ -30,6 +30,22 @@ const lessonImages: Record<string, string> = {
 const fallbackImage =
   "/images/module-2/digital-survivor-investigation.png";
 
+const conceptIllustrations = {
+  threats: "/images/module-2/concept-threat-actors.png",
+  manipulation: "/images/module-2/concept-social-engineering.png",
+  verification: "/images/module-2/concept-verify-before-action.png",
+};
+
+function conceptIllustration(lessonId: string) {
+  if (["bad-guys", "think-like-hacker"].includes(lessonId)) {
+    return conceptIllustrations.threats;
+  }
+  if (["social-engineering", "whatsapp-scams", "fake-opportunities", "romance-investment-scams", "fake-news-ai", "cyberbullying-harm"].includes(lessonId)) {
+    return conceptIllustrations.manipulation;
+  }
+  return conceptIllustrations.verification;
+}
+
 /**
  * Lesson structure:
  *
@@ -307,6 +323,7 @@ function buildConceptScenes(spec: SurvivalSpec) {
       coach:
         "Observe le mécanisme dans son ensemble plutôt que de mémoriser chaque phrase séparément.",
       visual: buildVisual(spec.id, index, combined),
+      illustration: conceptIllustration(spec.id),
     };
   });
 }

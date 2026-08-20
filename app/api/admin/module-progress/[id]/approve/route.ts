@@ -32,9 +32,9 @@ export async function POST(
   const moduleInfo = Array.isArray(progress?.modules)
     ? progress.modules[0]
     : progress?.modules;
-  if (!progress || moduleInfo?.order_index !== 1) {
+  if (!progress || !moduleInfo?.order_index) {
     return NextResponse.json(
-      { message: "Seule la progression du module 1 peut etre approuvee ici." },
+      { message: "Progression de module introuvable." },
       { status: 400 }
     );
   }
@@ -60,9 +60,9 @@ export async function POST(
     user_id: progress.user_id,
     type: "module_progress_approved",
     title: "Progression approuvee",
-    body: "Un administrateur a approuve ton module 1. Le module 2 est maintenant disponible.",
-    data: { progress_id: progress.id, unlocked_module: 2 }
+    body: `Un administrateur a approuve ton module ${moduleInfo.order_index}. Le module suivant est maintenant disponible.`,
+    data: { progress_id: progress.id, unlocked_module: moduleInfo.order_index + 1 }
   });
 
-  return NextResponse.json({ message: "Progression approuvee. Le module 2 est debloque." });
+  return NextResponse.json({ message: "Progression approuvee. Le module suivant est debloque." });
 }

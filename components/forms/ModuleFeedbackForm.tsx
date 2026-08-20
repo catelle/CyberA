@@ -3,7 +3,7 @@
 import { Star } from "lucide-react";
 import { FormEvent, useState } from "react";
 
-export function ModuleFeedbackForm({ moduleId }: { moduleId: string }) {
+export function ModuleFeedbackForm({ moduleId, onSubmitted }: { moduleId: string; onSubmitted?: () => void }) {
   const [rating, setRating] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -26,14 +26,21 @@ export function ModuleFeedbackForm({ moduleId }: { moduleId: string }) {
       body: JSON.stringify({
         moduleId,
         rating,
+        understandingRating: formData.get("understandingRating"),
+        usefulnessRating: formData.get("usefulnessRating"),
+        pace: formData.get("pace"),
         feedback: formData.get("feedback"),
+        suggestions: formData.get("suggestions"),
         publishConsent: formData.get("publishConsent") === "on"
       })
     });
     const result = (await response.json().catch(() => null)) as { message?: string } | null;
     setIsSubmitting(false);
     setMessage(result?.message ?? "Action terminee.");
-    if (response.ok) setSubmitted(true);
+    if (response.ok) {
+      setSubmitted(true);
+      onSubmitted?.();
+    }
   }
 
   if (submitted) {
@@ -71,6 +78,30 @@ export function ModuleFeedbackForm({ moduleId }: { moduleId: string }) {
             ))}
           </div>
         </fieldset>
+        <fieldset className="grid gap-3 rounded-lg border border-rose-200 bg-white p-4">
+          <legend className="px-1 text-sm font-black text-brand-ink">Questions rapides</legend>
+          <label className="grid gap-2 text-sm font-bold text-slate-700">
+            Le contenu etait-il facile a comprendre ?
+            <select className="min-h-11 rounded-lg border-2 border-secondary bg-white px-3" name="understandingRating" required defaultValue="">
+              <option disabled value="">Choisir</option>
+              <option value="5">Tres clair</option><option value="4">Clair</option><option value="3">Assez clair</option><option value="2">Difficile</option><option value="1">Tres difficile</option>
+            </select>
+          </label>
+          <label className="grid gap-2 text-sm font-bold text-slate-700">
+            Ce module te sera-t-il utile dans la vie reelle ?
+            <select className="min-h-11 rounded-lg border-2 border-secondary bg-white px-3" name="usefulnessRating" required defaultValue="">
+              <option disabled value="">Choisir</option>
+              <option value="5">Tres utile</option><option value="4">Utile</option><option value="3">Un peu utile</option><option value="2">Peu utile</option><option value="1">Pas utile</option>
+            </select>
+          </label>
+          <label className="grid gap-2 text-sm font-bold text-slate-700">
+            Comment as-tu trouve le rythme ?
+            <select className="min-h-11 rounded-lg border-2 border-secondary bg-white px-3" name="pace" required defaultValue="">
+              <option disabled value="">Choisir</option>
+              <option value="too_slow">Trop lent</option><option value="just_right">Bon rythme</option><option value="too_fast">Trop rapide</option>
+            </select>
+          </label>
+        </fieldset>
         <label className="grid gap-2 text-sm font-black text-brand-ink">
           Raconte-nous ton experience
           <textarea
@@ -82,9 +113,13 @@ export function ModuleFeedbackForm({ moduleId }: { moduleId: string }) {
             required
           />
         </label>
+        <label className="grid gap-2 text-sm font-black text-brand-ink">
+          Tes suggestions pour ameliorer ce module (facultatif)
+          <textarea className="min-h-24 rounded-lg border-2 border-secondary bg-white p-3 font-semibold" maxLength={1000} name="suggestions" placeholder="Une activite, une illustration ou une explication que tu aimerais ajouter..." />
+        </label>
         <label className="flex items-start gap-3 text-sm font-semibold text-slate-700">
-          <input className="mt-1" name="publishConsent" required type="checkbox" />
-          J&apos;autorise CyberAmbassadeurs a publier cet avis avec mon prenom uniquement, apres validation par un administrateur.
+          <input className="mt-1" name="publishConsent" type="checkbox" />
+          J&apos;autorise CyberAmbassadeurs a publier cet avis avec mon prenom uniquement, apres validation par un administrateur (facultatif).
         </label>
         {message ? <p className="rounded-lg bg-white p-3 text-sm font-bold text-primary">{message}</p> : null}
         <button

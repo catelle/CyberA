@@ -251,6 +251,71 @@ type Props = {
 
 const MIN_SCENE_SECONDS = 15;
 
+const interactiveTracks = {
+  threats: [
+    { icon: "💰", label: "Voler de l'argent" },
+    { icon: "🪪", label: "Prendre des donnees" },
+    { icon: "🧨", label: "Perturber un service" },
+    { icon: "🛡️", label: "Reconnaitre le mobile" },
+  ],
+  manipulation: [
+    { icon: "🎭", label: "Fausse autorite" },
+    { icon: "⏳", label: "Pression et urgence" },
+    { icon: "✋", label: "Faire une pause" },
+    { icon: "✅", label: "Verifier autrement" },
+  ],
+  verification: [
+    { icon: "👀", label: "Observer l'indice" },
+    { icon: "🔎", label: "Verifier la source" },
+    { icon: "🔗", label: "Ouvrir le site officiel" },
+    { icon: "🔐", label: "Agir en securite" },
+  ],
+};
+
+function trackForLesson(lessonId: string) {
+  if (["bad-guys", "think-like-hacker"].includes(lessonId)) return interactiveTracks.threats;
+  if (["social-engineering", "whatsapp-scams", "fake-opportunities", "romance-investment-scams", "fake-news-ai", "cyberbullying-harm"].includes(lessonId)) return interactiveTracks.manipulation;
+  return interactiveTracks.verification;
+}
+
+function ModuleTwoConceptActivity({ lessonId, sceneIndex, accent }: { lessonId: string; sceneIndex: number; accent: string }) {
+  const [activeSteps, setActiveSteps] = useState<number[]>([]);
+  const steps = trackForLesson(lessonId);
+
+  useEffect(() => setActiveSteps([]), [lessonId, sceneIndex]);
+
+  function activate(index: number) {
+    setActiveSteps((current) => current.includes(index) ? current.filter((item) => item !== index) : [...current, index]);
+  }
+
+  return (
+    <section className="mt-5 overflow-hidden rounded-2xl border-2 border-slate-300 bg-[#14111c] p-4 text-white shadow-[0_5px_0_#586062] sm:p-5" aria-label="Animation interactive du concept">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs font-black uppercase tracking-widest text-rose-300">Laboratoire interactif</p>
+        <p className="text-xs font-bold text-white/60">Touche chaque etape</p>
+      </div>
+      <div className="relative mt-5 grid gap-3 sm:grid-cols-4">
+        <span className="concept-track-line absolute left-[10%] right-[10%] top-7 hidden h-0.5 sm:block" style={{ backgroundColor: accent }} />
+        {steps.map((step, index) => {
+          const active = activeSteps.includes(index);
+          return (
+            <button className={`concept-track-step relative z-10 grid min-h-24 place-items-center rounded-xl border-2 p-3 text-center transition ${active ? "-translate-y-1 border-white bg-white text-brand-ink shadow-[0_0_24px_rgba(255,255,255,.28)]" : "border-white/25 bg-white/5 text-white hover:border-white/60"}`} key={step.label} onClick={() => activate(index)} type="button">
+              <span className={`text-2xl ${active ? "concept-step-active" : ""}`} aria-hidden>{step.icon}</span>
+              <span className="mt-2 text-xs font-black leading-4">{step.label}</span>
+            </button>
+          );
+        })}
+      </div>
+      <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
+        <div className="h-full rounded-full transition-all duration-500" style={{ backgroundColor: accent, width: `${(activeSteps.length / steps.length) * 100}%` }} />
+      </div>
+      <p className="mt-2 text-center text-xs font-bold text-white/60">
+        {activeSteps.length === steps.length ? "Sequence comprise : tu peux relier le concept a une situation reelle." : `${activeSteps.length}/${steps.length} etapes explorees`}
+      </p>
+    </section>
+  );
+}
+
 export function ModuleTwoInvestigationLesson({ lesson, moduleId, canComplete }: Props) {
   const [started, setStarted] = useState(false);
   const [sceneIndex, setSceneIndex] = useState(0);
@@ -308,7 +373,7 @@ export function ModuleTwoInvestigationLesson({ lesson, moduleId, canComplete }: 
 
   // ── Splash screen ──
   if (!started) return (
-    <section className="relative grid min-h-[700px] place-items-center overflow-hidden rounded-2xl border-2 border-[#3a0a1e] bg-[#0f0208] p-6 text-center text-white shadow-[0_8px_0_#3a0a1e]">
+    <section className="relative grid min-h-[520px] place-items-center overflow-hidden rounded-2xl border-2 border-[#3a0a1e] bg-[#0f0208] p-4 text-center text-white shadow-[0_8px_0_#3a0a1e] sm:min-h-[700px] sm:p-6">
       <Image
         alt="Dossier de survie numérique"
         className="investigation-camera object-cover opacity-40"
@@ -347,7 +412,7 @@ export function ModuleTwoInvestigationLesson({ lesson, moduleId, canComplete }: 
       <SoundToggleButton />
 
       {toast && (
-        <div className={`fixed right-5 top-5 z-50 flex max-w-sm items-center gap-3 rounded-2xl border-2 border-white p-4 font-black text-white shadow-2xl mascot-toast ${toast === "bad" ? "bg-[#8f1237] mascot-toast-sad" : "bg-[#087f67] mascot-toast-celebrate"}`}>
+        <div className={`mascot-toast fixed inset-x-3 top-3 z-50 flex max-w-sm items-center gap-3 rounded-2xl border-2 border-white p-3 font-black text-white shadow-2xl sm:inset-x-auto sm:right-5 sm:top-5 sm:p-4 ${toast === "bad" ? "bg-[#8f1237] mascot-toast-sad" : "bg-[#087f67] mascot-toast-celebrate"}`}>
           <CyberMascot mood={toast === "bad" ? "sad" : "celebrate"} size="sm" />
           <span>
             {toast === "bad"
@@ -422,6 +487,14 @@ export function ModuleTwoInvestigationLesson({ lesson, moduleId, canComplete }: 
           <h2 className="mt-3 font-display text-3xl font-black leading-tight text-[#111827] sm:text-4xl">
             {scene.title}
           </h2>
+
+          {scene.illustration && (
+            <figure className="lesson-concept-illustration relative mt-5 aspect-[16/9] overflow-hidden rounded-2xl border-2 border-slate-200 bg-slate-950 shadow-[0_10px_30px_rgba(15,23,42,.18)]">
+              <Image alt={`Explication visuelle : ${scene.title}`} className="object-cover" fill sizes="(min-width: 1024px) 56rem, 100vw" src={scene.illustration} />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/35 via-transparent to-transparent" />
+            </figure>
+          )}
+          {scene.illustration ? <ModuleTwoConceptActivity accent={lesson.accent} lessonId={lesson.id} sceneIndex={sceneIndex} /> : null}
 
           {/* Scene progress dots */}
           <div className="mt-5" aria-label={`Scène ${sceneIndex + 1} sur ${lesson.scenes.length}`}>
@@ -526,16 +599,16 @@ export function ModuleTwoInvestigationLesson({ lesson, moduleId, canComplete }: 
       </div>
 
       {/* Footer navigation */}
-      <footer className="flex flex-wrap items-center justify-between gap-3 border-t-2 border-slate-200 bg-white p-4">
+      <footer className="grid gap-3 border-t-2 border-slate-200 bg-white p-4 sm:flex sm:flex-wrap sm:items-center sm:justify-between">
         <button
-          className="rounded-lg border-2 border-slate-400 px-4 py-3 font-black disabled:opacity-30"
+          className="w-full rounded-lg border-2 border-slate-400 px-4 py-3 font-black disabled:opacity-30 sm:w-auto"
           disabled={sceneIndex === 0}
           onClick={() => setSceneIndex((v) => v - 1)}
         >
           <ArrowLeft className="mr-2 inline h-4 w-4" />
           Retour
         </button>
-        <span className="rounded-full bg-slate-100 px-4 py-2 text-sm font-black text-slate-600">
+        <span className="text-center rounded-full bg-slate-100 px-4 py-2 text-sm font-black text-slate-600">
           {sceneIndex === 0
             ? "Prends connaissance du dossier"
             : timeReady
@@ -544,7 +617,7 @@ export function ModuleTwoInvestigationLesson({ lesson, moduleId, canComplete }: 
         </span>
         {!complete ? (
           <button
-            className="rounded-lg px-5 py-3 font-black text-white disabled:opacity-35"
+            className="w-full rounded-lg px-5 py-3 font-black text-white disabled:opacity-35 sm:w-auto"
             disabled={!answered || !timeReady}
             onClick={goNext}
             style={{ backgroundColor: lesson.accent }}
@@ -553,7 +626,7 @@ export function ModuleTwoInvestigationLesson({ lesson, moduleId, canComplete }: 
           </button>
         ) : canComplete ? (
           <Link
-            className={`rounded-lg px-5 py-3 font-black text-white ${timeReady ? "" : "pointer-events-none opacity-35"}`}
+            className={`w-full rounded-lg px-5 py-3 text-center font-black text-white sm:w-auto ${timeReady ? "" : "pointer-events-none opacity-35"}`}
             href={`/student/modules/${moduleId}/lesson/${lesson.id}/quiz`}
             style={{ backgroundColor: lesson.accent }}
           >

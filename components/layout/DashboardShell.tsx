@@ -26,6 +26,7 @@ import { DashboardTour } from "@/components/layout/DashboardTour";
 import { PresenceHeartbeat } from "@/components/layout/PresenceHeartbeat";
 import { AccountLanguageToggle } from "@/components/layout/AccountLanguageToggle";
 import { getDictionary } from "@/lib/i18n/dictionary";
+import { countUnreadNotificationsForUser, ensureModuleFeedbackNotifications } from "@/lib/db/cybera";
 import type { SafeUser } from "@/types/auth";
 
 type DashboardShellProps = {
@@ -40,7 +41,7 @@ type NavItem = {
   Icon: LucideIcon;
 };
 
-export function DashboardShell({ user, title, children }: DashboardShellProps) {
+export async function DashboardShell({ user, title, children }: DashboardShellProps) {
   const t = getDictionary(user.language);
   const en = user.language === "en";
   const navItems: NavItem[] =
@@ -82,10 +83,6 @@ export function DashboardShell({ user, title, children }: DashboardShellProps) {
             { href: "/student/notifications", label: "Notifications", Icon: Megaphone },
             { href: "/student/profile", label: en ? "Profile" : "Profil", Icon: User }
           ];
-  const mobileNavItems =
-    user.role === "admin" || user.role === "facilitator"
-      ? navItems.slice(0, 4)
-      : navItems.slice(0, 5);
   const roleLabel =
     user.role === "admin"
       ? "Admin LVL 99"
@@ -95,14 +92,22 @@ export function DashboardShell({ user, title, children }: DashboardShellProps) {
         ? "Parent allié"
         : "Cyber-Éclaireur";
   const isStudent = user.role === "student";
-  const profileHref = isStudent ? "/student/profile" : "/parent/dashboard";
+  if (isStudent) await ensureModuleFeedbackNotifications(user.supabaseUserId);
+  const unreadNotifications = await countUnreadNotificationsForUser(user.supabaseUserId);
+
+  const notificationBadge = (href: string) =>
+    href.includes("/notifications") && unreadNotifications > 0 ? (
+      <span className="grid min-w-5 place-items-center rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-black leading-none text-white" aria-label={`${unreadNotifications} notifications non lues`}>
+        {unreadNotifications > 99 ? "99+" : unreadNotifications}
+      </span>
+    ) : null;
 
   return (
     <main
       className={
         isStudent
-          ? "learning-surface min-h-screen pb-24 font-body-md text-on-background lg:pb-0"
-          : "min-h-screen bg-background pb-24 font-body-md text-on-background lg:pb-0"
+          ? "learning-surface min-h-screen overflow-x-hidden pb-24 font-body-md text-on-background lg:pb-0"
+          : "min-h-screen overflow-x-hidden bg-background pb-24 font-body-md text-on-background lg:pb-0"
       }
     >
       <div className="dashboard-layout flex min-h-screen flex-col lg:flex-row">
@@ -150,6 +155,7 @@ export function DashboardShell({ user, title, children }: DashboardShellProps) {
               >
                 <Icon aria-hidden className="h-4 w-4 shrink-0" />
                 {item.label}
+                {notificationBadge(item.href)}
               </Link>
             ))}
           </nav>
@@ -170,23 +176,6 @@ export function DashboardShell({ user, title, children }: DashboardShellProps) {
                   {title}
                 </h1>
               </div>
-              {user.role !== "admin" && user.role !== "facilitator" ? (
-                <details className="group relative lg:hidden">
-                  <summary aria-label="Afficher mon profil" className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-full border-2 border-secondary bg-primary font-display text-lg font-black text-white shadow-[0_3px_0_0_rgba(88,96,98,1)] marker:content-none">
-                    {user.profile.fullName.slice(0, 1).toUpperCase()}
-                  </summary>
-                  <div className="absolute right-0 top-14 z-50 w-64 rounded-xl border border-slate-200 bg-white p-4 shadow-xl">
-                    <p className="text-xs font-black uppercase tracking-wider text-primary">{roleLabel}</p>
-                    <p className="mt-1 truncate font-black text-brand-ink">{user.profile.fullName}</p>
-                    <Link className="mt-4 flex min-h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-black text-white" href={profileHref}>
-                      {en ? "View my profile" : "Voir mon profil"}
-                    </Link>
-                    <div className="mt-3 border-t border-slate-200 pt-3">
-                      <LogoutButton label={t.logout} />
-                    </div>
-                  </div>
-                </details>
-              ) : null}
               <div className="col-span-2 flex flex-wrap items-center gap-2 lg:col-span-1 lg:justify-end">
                 <AccountLanguageToggle initialLanguage={user.language} />
                 {isStudent ? (
@@ -224,20 +213,22 @@ export function DashboardShell({ user, title, children }: DashboardShellProps) {
 
       {isStudent ? <RewardPopup userId={user.supabaseUserId} /> : null}
 
-      {user.role !== "admin" && user.role !== "facilitator" ? (
-        <nav className="dashboard-mobile-nav fixed inset-x-3 bottom-3 z-40 grid grid-cols-5 rounded-2xl border border-slate-200 bg-white/95 p-1.5 shadow-[0_14px_36px_rgba(15,23,42,0.16)] backdrop-blur lg:hidden">
-          {mobileNavItems.map(({ Icon, ...item }) => (
+        <nav className="dashboard-mobile-nav fixed inset-x-3 bottom-3 z-40 flex gap-1 overflow-x-auto rounded-2xl border border-slate-200 bg-white/95 p-1.5 shadow-[0_14px_36px_rgba(15,23,42,0.16)] backdrop-blur lg:hidden">
+          {navItems.map(({ Icon, ...item }) => (
             <Link
-              className="flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-1 text-center text-[0.68rem] font-bold leading-tight text-slate-600 transition hover:bg-primary-fixed hover:text-primary"
+              className="flex min-h-14 min-w-[4.5rem] shrink-0 flex-col items-center justify-center gap-1 rounded-xl px-1 text-center text-[0.65rem] font-bold leading-tight text-slate-600 transition hover:bg-primary-fixed hover:text-primary"
               href={item.href}
               key={item.href}
             >
               <Icon aria-hidden className="h-4 w-4" />
               {item.label}
+              {notificationBadge(item.href)}
             </Link>
           ))}
+          <div className="dashboard-mobile-logout min-w-[5rem] shrink-0">
+            <LogoutButton label={t.logout} />
+          </div>
         </nav>
-      ) : null}
     </main>
   );
 }

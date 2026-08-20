@@ -62,7 +62,7 @@ const platformHighlights = [
 export default async function HomePage() {
   const testimonials = await listApprovedTestimonials();
   return (
-    <main className="min-h-screen bg-background font-body-md text-on-background">
+    <main className="min-h-screen w-full max-w-full overflow-x-hidden bg-background font-body-md text-on-background">
       <section className="relative min-h-[92vh] overflow-hidden bg-brand-ink text-white">
         <Image
           alt="Jeunes Cyberambassadeurs en formation"
@@ -74,7 +74,7 @@ export default async function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-b from-brand-ink/85 via-brand-ink/60 to-brand-ink/85" />
         <div className="relative z-10 mx-auto flex min-h-[92vh] max-w-7xl flex-col px-5 py-6">
           <header className="flex min-w-0 items-center justify-between gap-2 rounded-xl border-2 border-white/70 bg-white/95 px-3 py-3 text-on-surface shadow-[0_4px_0_0_rgba(88,96,98,1)] sm:gap-4">
-            <Link className="flex items-center gap-3 font-black" href="/">
+            <Link className="flex min-w-0 items-center gap-2 font-black sm:gap-3" href="/">
               <span className="flex h-10 w-10 items-center justify-center rounded-lg border-2 border-secondary bg-primary-container text-lg font-black text-white">
                 C
               </span>
@@ -85,7 +85,7 @@ export default async function HomePage() {
                 Programme
               </Link>
               <Link
-                className="rounded-xl bg-primary px-4 py-2 font-black text-white transition hover:bg-primary-container"
+                className="shrink-0 rounded-xl bg-primary px-3 py-2 text-xs font-black text-white transition hover:bg-primary-container sm:px-4 sm:text-sm"
                 href="/login"
               >
                 Connexion

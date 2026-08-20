@@ -19,4 +19,4 @@ revoke all on table public.module_progress_approvals from anon, authenticated;
 grant all on table public.module_progress_approvals to service_role;
 
 comment on table public.module_progress_approvals is
-  'Auditable admin approvals that unlock the next module after module 1.';
+  'Auditable admin approvals that unlock the next module after each completed module.';

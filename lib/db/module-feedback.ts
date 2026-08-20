@@ -9,7 +9,7 @@ export async function listModuleFeedbackForAdmin() {
   const { data, error } = await supabase
     .from("module_feedback")
     .select(
-      "id, rating, feedback, publish_consent, status, created_at, reviewed_at, users!module_feedback_user_id_fkey(full_name), modules(title, order_index)"
+      "id, rating, understanding_rating, usefulness_rating, pace, feedback, suggestions, publish_consent, status, created_at, reviewed_at, users!module_feedback_user_id_fkey(full_name), modules(title, order_index)"
     )
     .order("created_at", { ascending: false });
 
@@ -19,7 +19,11 @@ export async function listModuleFeedbackForAdmin() {
     learnerName: joined(row.users)?.full_name ?? "Eleve",
     moduleTitle: joined(row.modules)?.title ?? `Module ${joined(row.modules)?.order_index ?? ""}`,
     rating: row.rating as number,
+    understandingRating: (row.understanding_rating as number | null) ?? null,
+    usefulnessRating: (row.usefulness_rating as number | null) ?? null,
+    pace: (row.pace as string | null) ?? null,
     feedback: row.feedback as string,
+    suggestions: (row.suggestions as string | null) ?? null,
     publishConsent: row.publish_consent === true,
     status: row.status as "pending" | "approved" | "rejected",
     createdAt: row.created_at as string,

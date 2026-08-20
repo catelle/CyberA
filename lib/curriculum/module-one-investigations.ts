@@ -50,6 +50,7 @@ export type InvestigationScene = {
   options?: string[];
   correct?: number;
   deepDive?: string;
+  illustration?: string;
 };
 
 export type InvestigationLesson = {

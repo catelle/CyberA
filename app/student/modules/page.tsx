@@ -41,7 +41,7 @@ export default async function StudentModulesPage({ searchParams }: StudentModule
         {isPreview ? <LearningSpacePreviewNotice /> : null}
         {searchParams.locked ? (
           <section className="rounded-lg border-2 border-secondary bg-[#fff4c2] p-4 font-bold text-brand-ink shadow-[0_4px_0_0_rgba(88,96,98,1)]">
-            {en ? "Complete the previous module and wait for admin approval to unlock Module 2." : "Termine le module précédent puis attends l'approbation d'un administrateur pour débloquer le module 2."}
+            {en ? "Complete the previous module and wait for admin approval to unlock the next one." : "Termine le module précédent puis attends l'approbation d'un administrateur pour débloquer le suivant."}
           </section>
         ) : null}
 
