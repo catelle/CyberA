@@ -5,11 +5,11 @@ import { AuthShell } from "@/components/layout/AuthShell";
 import { getDictionary } from "@/lib/i18n/dictionary";
 
 export default function LoginPage() {
-  const t = getDictionary("fr");
+  const fr = getDictionary("fr");
+  const en = getDictionary("en");
 
   return (
-    <AuthShell title={t.brand} subtitle={t.mission}>
-      <h2 className="mb-6 text-2xl font-black text-brand-blue">{t.login}</h2>
+    <AuthShell title={{ fr: fr.brand, en: en.brand }} subtitle={{ fr: fr.mission, en: en.mission }}>
       <Suspense fallback={null}>
         <LoginForm />
       </Suspense>

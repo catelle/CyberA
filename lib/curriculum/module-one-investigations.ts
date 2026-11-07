@@ -1,3 +1,6 @@
+import type { Language } from "@/types/auth";
+import { moduleOneEnglishInvestigations } from "@/lib/curriculum/module-one-investigations-en";
+
 export type InvestigationVisual =
   | {
       type: "flow";
@@ -1053,3 +1056,7 @@ export const moduleOneInvestigations: Record<string, InvestigationLesson> =
   );
 
 export const moduleOneInvestigationIds = Object.keys(moduleOneInvestigations);
+
+export function getModuleOneInvestigations(language: Language): Record<string, InvestigationLesson> {
+  return language === "en" ? { ...moduleOneInvestigations, ...moduleOneEnglishInvestigations } : moduleOneInvestigations;
+}

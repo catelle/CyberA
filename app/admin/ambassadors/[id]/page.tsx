@@ -112,6 +112,14 @@ export default async function StudentActivityPage({ params }: StudentActivityPag
           </div>
         </section>
 
+        <section className="rounded-lg bg-white p-5 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div><p className="text-sm font-black uppercase text-brand-gold">Certificat</p><h2 className="mt-1 font-display text-2xl font-black text-brand-ink">{detail.student.programTrack === "scholarship" ? "Bourse des 100" : "CyberAmbassador"}</h2></div>
+            {detail.student.certificate ? <a className="inline-flex min-h-11 items-center rounded-lg bg-brand-blue px-4 font-black text-white" href={`/api/admin/certificates/${detail.student.id}/download`}>Voir et telecharger</a> : null}
+          </div>
+          {detail.student.certificate ? <img alt={`Certificat de ${detail.student.fullName}`} className="mt-4 w-full rounded-lg border border-slate-200" src={`/api/admin/certificates/${detail.student.id}/download?inline=1`} /> : <p className="mt-4 rounded-lg bg-slate-50 p-4 font-semibold text-slate-500">Aucun certificat attribue pour le moment.</p>}
+        </section>
+
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
           {summary.map(({ label, value, Icon }) => (
             <article className="rounded-lg bg-white p-4 shadow-sm" key={label}>

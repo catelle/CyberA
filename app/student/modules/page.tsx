@@ -27,11 +27,11 @@ export default async function StudentModulesPage({ searchParams }: StudentModule
   const user = await requireRole(["student", "admin", "facilitator"]);
   const en = user.language === "en";
   const isPreview = user.role === "admin" || user.role === "facilitator";
-  const modules = await listProgramModulesForStudent(user.supabaseUserId);
+  const modules = await listProgramModulesForStudent(user.supabaseUserId, user.language, user.programTrack);
   // Admins review the parcours as a whole, so sequencing never hides a module.
   const unlockFlags = await Promise.all(
     modules.map((module) =>
-      isPreview ? Promise.resolve(true) : isModuleUnlockedForStudent(user.supabaseUserId, module.week)
+      isPreview ? Promise.resolve(true) : isModuleUnlockedForStudent(user.supabaseUserId, module.week, user.programTrack)
     )
   );
 
@@ -41,7 +41,9 @@ export default async function StudentModulesPage({ searchParams }: StudentModule
         {isPreview ? <LearningSpacePreviewNotice /> : null}
         {searchParams.locked ? (
           <section className="rounded-lg border-2 border-secondary bg-[#fff4c2] p-4 font-bold text-brand-ink shadow-[0_4px_0_0_rgba(88,96,98,1)]">
-            {en ? "Complete the previous module and wait for admin approval to unlock the next one." : "Termine le module précédent puis attends l'approbation d'un administrateur pour débloquer le suivant."}
+            {user.programTrack === "scholarship"
+              ? (en ? "Complete Module 1 and submit your feedback to unlock Module 2." : "Termine le Module 1 et envoie ton avis pour débloquer le Module 2.")
+              : (en ? "Complete the previous module and wait for admin approval to unlock the next one." : "Termine le module précédent puis attends l'approbation d'un administrateur pour débloquer le suivant.")}
           </section>
         ) : null}
 
@@ -49,7 +51,9 @@ export default async function StudentModulesPage({ searchParams }: StudentModule
           <div className="min-w-0">
             <p className="text-sm font-black uppercase text-tertiary">Parcours</p>
             <h2 className="mt-2 break-words font-display text-2xl font-black leading-tight text-brand-ink sm:text-3xl">
-              {en ? "4 modules to become a CyberAmbassador" : "4 modules pour devenir CyberAmbassadeur"}
+              {user.programTrack === "scholarship"
+                ? (en ? `${modules.length} assigned learning module${modules.length === 1 ? "" : "s"}` : `${modules.length} module${modules.length === 1 ? "" : "s"} d'apprentissage attribue${modules.length === 1 ? "" : "s"}`)
+                : (en ? "4 modules to become a CyberAmbassador" : "4 modules pour devenir CyberAmbassadeur")}
             </h2>
             <p className="mt-3 max-w-2xl text-sm font-semibold leading-7 text-slate-600 sm:text-base">
               {en ? "Lessons are short, practical, and available for offline review after their first opening." : "Les leçons restent courtes, pratiques et pensées pour être relues hors connexion après leur première ouverture."}
@@ -134,13 +138,13 @@ export default async function StudentModulesPage({ searchParams }: StudentModule
                       className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border-2 border-secondary bg-brand-blue px-4 font-black text-white shadow-[0_4px_0_0_rgba(88,96,98,1)] transition hover:bg-brand-ink"
                       href={`/student/modules/${module.id}`}
                     >
-                      Ouvrir
+                      {en ? "Open" : "Ouvrir"}
                       <ArrowRight aria-hidden className="h-4 w-4" />
                     </Link>
                   ) : (
                     <span className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border-2 border-secondary bg-slate-100 px-4 font-black text-slate-400">
                       <Lock aria-hidden className="h-4 w-4" />
-                      Verrouille
+                      {en ? "Locked" : "Verrouille"}
                     </span>
                   )}
                 </div>

@@ -8,6 +8,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { CyberMascot } from "@/components/gamified/CyberMascot";
 import { SoundToggleButton } from "@/components/lesson/SoundToggleButton";
 import { playCorrect, playLessonOpen, playWrong, startAmbientLoop, stopAmbientLoop } from "@/lib/sounds";
+import type { Language } from "@/types/auth";
+import { englishWelcomeScenes } from "@/components/lesson/EnglishWelcomeBehindScreen";
 import {
   ArrowLeft,
   ArrowRight,
@@ -104,8 +106,75 @@ const deepMemory = [
   { stage: "Adopter le réflexe cyber", takeaway: "Face à un service, demande ce qui part, qui travaille, quelles copies restent et quelles traces sont créées.", connection: "Cette méthode te servira pour chaque application, pas seulement pour cette photo." },
 ] as const;
 
-type Props = { moduleId: string; lessonId: string; canComplete: boolean };
+type Props = { moduleId: string; lessonId: string; canComplete: boolean; language?: Language };
 const SCENE_MINIMUM_SECONDS = 15;
+
+const visualLabelsEn: Record<string, string> = {
+  "📱 Toi": "📱 You",
+  "📡 Première porte": "📡 First door",
+  "📡 Antenne": "📡 Antenna",
+  "💡 Lumière": "💡 Light",
+  "〰️ Fibre": "〰️ Fiber",
+  "📦 Ton paquet": "📦 Your packet",
+  "🔀 Choix": "🔀 Choice",
+  "➡️ Route": "➡️ Route",
+  "📱 Ta demande": "📱 Your request",
+  "🏢 Serveur": "🏢 Server",
+  "✅ Réponse": "✅ Response",
+  "✓ Envoyé": "✓ Sent",
+  "✓✓ Livré": "✓✓ Delivered",
+  "👁 Lu": "👁 Read",
+  "🖼️ Chez toi": "🖼️ At your device",
+  "🖼️ Chez l'autre": "🖼️ At the other device",
+  "🖼️ Sauvegarde": "🖼️ Backup",
+  "👤 Identifiant": "👤 Identifier",
+  "🔑 Preuve": "🔑 Proof",
+  "🗂️ Dossier": "🗂️ Folder",
+  "📱 Ancien": "📱 Old device",
+  "🔄 Échange": "🔄 Exchange",
+  "💻 Nouveau": "💻 New device",
+  "⚡ Énergie": "⚡ Energy",
+  "🖥️ Calcul": "🖥️ Computing",
+  "❄️ Froid": "❄️ Cooling",
+  "🌍 Côte": "🌍 Coast",
+  "🌊 Câble": "🌊 Cable",
+  "🌎 Continent": "🌎 Continent",
+  "⛔ Coupure": "⛔ Outage",
+  "↪️ Détour": "↪️ Detour",
+  "✅ Arrivée": "✅ Arrival",
+  "🔒 Contenu": "🔒 Content",
+  "🏷️ Étiquette": "🏷️ Label",
+  "🛣️ Trajet": "🛣️ Journey",
+  "🕖 Heure": "🕖 Time",
+  "📍 Zone": "📍 Area",
+  "👥 Relation": "👥 Relationship",
+  "📥 Ce que tu donnes": "📥 What you provide",
+  "⚙️ Travail caché": "⚙️ Hidden work",
+  "📤 Ce que tu reçois": "📤 What you receive",
+};
+
+const questionLabelsEn: Record<string, string> = {
+  "Que fait principalement le routeur ?": "What does a router mainly do?",
+  "Quel élément doit rester secret ?": "Which element must remain secret?",
+  "Pourquoi utiliser plusieurs lieux ?": "Why use several locations?",
+  "Pourquoi numéroter les morceaux ?": "Why number the pieces?",
+  "Quel résumé est le plus juste ?": "Which summary is most accurate?",
+  "Il regarde ta photo": "It looks at your photo",
+  "Il choisit la prochaine route": "It chooses the next route",
+  "Il recharge ton téléphone": "It charges your phone",
+  "Le nom de l'application": "The app's name",
+  "Ton mot de passe": "Your password",
+  "La couleur du téléphone": "The phone's color",
+  "Pour décorer une carte": "To decorate a map",
+  "Pour rester disponible et plus proche": "To stay available and closer",
+  "Pour supprimer Internet": "To delete the Internet",
+  "Pour les décorer": "To decorate them",
+  "Pour les remettre dans le bon ordre": "To put them back in the right order",
+  "Pour changer leur destination": "To change their destination",
+  "Ton téléphone agit seul": "Your phone acts alone",
+  "De nombreux acteurs coopèrent": "Many different actors cooperate",
+  "Tout se passe dans le ciel": "Everything happens in the sky",
+};
 
 const pillars = [
   { start: 1, end: 5, name: "Voir derrière l'écran", goal: "distinguer ce que tu touches de l'information qui continue à voyager sans que tu la voies", unlocked: "Tu sais maintenant que l'écran est une porte, pas le monde numérique tout entier." },
@@ -120,7 +189,43 @@ export function WelcomeBehindScreen({
   moduleId,
   lessonId,
   canComplete,
+  language = "fr",
 }: Props) {
+  const en = language === "en";
+  const localizedStoryThread = language === "en"
+    ? englishWelcomeScenes.slice(0, 11).map((scene) => scene[2])
+    : storyThread;
+  const localizedDeepScenes = language === "en"
+    ? deepScenes.map((scene, index) => ({
+        ...scene,
+        eyebrow: englishWelcomeScenes[index + 11]?.[0] ?? scene.eyebrow,
+        title: englishWelcomeScenes[index + 11]?.[1] ?? scene.title,
+        story: englishWelcomeScenes[index + 11]?.[2] ?? scene.story,
+        bridge: englishWelcomeScenes[index + 11]?.[2] ?? scene.bridge,
+        discovery: englishWelcomeScenes[index + 11]?.[2] ?? scene.discovery,
+        visual: scene.visual.map((label) => visualLabelsEn[label] ?? label),
+        question: scene.question ? questionLabelsEn[scene.question] ?? scene.question : undefined,
+        options: scene.options?.map((option) => questionLabelsEn[option] ?? option),
+      }))
+    : deepScenes;
+  const localizedDeepMemory: ReadonlyArray<{ stage: string; takeaway: string; connection: string }> = en
+    ? deepMemory.map((memory, index) => ({
+        ...memory,
+        stage: englishWelcomeScenes[index + 11]?.[1] ?? memory.stage,
+        takeaway: englishWelcomeScenes[index + 11]?.[2] ?? memory.takeaway,
+        connection: "This is one step in the journey from your device to the person receiving the result.",
+      }))
+    : deepMemory;
+  const localizedPillars = en
+    ? [
+        { start: 1, end: 5, name: "See behind the screen", goal: "distinguish what you touch from the information that keeps travelling beyond your view", unlocked: "You now know that the screen is a door, not the whole digital world." },
+        { start: 6, end: 10, name: "Follow a piece of data", goal: "follow a photo from your finger through signals, packets, routes, and services", unlocked: "You can now tell the invisible journey of a piece of data." },
+        { start: 11, end: 15, name: "Understand Internet paths", goal: "recognize the roles of Wi-Fi, cables, routers, and servers", unlocked: "You recognize the first machines and paths carrying your data." },
+        { start: 16, end: 20, name: "Find your data again", goal: "understand copies, accounts, synchronization, and the physical machines behind the cloud", unlocked: "You understand how data can wait, be copied, and reappear on another device." },
+        { start: 21, end: 25, name: "Cross a global network", goal: "follow data between data centers and continents, including detours and protections", unlocked: "You can follow data over long distances and understand how the network handles problems." },
+        { start: 26, end: 29, name: "Adopt a CyberAmbassador mindset", goal: "spot metadata, understand a service, and ask the right questions before acting", unlocked: "You can now investigate what an app does behind its icon." },
+      ]
+    : pillars;
   const [step, setStep] = useState(0);
   const [worldSortComplete, setWorldSortComplete] = useState(false);
   const [guess, setGuess] = useState<number | null>(null);
@@ -141,20 +246,20 @@ export function WelcomeBehindScreen({
     () =>
       step <= 10
         ? [
-            "Bienvenue derrière l'écran",
-            "Ton premier indice",
-            "Deux mondes superposés",
-            "Classe les indices",
-            "La photo qui continue",
-            "Où a-t-elle attendu ?",
-            "Suis le signal",
-            "Ce que transporte le signal",
-            "Pourquoi découper ?",
-            "Les machines derrière le cloud",
-            "Le travail derrière l'icône",
+            language === "en" ? englishWelcomeScenes[0][1] : "Bienvenue derrière l'écran",
+            language === "en" ? englishWelcomeScenes[1][1] : "Ton premier indice",
+            language === "en" ? englishWelcomeScenes[2][1] : "Deux mondes superposés",
+            language === "en" ? englishWelcomeScenes[3][1] : "Classe les indices",
+            language === "en" ? englishWelcomeScenes[4][1] : "La photo qui continue",
+            language === "en" ? englishWelcomeScenes[5][1] : "Où a-t-elle attendu ?",
+            language === "en" ? englishWelcomeScenes[6][1] : "Suis le signal",
+            language === "en" ? englishWelcomeScenes[7][1] : "Ce que transporte le signal",
+            language === "en" ? englishWelcomeScenes[8][1] : "Pourquoi découper ?",
+            language === "en" ? englishWelcomeScenes[9][1] : "Les machines derrière le cloud",
+            language === "en" ? englishWelcomeScenes[10][1] : "Le travail derrière l'icône",
           ][step]
-        : deepScenes[step - 11]?.title ?? "Digital Explorer",
-    [step],
+        : localizedDeepScenes[step - 11]?.title ?? "Digital Explorer",
+    [language, localizedDeepScenes, step],
   );
 
   useEffect(() => {
@@ -203,7 +308,7 @@ export function WelcomeBehindScreen({
       setSceneRemainingSeconds(0);
       return;
     }
-    const briefingIndex = pillars.findIndex(
+    const briefingIndex = localizedPillars.findIndex(
       (pillar) => step === pillar.start,
     );
     if (briefingIndex >= 0 && !readyPillars.has(briefingIndex)) {
@@ -237,8 +342,8 @@ export function WelcomeBehindScreen({
     (step === 9 && checkpointTwo !== 2) ||
     (step === 10 && services.trim().length === 0) ||
     (step >= 11 && step <= 28 && !completedDeepScenes.has(step));
-  const currentPillarIndex = pillars.findIndex((pillar) => step >= pillar.start && step <= pillar.end);
-  const currentPillar = currentPillarIndex >= 0 ? pillars[currentPillarIndex] : null;
+  const currentPillarIndex = localizedPillars.findIndex((pillar) => step >= pillar.start && step <= pillar.end);
+  const currentPillar = currentPillarIndex >= 0 ? localizedPillars[currentPillarIndex] : null;
   const isPillarBriefing = Boolean(currentPillar && step === currentPillar.start && !readyPillars.has(currentPillarIndex));
 
   async function recordCheckpoint(checkpoint: number) {
@@ -285,7 +390,7 @@ export function WelcomeBehindScreen({
           </Link>
           <div className="min-w-0 flex-1">
             <div className="mb-2 flex items-center justify-between gap-3 text-xs font-black uppercase tracking-[0.18em] text-cyan-300">
-              <span>{step === 0 ? "Bienvenue dans la formation guidée" : isPillarBriefing ? "Présentation de la prochaine mission" : `Formation guidée · 15 s minimum par scène · ${remainingLabel}`}</span>
+              <span>{step === 0 ? (language === "en" ? "Welcome to guided training" : "Bienvenue dans la formation guidée") : isPillarBriefing ? (language === "en" ? "Next mission briefing" : "Présentation de la prochaine mission") : `${language === "en" ? "Guided training" : "Formation guidée"} · 15 ${language === "en" ? "seconds minimum per scene" : "s minimum par scène"} · ${remainingLabel}`}</span>
               <span>
                 {step + 1}/{total}
               </span>
@@ -304,21 +409,21 @@ export function WelcomeBehindScreen({
       </header>
 
       <div className="lesson-scene relative min-h-[640px]" key={step}>
-        {step > 0 && !isPillarBriefing ? <StoryRibbon message={step >= 11 ? deepScenes[step - 11]?.bridge ?? "Tu arrives au bout de ton enquête avec Coach Cyber." : storyThread[step]} /> : null}
+        {step > 0 && !isPillarBriefing ? <StoryRibbon message={step >= 11 ? localizedDeepScenes[step - 11]?.bridge ?? "You are reaching the end of your investigation with Cyber Coach." : localizedStoryThread[step]} /> : null}
         {isPillarBriefing && currentPillar ? (
-          <PillarBriefing count={currentPillar.end - currentPillar.start + 1} goal={currentPillar.goal} name={currentPillar.name} number={currentPillarIndex + 1} recap={currentPillarIndex > 0 ? pillars[currentPillarIndex - 1].unlocked : undefined} onReady={() => {
+        <PillarBriefing language={language} count={currentPillar.end - currentPillar.start + 1} goal={currentPillar.goal} name={currentPillar.name} number={currentPillarIndex + 1} recap={currentPillarIndex > 0 ? localizedPillars[currentPillarIndex - 1].unlocked : undefined} onReady={() => {
             setReadyPillars((current) => new Set(current).add(currentPillarIndex));
             timedScenes.current.delete(step);
             setSceneRemainingSeconds(SCENE_MINIMUM_SECONDS);
             setSceneTimerVersion((version) => version + 1);
-            celebrate(`Mission acceptée ! Ton objectif est de ${currentPillar.goal}.`);
+            celebrate(en ? `Mission accepted! Your goal is to ${currentPillar.goal}.` : `Mission acceptée ! Ton objectif est de ${currentPillar.goal}.`);
           }} />
         ) : null}
         {!isPillarBriefing ? <>
         {step === 0 ? (
           <section className="lesson-opening-scene lesson-scene relative grid min-h-[540px] place-items-center overflow-hidden bg-white px-5 py-16 text-center">
             <Image
-              alt="Un jeune découvre le réseau mondial invisible derrière son téléphone"
+              alt={en ? "A young person discovers the invisible global network behind a phone" : "Un jeune découvre le réseau mondial invisible derrière son téléphone"}
               className="lesson-opening-image object-cover opacity-55"
               fill
               priority
@@ -339,20 +444,20 @@ export function WelcomeBehindScreen({
                 ))}
               </div>
               <p className="mb-3 text-sm font-black uppercase tracking-[0.35em] text-cyan-300">
-                Bienvenue dans la formation CyberAmbassador
+                {en ? "Welcome to CyberAmbassador training" : "Bienvenue dans la formation CyberAmbassador"}
               </p>
               <h1 className="font-display text-4xl font-black uppercase leading-none text-brand-ink sm:text-6xl lg:text-7xl">
-                Bienvenue
+                {en ? "Welcome" : "Bienvenue"}
                 <br />
                 <span className="text-primary">
-                  derrière l'écran
+                  {en ? "behind the screen" : "derrière l'écran"}
                 </span>
               </h1>
               <p className="mx-auto mt-6 max-w-2xl text-lg font-semibold leading-8 text-slate-700">
-                Quand on veut comprendre Internet, on ne sait pas toujours par où commencer. On voudrait parfois sauter directement aux mots compliqués. Ici, nous allons avancer ensemble, une découverte à la fois.
+                {en ? "When we want to understand the Internet, we do not always know where to start. We may want to jump straight to complicated words. Here, we will move forward together, one discovery at a time." : "Quand on veut comprendre Internet, on ne sait pas toujours par où commencer. On voudrait parfois sauter directement aux mots compliqués. Ici, nous allons avancer ensemble, une découverte à la fois."}
               </p>
               <p className="mx-auto mt-4 max-w-2xl rounded-2xl border border-slate-200 bg-white p-4 font-black leading-7 text-brand-blue shadow-sm">
-                Six missions vont t'aider à comprendre ce qui se passe vraiment derrière chaque clic. Avant chaque série, Coach Cyber t'expliquera clairement le but des prochaines scènes.
+                {en ? "Six missions will help you understand what really happens behind every click. Before each series, Cyber Coach will clearly explain the goal of the next scenes." : "Six missions vont t'aider à comprendre ce qui se passe vraiment derrière chaque clic. Avant chaque série, Coach Cyber t'expliquera clairement le but des prochaines scènes."}
               </p>
             </div>
           </section>
@@ -361,27 +466,27 @@ export function WelcomeBehindScreen({
         {step === 1 && !isPillarBriefing ? (
           <section className="grid min-h-[640px] items-center gap-8 p-6 lg:grid-cols-2 lg:p-10">
             <div>
-              <p className="scene-label">Scène 1</p>
-              <h2 className="scene-title">Tu déverrouilles ton téléphone.</h2>
+              <p className="scene-label">{en ? "Scene 1" : "Scène 1"}</p>
+              <h2 className="scene-title">{en ? "You unlock your phone." : "Tu déverrouilles ton téléphone."}</h2>
               <div className="mt-6 space-y-3 text-lg font-semibold leading-8 text-white/75">
                 <p>
-                  L'écran s'allume. Rien d'étrange. Tu n'as encore ouvert aucune application.
+                  {en ? "The screen lights up. Nothing seems strange. You have not opened an app yet." : "L'écran s'allume. Rien d'étrange. Tu n'as encore ouvert aucune application."}
                 </p>
                 <p>
-                  Pourtant, l'heure se met à jour. Des notifications arrivent. La météo est déjà prête.
+                  {en ? "Yet the time updates. Notifications arrive. The weather is already ready." : "Pourtant, l'heure se met à jour. Des notifications arrivent. La météo est déjà prête."}
                 </p>
                 <p className="pt-3 text-2xl font-black text-white">
-                  Comment ton téléphone sait-il déjà tout cela ?
+                  {en ? "How does your phone already know all this?" : "Comment ton téléphone sait-il déjà tout cela ?"}
                 </p>
                 <p>
-                  Il a forcément communiqué. Mais avec qui ? Et par quel chemin invisible ?
+                  {en ? "It must have communicated. But with whom? And along which invisible path?" : "Il a forcément communiqué. Mais avec qui ? Et par quel chemin invisible ?"}
                 </p>
               </div>
               <div className="lesson-key-evidence mt-7 rounded-2xl border border-primary bg-rose-50 p-4 font-black text-primary">
-                Aujourd'hui, tu passes derrière l'écran.
+                {en ? "Today, you step behind the screen." : "Aujourd'hui, tu passes derrière l'écran."}
               </div>
             </div>
-            <SceneImage
+            <SceneImage language={language}
               alt="Un adolescent et le réseau numérique mondial derrière son téléphone"
               src="/images/module-1/lesson-1/behind-the-screen.png"
             />
@@ -390,32 +495,31 @@ export function WelcomeBehindScreen({
 
         {step === 2 ? (
           <section className="grid min-h-[640px] items-center gap-8 p-6 lg:grid-cols-2 lg:p-10">
-            <SceneImage
+            <SceneImage language={language}
               alt="Le monde physique et le monde numérique côte à côte"
               src="/images/module-1/lesson-1/two-worlds.png"
             />
             <div>
-              <p className="scene-label">Scène 2</p>
+              <p className="scene-label">{en ? "Scene 2" : "Scène 2"}</p>
               <h2 className="scene-title">
-                Tu ne vis pas dans un seul monde.
+                {en ? "You do not live in only one world." : "Tu ne vis pas dans un seul monde."}
                 <
                 br />
-                <span className="text-cyan-300">Tu vis dans deux.</span>
+                <span className="text-cyan-300">{en ? "You live in two." : "Tu vis dans deux."}</span>
               </h2>
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
                 <WorldCard
-                  title="Le monde physique"
-                  items={["ta chambre", "ton école", "ta famille", "ta ville"]}
+                  title={en ? "The physical world" : "Le monde physique"}
+                  items={en ? ["your room", "your school", "your family", "your city"] : ["ta chambre", "ton école", "ta famille", "ta ville"]}
                 />
                 <WorldCard
-                  title="Le monde numérique"
-                  items={["appareils", "réseaux", "données", "algorithmes"]}
+                  title={en ? "The digital world" : "Le monde numérique"}
+                  items={en ? ["devices", "networks", "data", "algorithms"] : ["appareils", "réseaux", "données", "algorithmes"]}
                   accent
                 />
               </div>
               <p className="mt-6 text-lg font-semibold leading-8 text-white/75">
-                Il n'a ni frontières, ni heure de fermeture. Il ne dort jamais.
-                Et il grandit sans cesse.
+                {en ? "It has no borders or closing time. It never sleeps, and it keeps growing." : "Il n'a ni frontières, ni heure de fermeture. Il ne dort jamais. Et il grandit sans cesse."}
               </p>
             </div>
           </section>
@@ -423,32 +527,32 @@ export function WelcomeBehindScreen({
 
         {step === 3 ? (
           <section className="mx-auto flex min-h-[640px] max-w-4xl flex-col justify-center p-6 sm:p-10">
-            <p className="scene-label">Expérience · deux mondes qui se rencontrent</p>
-            <h2 className="scene-title">Place chaque élément là où il existe.</h2>
-            <p className="mt-3 text-white/60">Fais glisser les cartes vers le monde physique ou le monde numérique. Sur téléphone, touche une carte puis touche une colonne.</p>
-            <WorldSortActivity onComplete={() => {
+            <p className="scene-label">{en ? "Activity · two worlds meet" : "Expérience · deux mondes qui se rencontrent"}</p>
+            <h2 className="scene-title">{en ? "Place each item where it exists." : "Place chaque élément là où il existe."}</h2>
+            <p className="mt-3 text-white/60">{en ? "Drag the cards to the physical or digital world. On a phone, tap a card and then tap a column." : "Fais glisser les cartes vers le monde physique ou le monde numérique. Sur téléphone, touche une carte puis touche une colonne."}</p>
+            <WorldSortActivity language={language} onComplete={() => {
               setWorldSortComplete(true);
               completeCurrentSceneTimer();
-              celebrate("Excellent ! Tu distingues maintenant un objet physique d'une information numérique. Ton enquête peut continuer.");
-            }} onMistake={() => encourage("Presque ! Demande-toi : puis-je toucher cet élément directement, ou est-ce une information affichée par une machine ?")} />
+              celebrate(en ? "Excellent! You can now distinguish a physical object from digital information. Your investigation can continue." : "Excellent ! Tu distingues maintenant un objet physique d'une information numérique. Ton enquête peut continuer.");
+            }} onMistake={() => encourage(en ? "Almost! Ask yourself: can I touch this item directly, or is it information shown by a machine?" : "Presque ! Demande-toi : puis-je toucher cet élément directement, ou est-ce une information affichée par une machine ?")} />
           </section>
         ) : null}
 
         {step === 4 ? (
           <section className="grid min-h-[640px] items-center gap-8 p-6 lg:grid-cols-2 lg:p-10">
             <div>
-              <p className="scene-label">Scène 3 · Le plus grand malentendu</p>
+              <p className="scene-label">{en ? "Scene 3 · The biggest misunderstanding" : "Scène 3 · Le plus grand malentendu"}</p>
               <h2 className="scene-title">
-                Tu éteins ton téléphone. Ta photo existe-t-elle encore ?
+                {en ? "You turn off your phone. Does your photo still exist?" : "Tu éteins ton téléphone. Ta photo existe-t-elle encore ?"}
               </h2>
               <div className="mt-6 space-y-4 text-lg font-semibold leading-8 text-white/70">
-                <p>Tu prends une photo. Tu l'envoies à un proche. Puis ton téléphone s'éteint.</p>
-                <p className="text-xl font-black text-primary">Quelques secondes plus tard, ton proche la reçoit quand même. Comment est-ce possible ?</p>
-                <p>Une copie a quitté ton appareil avant qu'il ne s'éteigne. Quelque chose d'autre a poursuivi le travail.</p>
-                <p>Le téléphone est donc comme une <strong className="text-white">porte</strong> : tu vois la poignée, mais pas les couloirs, les salles et les personnes qui travaillent derrière.</p>
+                <p>{en ? "You take a photo and send it to someone close to you. Then your phone turns off." : "Tu prends une photo. Tu l'envoies à un proche. Puis ton téléphone s'éteint."}</p>
+                <p className="text-xl font-black text-primary">{en ? "A few seconds later, they receive it anyway. How is that possible?" : "Quelques secondes plus tard, ton proche la reçoit quand même. Comment est-ce possible ?"}</p>
+                <p>{en ? "A copy left your device before it turned off. Something else continued the work." : "Une copie a quitté ton appareil avant qu'il ne s'éteigne. Quelque chose d'autre a poursuivi le travail."}</p>
+                <p>{en ? <>Your phone is like a <strong className="text-white">door</strong>: you see the handle, but not the corridors, rooms, and people working behind it.</> : <>Le téléphone est donc comme une <strong className="text-white">porte</strong> : tu vois la poignée, mais pas les couloirs, les salles et les personnes qui travaillent derrière.</>}</p>
               </div>
             </div>
-            <SceneImage
+            <SceneImage language={language}
               alt="Un téléphone utilisé comme clé vers une immense infrastructure numérique"
               src="/images/module-1/lesson-1/phone-is-a-key.png"
             />
@@ -456,24 +560,22 @@ export function WelcomeBehindScreen({
               <AttentionCheck
                 answer={checkpointOne}
                 correctIndex={1}
-                explanation="Ton téléphone est la porte visible. Ton message continue grâce à d'autres machines, même lorsque ton écran est éteint."
+                explanation={en ? "Your phone is the visible door. Other machines keep your message moving even when your screen is off." : "Ton téléphone est la porte visible. Ton message continue grâce à d'autres machines, même lorsque ton écran est éteint."}
                 onAnswer={(answer) => {
                   setCheckpointOne(answer);
                   if (answer === 1) {
                     void recordCheckpoint(1);
                     completeCurrentSceneTimer();
-                    celebrate("Bien raisonné ! Le téléphone est la porte visible, pas tout le monde qui travaille derrière.");
+                    celebrate(en ? "Good reasoning! The phone is the visible door, not everything working behind it." : "Bien raisonné ! Le téléphone est la porte visible, pas tout le monde qui travaille derrière.");
                   } else {
-                    encourage("Je vois ton raisonnement, mais reprends l'indice : ton message continue même lorsque ton téléphone est éteint.");
+                    encourage(en ? "I see your reasoning, but revisit the clue: your message continues even when your phone is off." : "Je vois ton raisonnement, mais reprends l'indice : ton message continue même lorsque ton téléphone est éteint.");
                   }
                 }}
                 options={[
-                  "Tout reste à l'intérieur du téléphone",
-                  "Le téléphone ouvre l'accès à d'autres machines reliées entre elles",
-                  "La batterie stocke les services Internet",
+                  ...(en ? ["Everything stays inside the phone", "The phone opens access to other connected machines", "The battery stores Internet services"] : ["Tout reste à l'intérieur du téléphone", "Le téléphone ouvre l'accès à d'autres machines reliées entre elles", "La batterie stocke les services Internet"]),
                 ]}
-                question="Pourquoi compare-t-on le téléphone à une clé ?"
-                title="Checkpoint 1 · idées 1 à 5"
+                question={en ? "Why do we compare the phone to a key?" : "Pourquoi compare-t-on le téléphone à une clé ?"}
+                title={en ? "Checkpoint 1 · ideas 1 to 5" : "Checkpoint 1 · idées 1 à 5"}
               />
             </div>
           </section>
@@ -482,17 +584,14 @@ export function WelcomeBehindScreen({
         {step === 5 ? (
           <section className="mx-auto flex min-h-[640px] max-w-3xl flex-col justify-center p-6 sm:p-10">
             <KeyRound className="mb-5 h-12 w-12 text-violet-300" />
-            <p className="scene-label">Mini-activité · Sans chercher</p>
+            <p className="scene-label">{en ? "Mini-activity · No searching" : "Mini-activité · Sans chercher"}</p>
             <h2 className="scene-title">
-              Après l'envoi, où ta photo peut-elle exister ?
+              {en ? "After sending, where can your photo exist?" : "Après l'envoi, où ta photo peut-elle exister ?"}
             </h2>
-            <p className="mt-3 font-semibold leading-7 text-white/60">Souviens-toi : ton téléphone est éteint, mais ton proche reçoit tout de même la photo.</p>
+            <p className="mt-3 font-semibold leading-7 text-white/60">{en ? "Remember: your phone is off, but the other person still receives the photo." : "Souviens-toi : ton téléphone est éteint, mais ton proche reçoit tout de même la photo."}</p>
             <div className="mt-8 grid gap-3">
               {[
-                "Uniquement dans ton téléphone",
-                "Sur d'autres machines qui la transportent, puis sur le téléphone de ton proche",
-                "Dans la carte SIM",
-                "Dans la batterie",
+                ...(en ? ["Only on your phone", "On other machines that transport it, then on the other person's phone", "On the SIM card", "In the battery"] : ["Uniquement dans ton téléphone", "Sur d'autres machines qui la transportent, puis sur le téléphone de ton proche", "Dans la carte SIM", "Dans la batterie"]),
               ].map((option, index) => (
                 <button
                   className={`rounded-2xl border-2 p-4 text-left font-black transition ${guess === index ? (index === 1 ? "border-emerald-300 bg-emerald-300/15 text-emerald-100" : "border-rose-300 bg-rose-300/10 text-rose-100") : "border-white/15 bg-white/5 hover:bg-white/10"}`}
@@ -501,9 +600,9 @@ export function WelcomeBehindScreen({
                     setGuess(index);
                     if (index === 1) {
                       completeCurrentSceneTimer();
-                      celebrate("Bravo ! Tu as utilisé l'indice : ta photo a quitté ton appareil et d'autres machines ont poursuivi le travail.");
+                      celebrate(en ? "Well done! You used the clue: your photo left your device and other machines continued the work." : "Bravo ! Tu as utilisé l'indice : ta photo a quitté ton appareil et d'autres machines ont poursuivi le travail.");
                     } else {
-                      encourage("Ce choix ne correspond pas à l'indice. Ton téléphone est éteint, pourtant la photo arrive encore.");
+                      encourage(en ? "That choice does not match the clue. Your phone is off, yet the photo still arrives." : "Ce choix ne correspond pas à l'indice. Ton téléphone est éteint, pourtant la photo arrive encore.");
                     }
                   }}
                   type="button"
@@ -518,8 +617,8 @@ export function WelcomeBehindScreen({
             {guess !== null ? (
               <p className="mt-5 rounded-2xl bg-white/5 p-4 font-semibold leading-7 text-white/75">
                 {guess === 1
-                  ? "Exact. Tu viens de découvrir l'idée avant le vocabulaire : des ordinateurs éloignés reçoivent, orientent et parfois conservent temporairement la photo. Nous leur donnerons bientôt un nom."
-                  : "Reviens à l'indice : si ton téléphone est éteint et que la photo arrive, elle a forcément été confiée à autre chose pendant son voyage."}
+                  ? (en ? "Exactly. You discovered the idea before the vocabulary: remote computers receive, route, and sometimes temporarily store the photo. We will give them a name soon." : "Exact. Tu viens de découvrir l'idée avant le vocabulaire : des ordinateurs éloignés reçoivent, orientent et parfois conservent temporairement la photo. Nous leur donnerons bientôt un nom.")
+                  : (en ? "Return to the clue: if your phone is off and the photo arrives, it must have been handed to something else during its journey." : "Reviens à l'indice : si ton téléphone est éteint et que la photo arrive, elle a forcément été confiée à autre chose pendant son voyage.")}
               </p>
             ) : null}
           </section>
@@ -527,24 +626,24 @@ export function WelcomeBehindScreen({
 
         {step === 6 && !isPillarBriefing ? (
           <section className="grid min-h-[640px] items-center gap-8 p-6 lg:grid-cols-2 lg:p-10">
-            <SceneImage
+            <SceneImage language={language}
               alt="La Terre reliée par des satellites, câbles et flux de données"
               src="/images/module-1/lesson-1/invisible-world.png"
             />
             <div>
-              <p className="scene-label">Scène 4 · regarde le voyage</p>
+              <p className="scene-label">{language === "en" ? "Scene 4 · watch the journey" : "Scène 4 · regarde le voyage"}</p>
               <h2 className="scene-title">
-                Une lumière invisible quitte ta main.
+                {language === "en" ? "An invisible light leaves your hand." : "Une lumière invisible quitte ta main."}
               </h2>
-              <p className="mt-5 text-lg font-semibold leading-8 text-white/70">Tu touches « Envoyer ». Ton téléphone transforme la photo en signaux trop rapides pour être vus. Suis le point lumineux. Où disparaît-il après ton écran ?</p>
-              <LiveSignalDemo />
+              <p className="mt-5 text-lg font-semibold leading-8 text-white/70">{language === "en" ? "You tap Send. Your phone turns the photo into signals too fast to see. Follow the point of light. Where does it go after leaving your screen?" : "Tu touches « Envoyer ». Ton téléphone transforme la photo en signaux trop rapides pour être vus. Suis le point lumineux. Où disparaît-il après ton écran ?"}</p>
+              <LiveSignalDemo language={language} />
               <div className="mt-7 rounded-2xl border border-violet-300/25 bg-violet-300/10 p-5">
                 <p className="text-xs font-black uppercase tracking-widest text-violet-200">
-                  Le savais-tu ? · estimation 2024
+                  {language === "en" ? "Did you know? · 2024 estimate" : "Le savais-tu ? · estimation 2024"}
                 </p>
-                <p className="mt-2 text-3xl font-black">≈ 5,9 millions</p>
+                <p className="mt-2 text-3xl font-black">{language === "en" ? "≈ 5.9 million" : "≈ 5,9 millions"}</p>
                 <p className="text-white/65">
-                  de recherches Google commencent chaque minute. Chacune déclenche son propre voyage invisible.
+                  {language === "en" ? "Google searches begin every minute. Each one starts its own invisible journey." : "de recherches Google commencent chaque minute. Chacune déclenche son propre voyage invisible."}
                 </p>
                 <a
                   className="mt-3 inline-block text-xs font-bold text-cyan-300 underline"
@@ -552,7 +651,7 @@ export function WelcomeBehindScreen({
                   rel="noreferrer"
                   target="_blank"
                 >
-                  Source : Data Never Sleeps 12.0 ↗
+                  {language === "en" ? "Source: Data Never Sleeps 12.0 ↗" : "Source : Data Never Sleeps 12.0 ↗"}
                 </a>
               </div>
             </div>
@@ -561,91 +660,86 @@ export function WelcomeBehindScreen({
 
         {step === 7 ? (
           <section className="mx-auto flex min-h-[640px] max-w-5xl flex-col justify-center p-6 sm:p-10">
-            <p className="scene-label">Décomposons une action</p>
+            <p className="scene-label">{language === "en" ? "Break an action down" : "Décomposons une action"}</p>
             <h2 className="scene-title">
-              La photo devient un colis que personne ne peut tenir.
+              {language === "en" ? "A photo becomes a package that nobody can hold." : "La photo devient un colis que personne ne peut tenir."}
             </h2>
             <p className="mt-4 max-w-3xl text-lg font-semibold leading-8 text-white/65">
-              Imagine une poste extraordinaire. Tu ne remets pas une enveloppe : ton téléphone traduit les couleurs de ta photo en nombres, ajoute une destination, puis confie le tout au réseau. Mais comment des nombres peuvent-ils redevenir ta photo ?
+              {language === "en" ? "Imagine an extraordinary postal service. You do not hand over an envelope: your phone translates the colors in your photo into numbers, adds a destination, and gives everything to the network. But how can numbers become your photo again?" : "Imagine une poste extraordinaire. Tu ne remets pas une enveloppe : ton téléphone traduit les couleurs de ta photo en nombres, ajoute une destination, puis confie le tout au réseau. Mais comment des nombres peuvent-ils redevenir ta photo ?"}
             </p>
             <div className="mt-8 grid gap-4 md:grid-cols-3">
               <ExplainCard
                 icon={<Smartphone />}
                 number="1"
-                title="1. Traduire"
-                text="Une machine ne voit pas un sourire ou un ciel bleu comme nous. Le téléphone transforme chaque détail en nombres. Ces nombres sont les données : une manière de représenter l'information."
+                title={language === "en" ? "1. Translate" : "1. Traduire"}
+                text={language === "en" ? "A machine does not see a smile or a blue sky as we do. Your phone turns every detail into numbers. These numbers are data: a way to represent information." : "Une machine ne voit pas un sourire ou un ciel bleu comme nous. Le téléphone transforme chaque détail en nombres. Ces nombres sont les données : une manière de représenter l'information."}
               />
               <ExplainCard
                 icon={<RadioTower />}
                 number="2"
-                title="2. Confier"
-                text="Le téléphone transforme ces nombres en signal et les confie soit à la petite boîte Internet de la maison, soit à une antenne du quartier. Voilà ce que Wi-Fi et réseau mobile permettent."
+                title={language === "en" ? "2. Hand it over" : "2. Confier"}
+                text={language === "en" ? "Your phone turns those numbers into a signal and hands it to either your home's Wi-Fi box or a nearby antenna. That is what Wi-Fi and mobile networks make possible." : "Le téléphone transforme ces nombres en signal et les confie soit à la petite boîte Internet de la maison, soit à une antenne du quartier. Voilà ce que Wi-Fi et réseau mobile permettent."}
               />
               <ExplainCard
                 icon={<Router />}
                 number="3"
-                title="3. Orienter"
-                text="Comme à un carrefour, une machine lit la destination et choisit le prochain chemin. Cette machine s'appelle un routeur : son travail est d'orienter, pas de comprendre la photo."
+                title={language === "en" ? "3. Route it" : "3. Orienter"}
+                text={language === "en" ? "Like a crossroads, a machine reads the destination and chooses the next path. This machine is a router: its job is to route the data, not understand the photo." : "Comme à un carrefour, une machine lit la destination et choisit le prochain chemin. Cette machine s'appelle un routeur : son travail est d'orienter, pas de comprendre la photo."}
               />
             </div>
             <div className="mt-6 rounded-2xl border border-cyan-300/25 bg-cyan-300/10 p-5 font-semibold leading-7 text-cyan-50">
-              <strong>À retenir :</strong> une donnée est une information traduite pour une machine. Un signal la transporte. Un routeur lui indique la prochaine route.
+              <strong>{language === "en" ? "Remember:" : "À retenir :"}</strong> {language === "en" ? "Data is information translated for a machine. A signal carries it. A router points it to the next route." : "une donnée est une information traduite pour une machine. Un signal la transporte. Un routeur lui indique la prochaine route."}
             </div>
           </section>
         ) : null}
 
         {step === 8 ? (
           <section className="mx-auto flex min-h-[640px] max-w-5xl flex-col justify-center p-6 sm:p-10">
-            <p className="scene-label">Le voyage continue</p>
+            <p className="scene-label">{language === "en" ? "The journey continues" : "Le voyage continue"}</p>
             <h2 className="scene-title">
-              Pourquoi découper une photo avant de l'envoyer ?
+              {language === "en" ? "Why split a photo before sending it?" : "Pourquoi découper une photo avant de l'envoyer ?"}
             </h2>
             <p className="mt-4 max-w-3xl text-lg font-semibold leading-8 text-white/65">
-              Imagine un énorme meuble à transporter dans les rues de Yaoundé : il passe difficilement. Si on le démonte en petites pièces numérotées, chaque pièce voyage plus facilement et le meuble peut être remonté à l'arrivée. Le réseau fait quelque chose de semblable avec la photo.
+              {language === "en" ? "Imagine a huge piece of furniture being moved through the streets of Yaoundé: it is difficult to carry. If it is taken apart into numbered pieces, each piece travels more easily and the furniture can be rebuilt on arrival. The network does something similar with a photo." : "Imagine un énorme meuble à transporter dans les rues de Yaoundé : il passe difficilement. Si on le démonte en petites pièces numérotées, chaque pièce voyage plus facilement et le meuble peut être remonté à l'arrivée. Le réseau fait quelque chose de semblable avec la photo."}
             </p>
-            <p className="mt-4 rounded-xl border-l-4 border-rose-400 bg-rose-400/10 p-4 font-semibold leading-7 text-white/70">Chaque petit morceau numéroté s'appelle un <strong className="text-white">paquet</strong>. Ton proche ne les voit jamais : son appareil les remet dans l'ordre. Mais qui les oriente jusque-là ?</p>
+            <p className="mt-4 rounded-xl border-l-4 border-rose-400 bg-rose-400/10 p-4 font-semibold leading-7 text-white/70">{language === "en" ? <>Each numbered piece is called a <strong className="text-white">packet</strong>. Your contact never sees them: their device puts them back in order. But who routes them there?</> : <>Chaque petit morceau numéroté s'appelle un <strong className="text-white">paquet</strong>. Ton proche ne les voit jamais : son appareil les remet dans l'ordre. Mais qui les oriente jusque-là ?</>}</p>
             <div className="lesson-route mt-10 grid items-center gap-3 text-center sm:grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr]">
               <JourneyStop
                 icon={<Smartphone />}
-                label="Ton téléphone"
-                note="prépare les données"
+                label={en ? "Your phone" : "Ton téléphone"}
+                note={en ? "prepares the data" : "prépare les données"}
               />
               <ArrowRight className="lesson-route-arrow mx-auto h-6 w-6 rotate-90 text-cyan-300 sm:rotate-0" />
               <JourneyStop
                 icon={<RadioTower />}
-                label="Première porte"
-                note="boîte Internet ou antenne"
+                label={en ? "First door" : "Première porte"}
+                note={en ? "Internet box or antenna" : "boîte Internet ou antenne"}
               />
               <ArrowRight className="lesson-route-arrow mx-auto h-6 w-6 rotate-90 text-cyan-300 sm:rotate-0" />
               <JourneyStop
                 icon={<Server />}
-                label="Salle de tri"
-                note="les machines trouvent ton proche"
+                label={en ? "Sorting room" : "Salle de tri"}
+                note={en ? "machines find the recipient" : "les machines trouvent ton proche"}
               />
               <ArrowRight className="lesson-route-arrow mx-auto h-6 w-6 rotate-90 text-cyan-300 sm:rotate-0" />
               <JourneyStop
                 icon={<Smartphone />}
-                label="Son téléphone"
-                note="reçoit et affiche"
+                label={en ? "Their phone" : "Son téléphone"}
+                note={en ? "receives and displays" : "reçoit et affiche"}
               />
             </div>
             <div className="mt-8 grid gap-4 sm:grid-cols-2">
               <WorldCard
-                title="Le contenu"
-                items={["le texte", "la photo", "la note vocale"]}
+                title={en ? "The content" : "Le contenu"}
+                items={en ? ["the text", "the photo", "the voice note"] : ["le texte", "la photo", "la note vocale"]}
               />
               <WorldCard
-                title="L'étiquette du colis"
-                items={[
-                  "l'heure",
-                  "l'expéditeur",
-                  "la taille",
-                  "l'état de livraison",
-                ]}
+                title={en ? "The package label" : "L'étiquette du colis"}
+                items={en ? ["the time", "the sender", "the size", "the delivery status"] : ["l'heure", "l'expéditeur", "la taille", "l'état de livraison"]}
                 accent
               />
             </div>
-            <p className="mt-5 text-sm font-semibold leading-6 text-white/55">Le nom technique de « l'étiquette » est <strong className="text-white">métadonnée</strong> : une information qui décrit le message sans être le message lui-même. L'heure d'envoi et la destination aident à livrer sans raconter ce que montre la photo.</p>
+            <p className="mt-5 text-sm font-semibold leading-6 text-white/55">{en ? <>The technical name for the “label” is <strong className="text-white">metadata</strong>: information that describes a message without being the message itself. The sending time and destination help deliver it without revealing what the photo shows.</> : <>Le nom technique de « l'étiquette » est <strong className="text-white">métadonnée</strong> : une information qui décrit le message sans être le message lui-même. L'heure d'envoi et la destination aident à livrer sans raconter ce que montre la photo.</>}</p>
             <div className="mt-6 rounded-2xl border-2 border-cyan-300/30 bg-cyan-300/10 p-5">
               <p className="text-xs font-black uppercase tracking-widest text-cyan-300">Le lien avec la prochaine scène</p>
               <div className="mt-3 grid gap-3 text-center font-black sm:grid-cols-[1fr_auto_1fr_auto_1fr] sm:items-center">
@@ -655,7 +749,7 @@ export function WelcomeBehindScreen({
                 <ArrowRight className="mx-auto h-5 w-5 rotate-90 text-cyan-300 sm:rotate-0" />
                 <span className="rounded-xl bg-white/5 p-3">🏢 Des ordinateurs distants travaillent</span>
               </div>
-              <p className="mt-4 font-semibold leading-7 text-cyan-50">Quand une application utilise par Internet le stockage ou le travail de ces ordinateurs éloignés, on parle souvent de <strong>cloud</strong>. Le cloud n'est donc pas l'espace traversé par les données : <strong>Internet est le chemin, le cloud est la destination et le service accessible à distance.</strong></p>
+              <p className="mt-4 font-semibold leading-7 text-cyan-50">{en ? <>When an app uses remote computers for storage or processing over the Internet, we often call it the <strong>cloud</strong>. The cloud is not the space that data travels through: <strong>the Internet is the path; the cloud is the remote destination and service.</strong></> : <>Quand une application utilise par Internet le stockage ou le travail de ces ordinateurs éloignés, on parle souvent de <strong>cloud</strong>. Le cloud n'est donc pas l'espace traversé par les données : <strong>Internet est le chemin, le cloud est la destination et le service accessible à distance.</strong></>}</p>
             </div>
           </section>
         ) : null}
@@ -663,47 +757,47 @@ export function WelcomeBehindScreen({
         {step === 9 ? (
           <section className="grid min-h-[640px] items-start gap-8 p-6 lg:grid-cols-2 lg:p-10">
             <div className="grid gap-5">
-              <SceneImage
+              <SceneImage language={language}
                 alt="Un téléphone ouvre l'accès à des serveurs distants"
                 src="/images/module-1/lesson-1/phone-is-a-key.png"
               />
               <div className="rounded-2xl border border-cyan-300/25 bg-cyan-300/10 p-5">
-                <p className="text-xs font-black uppercase tracking-widest text-cyan-300">Ne mélange pas les deux</p>
+                <p className="text-xs font-black uppercase tracking-widest text-cyan-300">{en ? "Do not mix the two" : "Ne mélange pas les deux"}</p>
                 <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-                  <div className="rounded-xl bg-slate-950/35 p-4"><p className="text-2xl">🌐</p><p className="mt-2 font-black">Internet = le chemin</p><p className="mt-1 text-sm font-semibold leading-6 text-white/60">Le réseau transporte les paquets entre les appareils et les machines.</p></div>
-                  <div className="rounded-xl bg-slate-950/35 p-4"><p className="text-2xl">☁️</p><p className="mt-2 font-black">Cloud = le service distant</p><p className="mt-1 text-sm font-semibold leading-6 text-white/60">Des ordinateurs ailleurs stockent des données ou travaillent pour toi.</p></div>
+                  <div className="rounded-xl bg-slate-950/35 p-4"><p className="text-2xl">🌐</p><p className="mt-2 font-black">{en ? "Internet = the path" : "Internet = le chemin"}</p><p className="mt-1 text-sm font-semibold leading-6 text-white/60">{en ? "The network carries packets between devices and machines." : "Le réseau transporte les paquets entre les appareils et les machines."}</p></div>
+                  <div className="rounded-xl bg-slate-950/35 p-4"><p className="text-2xl">☁️</p><p className="mt-2 font-black">{en ? "Cloud = the remote service" : "Cloud = le service distant"}</p><p className="mt-1 text-sm font-semibold leading-6 text-white/60">{en ? "Computers elsewhere store data or work for you." : "Des ordinateurs ailleurs stockent des données ou travaillent pour toi."}</p></div>
                 </div>
-                <p className="mt-4 border-l-4 border-cyan-300 pl-4 font-black leading-7 text-cyan-50">Ta photo voyage sur Internet, puis peut être conservée ou traitée dans le cloud.</p>
+                <p className="mt-4 border-l-4 border-cyan-300 pl-4 font-black leading-7 text-cyan-50">{en ? "Your photo travels over the Internet, then may be stored or processed in the cloud." : "Ta photo voyage sur Internet, puis peut être conservée ou traitée dans le cloud."}</p>
               </div>
             </div>
             <div>
-              <p className="scene-label">Un mot souvent mal compris</p>
+              <p className="scene-label">{en ? "A commonly misunderstood word" : "Un mot souvent mal compris"}</p>
               <h2 className="scene-title">
-                Le cloud ressemble à un casier accessible depuis partout.
+                {en ? "The cloud is like a locker you can access from anywhere." : "Le cloud ressemble à un casier accessible depuis partout."}
               </h2>
               <p className="mt-5 text-lg font-semibold leading-8 text-white/70">
-                Tu gardes un cahier dans ton sac. Sans le sac, tu ne peux pas le lire. Imagine maintenant un casier sécurisé que tu peux ouvrir depuis ton téléphone, un ordinateur ou une tablette. Le cahier n'est dans aucun de ces écrans. Où reste-t-il ?
+                {en ? "You keep a notebook in your bag. Without the bag, you cannot read it. Now imagine a secure locker you can open from your phone, computer, or tablet. The notebook is not inside any of these screens. Where does it stay?" : "Tu gardes un cahier dans ton sac. Sans le sac, tu ne peux pas le lire. Imagine maintenant un casier sécurisé que tu peux ouvrir depuis ton téléphone, un ordinateur ou une tablette. Le cahier n'est dans aucun de ces écrans. Où reste-t-il ?"}
               </p>
-              <p className="mt-4 text-lg font-semibold leading-8 text-white/70">Le cloud fonctionne selon cette idée. Tes fichiers restent sur des ordinateurs allumés ailleurs. Internet est le chemin qui te permet d'y accéder, et ton compte est une partie de la clé.</p>
+              <p className="mt-4 text-lg font-semibold leading-8 text-white/70">{en ? "The cloud works this way. Your files stay on computers switched on elsewhere. The Internet is the path that lets you access them, and your account is part of the key." : "Le cloud fonctionne selon cette idée. Tes fichiers restent sur des ordinateurs allumés ailleurs. Internet est le chemin qui te permet d'y accéder, et ton compte est une partie de la clé."}</p>
               <div className="mt-6 space-y-3">
                 <Definition
                   icon={<Server />}
-                  title="L'ordinateur qui sert"
-                  text="Un serveur est d'abord un ordinateur. On l'appelle ainsi parce qu'il sert quelque chose à d'autres appareils : une photo, une page, une vidéo ou une réponse."
+                  title={en ? "The computer that serves" : "L'ordinateur qui sert"}
+                  text={en ? "A server is first of all a computer. It is called a server because it provides something to other devices: a photo, page, video, or answer." : "Un serveur est d'abord un ordinateur. On l'appelle ainsi parce qu'il sert quelque chose à d'autres appareils : une photo, une page, une vidéo ou une réponse."}
                 />
                 <Definition
                   icon={<Database />}
-                  title="Le bâtiment qui les protège"
-                  text="Beaucoup de serveurs sont rangés dans un centre de données : un vrai bâtiment avec des câbles, de l'électricité de secours, des ventilateurs et des gardiens."
+                  title={en ? "The building that protects them" : "Le bâtiment qui les protège"}
+                  text={en ? "Many servers are kept in a data center: a real building with cables, backup electricity, fans, and people who protect it." : "Beaucoup de serveurs sont rangés dans un centre de données : un vrai bâtiment avec des câbles, de l'électricité de secours, des ventilateurs et des gardiens."}
                 />
                 <Definition
                   icon={<Cloud />}
-                  title="Le nom donné à l'accès"
-                  text="Cloud est le mot pratique pour dire : « j'utilise par Internet du stockage ou de la puissance appartenant à des ordinateurs situés ailleurs »."
+                  title={en ? "The name for this access" : "Le nom donné à l'accès"}
+                  text={en ? "Cloud is a practical way to say: I use storage or computing power belonging to computers located elsewhere, through the Internet." : "Cloud est le mot pratique pour dire : « j'utilise par Internet du stockage ou de la puissance appartenant à des ordinateurs situés ailleurs »."}
                 />
               </div>
               <p className="mt-5 rounded-2xl bg-white/5 p-4 font-semibold leading-7 text-white/65">
-                Quand tu utilises une application pour envoyer, chercher, sauvegarder ou regarder quelque chose, elle te rend un <strong className="text-white">service numérique</strong>. Mais quelle différence y a-t-il entre l'icône visible et le travail caché ?
+                {en ? <>When you use an app to send, search, save, or watch something, it provides a <strong className="text-white">digital service</strong>. But what is the difference between the visible icon and the hidden work?</> : <>Quand tu utilises une application pour envoyer, chercher, sauvegarder ou regarder quelque chose, elle te rend un <strong className="text-white">service numérique</strong>. Mais quelle différence y a-t-il entre l'icône visible et le travail caché ?</>}
               </p>
             </div>
             <div className="lg:col-span-2">
@@ -736,24 +830,24 @@ export function WelcomeBehindScreen({
         {step === 10 ? (
           <section className="mx-auto flex min-h-[640px] max-w-3xl flex-col justify-center p-6 text-center sm:p-10">
             <Eye className="mx-auto mb-6 h-14 w-14 text-cyan-300" />
-            <p className="scene-label">Réflexion guidée · d'abord, définissons le mot</p>
+            <p className="scene-label">{en ? "Guided reflection · first, define the word" : "Réflexion guidée · d'abord, définissons le mot"}</p>
             <h2 className="scene-title">
-              Un service numérique fait quelque chose pour toi à travers un écran.
+              {en ? "A digital service does something for you through a screen." : "Un service numérique fait quelque chose pour toi à travers un écran."}
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-lg font-semibold leading-8 text-white/65">
-              Envoyer un message est un service. Chercher une information, regarder une vidéo à distance, sauvegarder une photo ou demander une réponse à une IA en sont aussi. L'application est la porte visible ; le service est le travail réalisé derrière.
+              {en ? "Sending a message is a service. Searching for information, watching a video remotely, saving a photo, or asking an AI for an answer are services too. The app is the visible door; the service is the work behind it." : "Envoyer un message est un service. Chercher une information, regarder une vidéo à distance, sauvegarder une photo ou demander une réponse à une IA en sont aussi. L'application est la porte visible ; le service est le travail réalisé derrière."}
             </p>
             <div className="mt-6 grid gap-3 text-left sm:grid-cols-3">
-              <div className="rounded-xl bg-white/5 p-4"><span className="text-2xl">💬</span><p className="mt-2 font-black">Communiquer</p><p className="text-xs text-white/50">message, appel, email</p></div>
-              <div className="rounded-xl bg-white/5 p-4"><span className="text-2xl">🔎</span><p className="mt-2 font-black">Trouver</p><p className="text-xs text-white/50">recherche, carte, météo</p></div>
-              <div className="rounded-xl bg-white/5 p-4"><span className="text-2xl">🎬</span><p className="mt-2 font-black">Regarder ou écouter</p><p className="text-xs text-white/50">vidéo, musique, direct</p></div>
+              <div className="rounded-xl bg-white/5 p-4"><span className="text-2xl">💬</span><p className="mt-2 font-black">{en ? "Communicate" : "Communiquer"}</p><p className="text-xs text-white/50">{en ? "message, call, email" : "message, appel, email"}</p></div>
+              <div className="rounded-xl bg-white/5 p-4"><span className="text-2xl">🔎</span><p className="mt-2 font-black">{en ? "Find" : "Trouver"}</p><p className="text-xs text-white/50">{en ? "search, map, weather" : "recherche, carte, météo"}</p></div>
+              <div className="rounded-xl bg-white/5 p-4"><span className="text-2xl">🎬</span><p className="mt-2 font-black">{en ? "Watch or listen" : "Regarder ou écouter"}</p><p className="text-xs text-white/50">{en ? "video, music, live" : "vidéo, musique, direct"}</p></div>
             </div>
-            <p className="mx-auto mt-5 max-w-xl font-black text-primary">Maintenant que le mot est clair : quels services as-tu utilisés aujourd'hui, et quel travail chacun a-t-il fait pour toi ?</p>
+            <p className="mx-auto mt-5 max-w-xl font-black text-primary">{en ? "Now that the word is clear: which services have you used today, and what work did each one do for you?" : "Maintenant que le mot est clair : quels services as-tu utilisés aujourd'hui, et quel travail chacun a-t-il fait pour toi ?"}</p>
             <label
               className="mt-8 text-left text-sm font-black text-cyan-100"
               htmlFor="services"
             >
-              Note au moins un service utilisé aujourd'hui
+              {en ? "Write down at least one service used today" : "Note au moins un service utilisé aujourd'hui"}
             </label>
             <textarea
               className="mt-2 min-h-32 rounded-2xl border-2 border-white/15 bg-white/5 p-4 font-semibold text-white outline-none transition placeholder:text-white/25 focus:border-cyan-300"
@@ -763,17 +857,15 @@ export function WelcomeBehindScreen({
                 setServices(value);
                 if (value.trim().length > 0) completeCurrentSceneTimer();
               }}
-              placeholder="Exemple : messagerie — elle a livré mon message à ma sœur…"
+              placeholder={en ? "Example: messaging — it delivered my message to my sister…" : "Exemple : messagerie — elle a livré mon message à ma sœur…"}
               value={services}
             />
             <div className="mt-7 rounded-2xl border border-amber-200/25 bg-amber-200/10 p-5 text-left">
               <p className="font-black text-amber-900">
-                Mission pour la prochaine heure
+                {en ? "Mission for the next hour" : "Mission pour la prochaine heure"}
               </p>
               <p className="mt-2 leading-7 text-white/70">
-                À chaque utilisation de ton téléphone, note l'application
-                ouverte, pourquoi tu l'as ouverte et quelle information tu as
-                partagée. Ne change rien : observe.
+                {en ? "Each time you use your phone, note the app you opened, why you opened it, and what information you shared. Do not change anything: observe." : <>À chaque utilisation de ton téléphone, note l'application ouverte, pourquoi tu l'as ouverte et quelle information tu as partagée. Ne change rien : observe.</>}
               </p>
             </div>
           </section>
@@ -781,15 +873,16 @@ export function WelcomeBehindScreen({
 
         {step >= 11 && step <= 28 && !isPillarBriefing ? (
           <DeepJourneyScene
+            language={language}
             completed={completedDeepScenes.has(step)}
-            memory={deepMemory[step - 11]}
+              memory={localizedDeepMemory[step - 11]}
             onCorrect={() => {
               setCompletedDeepScenes((current) => new Set(current).add(step));
               if (deepScenes[step - 11]?.question) completeCurrentSceneTimer();
               celebrate("Découverte validée ! Coach Cyber ajoute cette pièce à ta carte mentale.");
             }}
             onWrong={() => encourage("Pas tout à fait. Relis l'indice : la réponse est cachée dans ce qui vient de t'arriver.")}
-            scene={deepScenes[step - 11]}
+            scene={localizedDeepScenes[step - 11]}
           />
         ) : null}
 
@@ -845,7 +938,7 @@ export function WelcomeBehindScreen({
           onClick={() => setStep((value) => Math.max(0, value - 1))}
           type="button"
         >
-          <ArrowLeft className="h-4 w-4" /> Retour
+          <ArrowLeft className="h-4 w-4" /> {language === "en" ? "Back" : "Retour"}
         </button>
         <span className="hidden text-sm font-bold text-slate-500 sm:block">
           {title}
@@ -859,40 +952,41 @@ export function WelcomeBehindScreen({
           }}
           type="button"
         >
-          {sceneRemainingSeconds > 0 ? `Continuer dans ${sceneRemainingSeconds} s` : "Continuer"} <ArrowRight className="h-4 w-4" />
+          {sceneRemainingSeconds > 0 ? (language === "en" ? `Continue in ${sceneRemainingSeconds}s` : `Continuer dans ${sceneRemainingSeconds} s`) : language === "en" ? "Continue" : "Continuer"} <ArrowRight className="h-4 w-4" />
         </button>
       </footer>
     </article>
   );
 }
 
-function PillarBriefing({ count, goal, name, number, onReady, recap }: { count: number; goal: string; name: string; number: number; onReady: () => void; recap?: string }) {
+function PillarBriefing({ language, count, goal, name, number, onReady, recap }: { language: Language; count: number; goal: string; name: string; number: number; onReady: () => void; recap?: string }) {
+  const en = language === "en";
   return (
     <section className="grid min-h-[540px] place-items-center bg-slate-50 p-5 text-brand-ink sm:p-10">
       <div className="w-full max-w-4xl rounded-[2rem] border-2 border-secondary bg-white p-6 shadow-[0_7px_0_0_rgba(88,96,98,1)] sm:p-10">
         <div className="grid gap-7 sm:grid-cols-[auto_1fr] sm:items-center">
           <div className="mx-auto rounded-2xl bg-brand-sky p-3"><CyberMascot mood={recap ? "celebrate" : "focus"} size="lg" /></div>
           <div>
-            <p className="text-sm font-black uppercase tracking-[0.25em] text-primary">Mission {number} sur {pillars.length}</p>
+            <p className="text-sm font-black uppercase tracking-[0.25em] text-primary">{en ? `Mission ${number} of ${pillars.length}` : `Mission ${number} sur ${pillars.length}`}</p>
             <h2 className="mt-2 font-display text-3xl font-black leading-tight text-brand-blue sm:text-5xl">{name}</h2>
-            {recap ? <p className="mt-4 rounded-xl border-l-4 border-brand-gold bg-[#fff8d9] p-4 font-bold leading-7 text-slate-700"><strong className="text-brand-ink">Ce que tu sais déjà :</strong> {recap}</p> : null}
+            {recap ? <p className="mt-4 rounded-xl border-l-4 border-brand-gold bg-[#fff8d9] p-4 font-bold leading-7 text-slate-700"><strong className="text-brand-ink">{en ? "What you already know:" : "Ce que tu sais déjà :"}</strong> {recap}</p> : null}
           </div>
         </div>
         <div className="mt-7 rounded-2xl border border-rose-200 bg-rose-50 p-5 sm:p-6">
-          <p className="text-xs font-black uppercase tracking-widest text-primary">Ton objectif pour les {count} prochaines scènes</p>
-          <p className="mt-3 text-xl font-black leading-8 text-brand-ink">Tu vas apprendre à {goal}.</p>
-          <p className="mt-3 font-semibold leading-7 text-slate-600">Observe les situations, relie les indices et réponds aux petites questions. Chaque scène ajoutera une pièce au mécanisme complet.</p>
+          <p className="text-xs font-black uppercase tracking-widest text-primary">{en ? `Your goal for the next ${count} scenes` : `Ton objectif pour les ${count} prochaines scènes`}</p>
+          <p className="mt-3 text-xl font-black leading-8 text-brand-ink">{en ? `You will learn to ${goal}.` : `Tu vas apprendre à ${goal}.`}</p>
+          <p className="mt-3 font-semibold leading-7 text-slate-600">{en ? "Observe the situations, connect the clues, and answer the short questions. Each scene will add one piece to the complete mechanism." : "Observe les situations, relie les indices et réponds aux petites questions. Chaque scène ajoutera une pièce au mécanisme complet."}</p>
         </div>
         <div className="mt-7 flex flex-col items-center justify-between gap-4 sm:flex-row">
-          <p className="font-bold text-slate-500">Aucun décompte sur cette présentation.</p>
-          <button className="inline-flex min-h-14 items-center justify-center gap-2 rounded-xl border-2 border-secondary bg-primary px-7 font-black text-white shadow-[0_4px_0_0_#ffcc32] transition hover:bg-[#8f1237]" onClick={onReady} type="button">Commencer la mission <ArrowRight className="h-5 w-5" /></button>
+          <p className="font-bold text-slate-500">{en ? "No countdown during this briefing." : "Aucun décompte sur cette présentation."}</p>
+          <button className="inline-flex min-h-14 items-center justify-center gap-2 rounded-xl border-2 border-secondary bg-primary px-7 font-black text-white shadow-[0_4px_0_0_#ffcc32] transition hover:bg-[#8f1237]" onClick={onReady} type="button">{en ? "Start the mission" : "Commencer la mission"} <ArrowRight className="h-5 w-5" /></button>
         </div>
       </div>
     </section>
   );
 }
 
-function SceneImage({ alt, src }: { alt: string; src: string }) {
+function SceneImage({ alt, src, language = "fr" }: { alt: string; src: string; language?: Language }) {
   return (
     <figure className="lesson-image relative aspect-[16/10] overflow-hidden rounded-3xl border border-white/15 bg-slate-900 shadow-2xl">
       <Image
@@ -903,7 +997,7 @@ function SceneImage({ alt, src }: { alt: string; src: string }) {
         src={src}
       />
       <figcaption className="absolute bottom-4 left-4 rounded-full border border-white/40 bg-slate-950/80 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur">
-        Indice visuel · observe la scène
+        {language === "en" ? "Visual clue · observe the scene" : "Indice visuel · observe la scène"}
       </figcaption>
     </figure>
   );
@@ -914,7 +1008,7 @@ function StoryRibbon({ message }: { message: string }) {
     <aside className="relative z-20 flex items-center gap-4 border-b border-slate-200 bg-white px-5 py-3 text-brand-ink sm:px-8">
       <CyberMascot mood="focus" size="sm" />
       <div>
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Coach Cyber · fil de l'enquête</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Cyber Coach · investigation trail</p>
         <p className="mt-1 max-w-4xl text-sm font-semibold leading-6 text-slate-600">{message}</p>
       </div>
     </aside>
@@ -931,26 +1025,29 @@ function MascotToast({ message, mood }: { message: string; mood: "celebrate" | "
 }
 
 function DeepJourneyScene({
+  language,
   completed,
   memory,
   onCorrect,
   onWrong,
   scene,
 }: {
+  language: Language;
   completed: boolean;
-  memory: (typeof deepMemory)[number];
+  memory: { stage: string; takeaway: string; connection: string };
   onCorrect: () => void;
   onWrong: () => void;
   scene: DeepScene;
 }) {
+  const en = language === "en";
   const [answer, setAnswer] = useState<number | null>(null);
   return (
     <section className="mx-auto flex min-h-[640px] max-w-5xl flex-col justify-center p-6 sm:p-10">
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-        <p className="text-xs font-black uppercase tracking-widest text-cyan-300">Le voyage de ta photo</p>
-        <p className="text-sm font-black text-white/65">Étape actuelle : <span className="text-white">{memory.stage}</span></p>
+        <p className="text-xs font-black uppercase tracking-widest text-cyan-300">{en ? "Your photo's journey" : "Le voyage de ta photo"}</p>
+        <p className="text-sm font-black text-white/65">{en ? "Current step:" : "Étape actuelle :"} <span className="text-white">{memory.stage}</span></p>
       </div>
-      <p className="scene-label">Une question à résoudre</p>
+      <p className="scene-label">{en ? "A question to solve" : "Une question à résoudre"}</p>
       <h2 className="scene-title max-w-4xl">{scene.title}</h2>
       <div className="mt-7 grid gap-7 lg:grid-cols-[1.15fr_.85fr] lg:items-center">
         <div>
@@ -965,37 +1062,38 @@ function DeepJourneyScene({
           </div>
         </div>
         <aside className="rounded-2xl border-2 border-cyan-300/30 bg-cyan-300/10 p-5">
-          <div className="flex items-start gap-3"><CyberMascot mood={completed ? "celebrate" : "focus"} size="sm" /><div><p className="text-xs font-black uppercase tracking-widest text-cyan-300">Une seule idée à retenir</p><p className="mt-2 text-lg font-black leading-7 text-white">{memory.takeaway}</p></div></div>
-          <div className="mt-5 border-t border-white/10 pt-4"><p className="text-xs font-black uppercase tracking-widest text-rose-300">Le lien avec notre photo</p><p className="mt-2 font-semibold leading-7 text-white/70">{memory.connection}</p></div>
-          <details className="mt-4 rounded-xl bg-slate-950/30 p-3 text-sm text-white/60"><summary className="cursor-pointer font-black text-white/75">La question qui prépare la suite</summary><p className="mt-2 leading-6">{scene.discovery}</p></details>
+          <div className="flex items-start gap-3"><CyberMascot mood={completed ? "celebrate" : "focus"} size="sm" /><div><p className="text-xs font-black uppercase tracking-widest text-cyan-300">{en ? "One idea to remember" : "Une seule idée à retenir"}</p><p className="mt-2 text-lg font-black leading-7 text-white">{memory.takeaway}</p></div></div>
+          <div className="mt-5 border-t border-white/10 pt-4"><p className="text-xs font-black uppercase tracking-widest text-rose-300">{en ? "The link to our photo" : "Le lien avec notre photo"}</p><p className="mt-2 font-semibold leading-7 text-white/70">{memory.connection}</p></div>
+          <details className="mt-4 rounded-xl bg-slate-950/30 p-3 text-sm text-white/60"><summary className="cursor-pointer font-black text-white/75">{en ? "The question that prepares what comes next" : "La question qui prépare la suite"}</summary><p className="mt-2 leading-6">{scene.discovery}</p></details>
         </aside>
       </div>
       {scene.question && scene.options ? (
         <div className="mt-7 rounded-2xl border-2 border-primary bg-white p-5 text-brand-ink shadow-[0_4px_0_0_#ffcc32]">
-          <p className="text-xs font-black uppercase tracking-widest text-primary">Question de vérification</p>
+          <p className="text-xs font-black uppercase tracking-widest text-primary">{en ? "Check your understanding" : "Question de vérification"}</p>
           <p className="mt-2 text-lg font-black">{scene.question}</p>
           <div className="mt-3 grid gap-2">{scene.options.map((option, index) => <button className={`rounded-xl border-2 p-3 text-left text-sm font-bold transition ${answer === index ? index === scene.correctIndex ? "border-emerald-500 bg-emerald-50 text-emerald-800" : "border-primary bg-rose-50 text-primary" : "border-slate-300 bg-white text-slate-700 hover:border-primary"}`} key={option} onClick={() => { setAnswer(index); if (index === scene.correctIndex) onCorrect(); else onWrong(); }} type="button">{String.fromCharCode(65 + index)}. {option}</button>)}</div>
         </div>
       ) : (
-        <button className={`mt-7 self-center rounded-xl border-2 px-6 py-3 font-black transition ${completed ? "border-emerald-500 bg-emerald-100 text-emerald-900" : "border-rose-300 bg-rose-50 text-brand-ink hover:bg-rose-100"}`} onClick={onCorrect} type="button">{completed ? "Découverte comprise ✓" : "J'ai compris cette découverte"}</button>
+        <button className={`mt-7 self-center rounded-xl border-2 px-6 py-3 font-black transition ${completed ? "border-emerald-500 bg-emerald-100 text-emerald-900" : "border-rose-300 bg-rose-50 text-brand-ink hover:bg-rose-100"}`} onClick={onCorrect} type="button">{completed ? (en ? "Discovery understood ✓" : "Découverte comprise ✓") : (en ? "I understand this discovery" : "J'ai compris cette découverte")}</button>
       )}
     </section>
   );
 }
 
 type WorldKind = "physical" | "digital";
-const worldItems: Array<{ id: string; label: string; icon: string; world: WorldKind }> = [
-  { id: "book", label: "Un cahier", icon: "📒", world: "physical" },
-  { id: "ball", label: "Un ballon", icon: "⚽", world: "physical" },
-  { id: "tree", label: "Un arbre", icon: "🌳", world: "physical" },
-  { id: "bike", label: "Un vélo", icon: "🚲", world: "physical" },
-  { id: "message", label: "Un message envoyé", icon: "💬", world: "digital" },
-  { id: "video", label: "Une vidéo en ligne", icon: "▶️", world: "digital" },
-  { id: "account", label: "Un compte en ligne", icon: "👤", world: "digital" },
-  { id: "search", label: "Un résultat de recherche", icon: "🔎", world: "digital" },
+const worldItems: Array<{ id: string; label: string; labelEn: string; icon: string; world: WorldKind }> = [
+  { id: "book", label: "Un cahier", labelEn: "A notebook", icon: "📒", world: "physical" },
+  { id: "ball", label: "Un ballon", labelEn: "A ball", icon: "⚽", world: "physical" },
+  { id: "tree", label: "Un arbre", labelEn: "A tree", icon: "🌳", world: "physical" },
+  { id: "bike", label: "Un vélo", labelEn: "A bicycle", icon: "🚲", world: "physical" },
+  { id: "message", label: "Un message envoyé", labelEn: "A sent message", icon: "💬", world: "digital" },
+  { id: "video", label: "Une vidéo en ligne", labelEn: "An online video", icon: "▶️", world: "digital" },
+  { id: "account", label: "Un compte en ligne", labelEn: "An online account", icon: "👤", world: "digital" },
+  { id: "search", label: "Un résultat de recherche", labelEn: "A search result", icon: "🔎", world: "digital" },
 ];
 
-function WorldSortActivity({ onComplete, onMistake }: { onComplete: () => void; onMistake: () => void }) {
+function WorldSortActivity({ language, onComplete, onMistake }: { language: Language; onComplete: () => void; onMistake: () => void }) {
+  const en = language === "en";
   const [placements, setPlacements] = useState<Record<string, WorldKind>>({});
   const [selected, setSelected] = useState<string | null>(null);
   const [feedback, setFeedback] = useState("");
@@ -1004,14 +1102,14 @@ function WorldSortActivity({ onComplete, onMistake }: { onComplete: () => void; 
     const item = worldItems.find((candidate) => candidate.id === itemId);
     if (!item) return;
     if (item.world !== world) {
-      setFeedback(`Observe « ${item.label} » : peux-tu le toucher directement, ou existe-t-il sous forme d'information sur un écran ?`);
+      setFeedback(en ? `Look at “${item.labelEn}”: can you touch it directly, or does it exist as information on a screen?` : `Observe « ${item.label} » : peux-tu le toucher directement, ou existe-t-il sous forme d'information sur un écran ?`);
       onMistake();
       return;
     }
     const next = { ...placements, [itemId]: world };
     setPlacements(next);
     setSelected(null);
-    setFeedback("Bien vu. Continue jusqu'à ce que les deux mondes soient complets.");
+    setFeedback(en ? "Good observation. Continue until both worlds are complete." : "Bien vu. Continue jusqu'à ce que les deux mondes soient complets.");
     if (Object.keys(next).length === worldItems.length) onComplete();
   }
 
@@ -1034,10 +1132,10 @@ function WorldSortActivity({ onComplete, onMistake }: { onComplete: () => void; 
             onDragStart={(event) => event.dataTransfer.setData("text/plain", item.id)}
             type="button"
           >
-            <span className="mr-2 text-xl" aria-hidden>{item.icon}</span>{item.label}
+            <span className="mr-2 text-xl" aria-hidden>{item.icon}</span>{en ? item.labelEn : item.label}
           </button>
         ))}
-        {remaining.length === 0 ? <p className="self-center font-black text-emerald-200">Toutes les cartes sont placées.</p> : null}
+        {remaining.length === 0 ? <p className="self-center font-black text-emerald-200">{en ? "All cards are placed." : "Toutes les cartes sont placées."}</p> : null}
       </div>
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         {(["physical", "digital"] as const).map((world) => (
@@ -1049,10 +1147,10 @@ function WorldSortActivity({ onComplete, onMistake }: { onComplete: () => void; 
             onDrop={(event) => drop(event, world)}
             type="button"
           >
-            <span className="text-xs font-black uppercase tracking-widest text-slate-500">Dépose ici</span>
-            <h3 className="mt-1 text-xl font-black">{world === "physical" ? "🌍 Monde physique" : "✨ Monde numérique"}</h3>
+            <span className="text-xs font-black uppercase tracking-widest text-slate-500">{en ? "Drop here" : "Dépose ici"}</span>
+            <h3 className="mt-1 text-xl font-black">{world === "physical" ? (en ? "🌍 Physical world" : "🌍 Monde physique") : (en ? "✨ Digital world" : "✨ Monde numérique")}</h3>
             <div className="mt-4 flex flex-wrap gap-2">
-              {worldItems.filter((item) => placements[item.id] === world).map((item) => <span className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-brand-ink" key={item.id}>{item.icon} {item.label}</span>)}
+              {worldItems.filter((item) => placements[item.id] === world).map((item) => <span className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-brand-ink" key={item.id}>{item.icon} {en ? item.labelEn : item.label}</span>)}
             </div>
           </button>
         ))}
@@ -1062,13 +1160,13 @@ function WorldSortActivity({ onComplete, onMistake }: { onComplete: () => void; 
   );
 }
 
-function LiveSignalDemo() {
+function LiveSignalDemo({ language }: { language: Language }) {
   const stops = [
-    { icon: "📱", label: "Ton téléphone" },
-    { icon: "📡", label: "Antenne du quartier" },
-    { icon: "🌊", label: "Câbles" },
-    { icon: "🏢", label: "Machines du service" },
-    { icon: "📱", label: "Ton proche" },
+    { icon: "📱", label: language === "en" ? "Your phone" : "Ton téléphone" },
+    { icon: "📡", label: language === "en" ? "Nearby antenna" : "Antenne du quartier" },
+    { icon: "🌊", label: language === "en" ? "Cables" : "Câbles" },
+    { icon: "🏢", label: language === "en" ? "Service machines" : "Machines du service" },
+    { icon: "📱", label: language === "en" ? "Your contact" : "Ton proche" },
   ];
   return (
     <div className="mt-6 rounded-2xl border border-rose-300/30 bg-[#100f12] p-4">
@@ -1081,7 +1179,7 @@ function LiveSignalDemo() {
           </div>
         ))}
       </div>
-      <p className="mt-5 text-sm font-semibold leading-6 text-white/55">Le signal change de support : ondes dans l'air, lumière dans des câbles, puis données dans les machines. La photo reste reconnaissable parce que chaque étape suit des règles communes.</p>
+      <p className="mt-5 text-sm font-semibold leading-6 text-white/55">{language === "en" ? "The signal changes form: waves in the air, light in cables, then data inside machines. The photo remains recognizable because every step follows shared rules." : "Le signal change de support : ondes dans l'air, lumière dans des câbles, puis données dans les machines. La photo reste reconnaissable parce que chaque étape suit des règles communes."}</p>
     </div>
   );
 }

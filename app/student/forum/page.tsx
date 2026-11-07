@@ -1,11 +1,11 @@
 import Link from "next/link";
 
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { requireRole } from "@/lib/auth/guards";
+import { requireAmbassadorTrack, requireRole } from "@/lib/auth/guards";
 import { listForumReportsForStudent } from "@/lib/db/cybera";
 
 export default async function ForumPage() {
-  const user = await requireRole(["student"]);
+  const user = requireAmbassadorTrack(await requireRole(["student"]));
   const forumReports = await listForumReportsForStudent(user.supabaseUserId);
 
   return (

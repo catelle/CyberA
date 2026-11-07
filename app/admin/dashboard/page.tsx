@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, BookOpen, ClipboardCheck } from "lucide-react";
+import { ArrowRight, Award, BookOpen, ClipboardCheck } from "lucide-react";
 
 import { AutoRefresh } from "@/components/admin/AutoRefresh";
 import { AdminProgressApprovalButton } from "@/components/forms/AdminProgressApprovalButton";
@@ -46,7 +46,7 @@ export default async function AdminDashboardPage() {
   const stats = [
     { label: "Connectes", value: connectedStudents.length },
     { label: "Eleves", value: counts.students },
-    { label: "Parents", value: counts.parents },
+    { label: "Parents", value: counts.parents, href: "/admin/parents" },
     { label: "Admins", value: counts.admins },
     { label: "Certifies", value: metrics.certifiedAmbassadors },
     { label: "Soumissions", value: metrics.pendingChallengeSubmissions },
@@ -62,12 +62,15 @@ export default async function AdminDashboardPage() {
       <AutoRefresh />
       <div className="grid gap-5">
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-          {stats.map((stat) => (
-            <article className="rounded-lg bg-white p-5 shadow-sm" key={stat.label}>
+          {stats.map((stat) => {
+            const card = (
+            <article className="h-full rounded-lg bg-white p-5 shadow-sm transition hover:ring-2 hover:ring-brand-blue/20">
               <p className="text-sm font-bold text-slate-500">{stat.label}</p>
               <p className="mt-2 text-4xl font-black text-brand-blue">{stat.value}</p>
             </article>
-          ))}
+            );
+            return stat.href ? <Link href={stat.href} key={stat.label}>{card}</Link> : <div key={stat.label}>{card}</div>;
+          })}
         </section>
 
         <section className="rounded-lg border-2 border-amber-300 bg-amber-50 p-4 shadow-sm sm:p-5">
@@ -168,9 +171,15 @@ export default async function AdminDashboardPage() {
         <section className="grid gap-4 lg:grid-cols-[1fr_22rem]">
           <div className="rounded-lg bg-white p-5 shadow-sm">
             <p className="text-sm font-black uppercase text-brand-gold">Modules</p>
-            <h2 className="mt-2 text-2xl font-black text-brand-ink">
-              Etat de publication du parcours
-            </h2>
+            <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+              <h2 className="mt-2 text-2xl font-black text-brand-ink">
+                Etat de publication du parcours
+              </h2>
+              <Link className="inline-flex min-h-10 w-fit items-center gap-2 rounded-lg border border-primary/20 px-3 text-sm font-black text-primary transition hover:bg-primary-fixed" href="/admin/badges">
+                <Award aria-hidden className="h-4 w-4" />
+                Voir les badges
+              </Link>
+            </div>
             <div className="mt-5 grid gap-3">
               {modules.map((module) => (
                 <div

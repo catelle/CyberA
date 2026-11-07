@@ -4,14 +4,18 @@ import { ModuleFeedbackForm } from "@/components/forms/ModuleFeedbackForm";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { requireRole } from "@/lib/auth/guards";
 import { createSupabaseAdminClient } from "@/lib/auth/supabase-server";
-import { getPublishedProgramModuleById } from "@/lib/db/cybera";
+import { getPublishedProgramModuleById, listProgramModulesForStudent } from "@/lib/db/cybera";
 
 type Props = { params: { id: string } };
 
 export default async function ModuleFeedbackPage({ params }: Props) {
   const user = await requireRole(["student"]);
-  const programModule = await getPublishedProgramModuleById(params.id);
+  const programModule = await getPublishedProgramModuleById(params.id, user.language);
   if (!programModule) notFound();
+  if (user.programTrack === "scholarship") {
+    const assignedModules = await listProgramModulesForStudent(user.supabaseUserId, user.language, user.programTrack);
+    if (!assignedModules.some((module) => module.id === programModule.id)) notFound();
+  }
 
   const supabase = createSupabaseAdminClient();
   const { data: progress } = await supabase

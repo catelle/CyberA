@@ -4,7 +4,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -27,6 +27,7 @@ import {
   startAmbientLoop,
   stopAmbientLoop,
 } from "@/lib/sounds";
+import type { Language } from "@/types/auth";
 import type {
   InvestigationLesson,
   InvestigationVisual,
@@ -192,7 +193,7 @@ function SceneVisual({
             )}
           </div>
 
-          <p className="pt-0.5 pb-1 font-bold leading-6 text-white/80">
+          <p className="min-w-0 break-words pb-1 pt-0.5 font-bold leading-6 text-slate-700">
             {item}
           </p>
         </div>
@@ -247,6 +248,8 @@ type Props = {
   lesson: InvestigationLesson;
   moduleId: string;
   canComplete: boolean;
+  theme?: "survival" | "academy" | "toolbox" | "ambassador";
+  language?: Language;
 };
 
 const MIN_SCENE_SECONDS = 15;
@@ -272,15 +275,33 @@ const interactiveTracks = {
   ],
 };
 
-function trackForLesson(lessonId: string) {
+function trackForLesson(lessonId: string, language: Language = "fr") {
+  if (language === "en" && lessonId === "information-hunter") return [{ icon: "🔎", label: "Choose rare words" }, { icon: "🗝️", label: "Use an operator" }, { icon: "🏛️", label: "Find the original" }, { icon: "📚", label: "Compare sources" }];
+  if (language === "en" && lessonId === "truth-detective") return [{ icon: "💥", label: "Name the emotion" }, { icon: "📌", label: "Isolate the claim" }, { icon: "👥", label: "Find three witnesses" }, { icon: "🧭", label: "Give a verdict" }];
+  if (language === "en" && lessonId === "visual-investigator") return [{ icon: "🖼️", label: "Observe the frame" }, { icon: "✂️", label: "Compare the crop" }, { icon: "🔍", label: "Trace the image" }, { icon: "🕒", label: "Rebuild the timeline" }];
+  if (language === "en" && lessonId === "ai-decoder") return [{ icon: "🎭", label: "Spot clues" }, { icon: "🎧", label: "Listen to context" }, { icon: "🔗", label: "Check the origin" }, { icon: "✅", label: "Confirm elsewhere" }];
+  if (language === "en" && lessonId === "privacy-guardian") return [{ icon: "👤", label: "See your shadow" }, { icon: "🚪", label: "Audit the doors" }, { icon: "⚙️", label: "Limit access" }, { icon: "🛡️", label: "Raise the shield" }];
+  if (language === "en" && lessonId === "digital-first-responder") return [{ icon: "🫶", label: "Secure and listen" }, { icon: "📸", label: "Keep evidence" }, { icon: "🚫", label: "Block and report" }, { icon: "🚨", label: "Escalate and support" }];
+  if (language === "en" && lessonId === "master-investigator") return [{ icon: "🗃️", label: "Inventory" }, { icon: "🧩", label: "Test hypotheses" }, { icon: "🕸️", label: "Connect evidence" }, { icon: "⚖️", label: "Defend the verdict" }];
   if (["bad-guys", "think-like-hacker"].includes(lessonId)) return interactiveTracks.threats;
   if (["social-engineering", "whatsapp-scams", "fake-opportunities", "romance-investment-scams", "fake-news-ai", "cyberbullying-harm"].includes(lessonId)) return interactiveTracks.manipulation;
+  if (lessonId === "information-hunter") return [{ icon: "🔎", label: "Choisir les mots rares" }, { icon: "🗝️", label: "Utiliser un operateur" }, { icon: "🏛️", label: "Trouver l'original" }, { icon: "📚", label: "Comparer les sources" }];
+  if (lessonId === "truth-detective") return [{ icon: "💥", label: "Nommer l'emotion" }, { icon: "📌", label: "Isoler l'affirmation" }, { icon: "👥", label: "Trois temoins" }, { icon: "🧭", label: "Rendre le verdict" }];
+  if (lessonId === "visual-investigator") return [{ icon: "🖼️", label: "Observer le cadre" }, { icon: "✂️", label: "Comparer le recadrage" }, { icon: "🔍", label: "Suivre l'image" }, { icon: "🕒", label: "Reconstruire le temps" }];
+  if (lessonId === "ai-decoder") return [{ icon: "🎭", label: "Reperer les fissures" }, { icon: "🎧", label: "Ecouter le contexte" }, { icon: "🔗", label: "Verifier l'origine" }, { icon: "✅", label: "Confirmer ailleurs" }];
+  if (lessonId === "privacy-guardian") return [{ icon: "👤", label: "Voir son ombre" }, { icon: "🚪", label: "Auditer les portes" }, { icon: "⚙️", label: "Limiter les acces" }, { icon: "🛡️", label: "Elever le bouclier" }];
+  if (lessonId === "digital-first-responder") return [{ icon: "🫶", label: "Securiser et ecouter" }, { icon: "📸", label: "Garder les preuves" }, { icon: "🚫", label: "Bloquer et signaler" }, { icon: "🚨", label: "Escalader et soutenir" }];
+  if (lessonId === "master-investigator") return [{ icon: "🗃️", label: "Inventorier" }, { icon: "🧩", label: "Tester les hypotheses" }, { icon: "🕸️", label: "Relier les preuves" }, { icon: "⚖️", label: "Defendre le verdict" }];
+  if (["show-the-example", "technology-not-magic", "find-your-cause"].includes(lessonId)) return [{ icon: "🪞", label: "Observer ses choix" }, { icon: "🧩", label: "Comprendre" }, { icon: "🧭", label: "Choisir sa cause" }, { icon: "✅", label: "Agir avec coherence" }];
+  if (["make-message-travel", "power-of-numbers", "mobilize-dont-react"].includes(lessonId)) return [{ icon: "🔎", label: "Verifier" }, { icon: "📋", label: "Documenter" }, { icon: "📡", label: "Adapter le message" }, { icon: "🤝", label: "Mobiliser sans nuire" }];
+  if (["pass-on-your-power", "create-local-movement", "network-behind-you", "cyberambassador-code"].includes(lessonId)) return [{ icon: "🧑‍🏫", label: "Transmettre" }, { icon: "🌱", label: "Construire localement" }, { icon: "🌐", label: "Activer le reseau" }, { icon: "🛡️", label: "Tenir son engagement" }];
   return interactiveTracks.verification;
 }
 
-function ModuleTwoConceptActivity({ lessonId, sceneIndex, accent }: { lessonId: string; sceneIndex: number; accent: string }) {
+function ModuleTwoConceptActivity({ lessonId, sceneIndex, accent, language }: { lessonId: string; sceneIndex: number; accent: string; language: Language }) {
   const [activeSteps, setActiveSteps] = useState<number[]>([]);
-  const steps = trackForLesson(lessonId);
+  const steps = trackForLesson(lessonId, language);
+  const en = language === "en";
 
   useEffect(() => setActiveSteps([]), [lessonId, sceneIndex]);
 
@@ -291,8 +312,8 @@ function ModuleTwoConceptActivity({ lessonId, sceneIndex, accent }: { lessonId: 
   return (
     <section className="mt-5 overflow-hidden rounded-2xl border-2 border-slate-300 bg-[#14111c] p-4 text-white shadow-[0_5px_0_#586062] sm:p-5" aria-label="Animation interactive du concept">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-xs font-black uppercase tracking-widest text-rose-300">Laboratoire interactif</p>
-        <p className="text-xs font-bold text-white/60">Touche chaque etape</p>
+        <p className="text-xs font-black uppercase tracking-widest text-rose-300">{en ? "Interactive lab" : "Laboratoire interactif"}</p>
+        <p className="text-xs font-bold text-white/60">{en ? "Touch each step" : "Touche chaque étape"}</p>
       </div>
       <div className="relative mt-5 grid gap-3 sm:grid-cols-4">
         <span className="concept-track-line absolute left-[10%] right-[10%] top-7 hidden h-0.5 sm:block" style={{ backgroundColor: accent }} />
@@ -310,13 +331,15 @@ function ModuleTwoConceptActivity({ lessonId, sceneIndex, accent }: { lessonId: 
         <div className="h-full rounded-full transition-all duration-500" style={{ backgroundColor: accent, width: `${(activeSteps.length / steps.length) * 100}%` }} />
       </div>
       <p className="mt-2 text-center text-xs font-bold text-white/60">
-        {activeSteps.length === steps.length ? "Sequence comprise : tu peux relier le concept a une situation reelle." : `${activeSteps.length}/${steps.length} etapes explorees`}
+        {activeSteps.length === steps.length ? (en ? "Sequence complete: connect the concept to a real situation." : "Sequence comprise : tu peux relier le concept a une situation reelle.") : `${activeSteps.length}/${steps.length} ${en ? "steps explored" : "etapes explorees"}`}
       </p>
     </section>
   );
 }
 
-export function ModuleTwoInvestigationLesson({ lesson, moduleId, canComplete }: Props) {
+export function ModuleTwoInvestigationLesson({ lesson, moduleId, canComplete, theme = "survival", language = "fr" }: Props) {
+  const en = language === "en";
+  const lessonTopRef = useRef<HTMLElement>(null);
   const [started, setStarted] = useState(false);
   const [sceneIndex, setSceneIndex] = useState(0);
   const [choice, setChoice] = useState<number | null>(null);
@@ -361,6 +384,17 @@ export function ModuleTwoInvestigationLesson({ lesson, moduleId, canComplete }: 
     window.setTimeout(() => setToast(null), 6500);
   };
 
+  const moveToScene = (nextScene: number) => {
+    setSceneIndex(nextScene);
+    window.requestAnimationFrame(() => {
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      lessonTopRef.current?.scrollIntoView({
+        behavior: reduceMotion ? "auto" : "smooth",
+        block: "start",
+      });
+    });
+  };
+
   const goNext = () => {
     if (!answered || !timeReady || complete) return;
     if (sceneIndex === lesson.scenes.length - 2) {
@@ -368,7 +402,7 @@ export function ModuleTwoInvestigationLesson({ lesson, moduleId, canComplete }: 
       setToast("done");
       window.setTimeout(() => setToast(null), 8000);
     }
-    setSceneIndex((v) => v + 1);
+    moveToScene(sceneIndex + 1);
   };
 
   // ── Splash screen ──
@@ -384,14 +418,14 @@ export function ModuleTwoInvestigationLesson({ lesson, moduleId, canComplete }: 
       <div className="investigation-grid absolute inset-0 opacity-30" style={{ color: lesson.accent }} />
       <div className="relative max-w-3xl">
         <p className="text-xs font-black uppercase tracking-[.25em]" style={{ color: lesson.accent }}>
-          {lesson.atmosphere} · dossier d'enquête
+          {lesson.atmosphere} · {theme === "academy" ? (en ? "academy mission" : "mission de l'academie") : theme === "toolbox" ? (en ? "practical workshop" : "atelier pratique") : theme === "ambassador" ? (en ? "action pathway" : "passage vers l'action") : (en ? "investigation file" : "dossier d'enquête")}
         </p>
         <h1 className="mt-4 font-display text-4xl font-black sm:text-6xl">{lesson.title}</h1>
         <p className="mx-auto mt-6 max-w-2xl text-xl font-black leading-8">{lesson.mystery}</p>
         <div className="mx-auto mt-7 flex max-w-xl items-center gap-3 rounded-2xl border border-white/15 bg-white/10 p-4 text-left backdrop-blur">
           <CyberMascot mood="focus" size="sm" />
           <p className="font-bold text-white/85">
-            Chaque scène introduit une seule idée. Lis, observe le visuel, réponds si une question apparaît, puis avance.
+            {theme === "academy" ? (en ? "Each room combines an investigation, a visual and an activity. Explore the clues to unlock your artefact." : "Chaque salle combine une enquete, un visuel et une activite. Explore les indices pour debloquer ton artefact.") : theme === "toolbox" ? (en ? "Each workshop combines a method, a visual and an activity. Explore every step to add a tool to your toolbox." : "Chaque atelier combine une méthode, un visuel et une activité. Explore toutes les étapes pour ajouter un outil à ta boîte.") : theme === "ambassador" ? (en ? "Each pathway connects an idea, a decision and a field mission. Explore them to unlock your power to act." : "Chaque passage relie une idee profonde, une decision et une mission de terrain. Explore-les pour debloquer ton pouvoir d'action.") : (en ? "Each scene introduces one idea. Read, observe the visual, answer any question and move forward." : "Chaque scène introduit une seule idée. Lis, observe le visuel, réponds si une question apparaît, puis avance.")}
           </p>
         </div>
         <button
@@ -400,7 +434,7 @@ export function ModuleTwoInvestigationLesson({ lesson, moduleId, canComplete }: 
           style={{ backgroundColor: lesson.accent }}
           type="button"
         >
-          Ouvrir le dossier <ArrowRight className="ml-2 inline h-4 w-4" />
+          {theme === "academy" ? (en ? "Enter the room" : "Entrer dans la salle") : theme === "toolbox" ? (en ? "Open the workshop" : "Ouvrir l'atelier") : theme === "ambassador" ? (en ? "Start the pathway" : "Commencer le passage") : (en ? "Open the case file" : "Ouvrir le dossier")} <ArrowRight className="ml-2 inline h-4 w-4" />
         </button>
       </div>
     </section>
@@ -408,7 +442,7 @@ export function ModuleTwoInvestigationLesson({ lesson, moduleId, canComplete }: 
 
   // ── Active lesson ──
   return (
-    <section className="overflow-hidden rounded-2xl border-2 border-[#30394a] bg-[#f8fafc] shadow-[0_8px_0_#30394a]">
+    <section className="scroll-mt-4 overflow-hidden rounded-2xl border-2 border-[#30394a] bg-[#f8fafc] shadow-[0_8px_0_#30394a]" ref={lessonTopRef}>
       <SoundToggleButton />
 
       {toast && (
@@ -416,10 +450,10 @@ export function ModuleTwoInvestigationLesson({ lesson, moduleId, canComplete }: 
           <CyberMascot mood={toast === "bad" ? "sad" : "celebrate"} size="sm" />
           <span>
             {toast === "bad"
-              ? "Pas encore. Relis l'indice et essaie autrement."
+              ? en ? "Not yet. Re-read the clue and try again." : "Pas encore. Relis l'indice et essaie autrement."
               : toast === "done"
-                ? "Dossier résolu. Tu as tous les réflexes."
-                : "Bonne piste. Continue l'enquête."}
+                ? en ? "Case solved. You have all the reflexes." : "Dossier résolu. Tu as tous les réflexes."
+                : en ? "Good lead. Continue the investigation." : "Bonne piste. Continue l'enquête."}
           </span>
         </div>
       )}
@@ -494,7 +528,7 @@ export function ModuleTwoInvestigationLesson({ lesson, moduleId, canComplete }: 
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/35 via-transparent to-transparent" />
             </figure>
           )}
-          {scene.illustration ? <ModuleTwoConceptActivity accent={lesson.accent} lessonId={lesson.id} sceneIndex={sceneIndex} /> : null}
+          {scene.illustration ? <ModuleTwoConceptActivity accent={lesson.accent} language={language} lessonId={lesson.id} sceneIndex={sceneIndex} /> : null}
 
           {/* Scene progress dots */}
           <div className="mt-5" aria-label={`Scène ${sceneIndex + 1} sur ${lesson.scenes.length}`}>
@@ -508,7 +542,7 @@ export function ModuleTwoInvestigationLesson({ lesson, moduleId, canComplete }: 
               ))}
             </div>
             <p className="mt-2 text-right text-[10px] font-black uppercase tracking-widest text-slate-400">
-              Scène {sceneIndex + 1} sur {lesson.scenes.length}
+              {en ? "Scene" : "Scène"} {sceneIndex + 1} {en ? "of" : "sur"} {lesson.scenes.length}
             </p>
           </div>
 
@@ -516,7 +550,7 @@ export function ModuleTwoInvestigationLesson({ lesson, moduleId, canComplete }: 
           <div className="mt-5 rounded-2xl border-2 border-slate-200 bg-white p-5 shadow-sm sm:p-6">
             <p className="flex items-center gap-2 text-xs font-black uppercase tracking-widest" style={{ color: lesson.accent }}>
               <Sparkles className="h-4 w-4" />
-              Observe la situation
+              {en ? "Observe the situation" : "Observe la situation"}
             </p>
             <p className="mt-3 text-lg font-semibold leading-8 text-slate-700">{scene.narration}</p>
             {scene.evidence !== scene.narration && (
@@ -528,9 +562,9 @@ export function ModuleTwoInvestigationLesson({ lesson, moduleId, canComplete }: 
           {scene.visual && <SceneVisual visual={scene.visual} accent={lesson.accent} />}
 
           {/* Evidence badge */}
-          <div className="mt-4 rounded-2xl border border-[#f1b7c8] bg-[#fff7f9] p-4 sm:p-5">
+          <div className="mt-4 hidden rounded-2xl border border-[#f1b7c8] bg-[#fff7f9] p-4 sm:block sm:p-5">
             <p className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[#a90f3c]">
-              <ShieldCheck className="h-4 w-4" /> Preuve collectée
+              <ShieldCheck className="h-4 w-4" /> {en ? "Evidence collected" : "Preuve collectée"}
             </p>
             <p className="mt-2 font-bold leading-7 text-slate-700">{scene.evidence}</p>
           </div>
@@ -538,7 +572,7 @@ export function ModuleTwoInvestigationLesson({ lesson, moduleId, canComplete }: 
           {/* Glossary */}
           {newWords.length > 0 && (
             <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-4">
-              <p className="text-xs font-black uppercase tracking-widest text-amber-800">Mots utiles</p>
+              <p className="text-xs font-black uppercase tracking-widest text-amber-800">{en ? "Useful words" : "Mots utiles"}</p>
               <dl className="mt-3 grid gap-2">
                 {newWords.map(([term, meaning]) => (
                   <div className="text-sm leading-6" key={term}>
@@ -603,17 +637,17 @@ export function ModuleTwoInvestigationLesson({ lesson, moduleId, canComplete }: 
         <button
           className="w-full rounded-lg border-2 border-slate-400 px-4 py-3 font-black disabled:opacity-30 sm:w-auto"
           disabled={sceneIndex === 0}
-          onClick={() => setSceneIndex((v) => v - 1)}
+          onClick={() => moveToScene(sceneIndex - 1)}
         >
           <ArrowLeft className="mr-2 inline h-4 w-4" />
-          Retour
+          {en ? "Back" : "Retour"}
         </button>
         <span className="text-center rounded-full bg-slate-100 px-4 py-2 text-sm font-black text-slate-600">
           {sceneIndex === 0
-            ? "Prends connaissance du dossier"
+            ? (en ? "Review the case file" : "Prends connaissance du dossier")
             : timeReady
-              ? "Temps d'observation validé"
-              : `Observe encore 0:${String(remaining).padStart(2, "0")}`}
+              ? (en ? "Observation time complete" : "Temps d'observation validé")
+              : en ? `Observe for 0:${String(remaining).padStart(2, "0")} more` : `Observe encore 0:${String(remaining).padStart(2, "0")}`}
         </span>
         {!complete ? (
           <button
@@ -622,7 +656,7 @@ export function ModuleTwoInvestigationLesson({ lesson, moduleId, canComplete }: 
             onClick={goNext}
             style={{ backgroundColor: lesson.accent }}
           >
-            Continuer <ArrowRight className="ml-2 inline h-4 w-4" />
+            {en ? "Continue" : "Continuer"} <ArrowRight className="ml-2 inline h-4 w-4" />
           </button>
         ) : canComplete ? (
           <Link
@@ -630,10 +664,10 @@ export function ModuleTwoInvestigationLesson({ lesson, moduleId, canComplete }: 
             href={`/student/modules/${moduleId}/lesson/${lesson.id}/quiz`}
             style={{ backgroundColor: lesson.accent }}
           >
-            Quiz final <ArrowRight className="ml-2 inline h-4 w-4" />
+                {en ? "Final quiz" : "Quiz final"} <ArrowRight className="ml-2 inline h-4 w-4" />
           </Link>
         ) : (
-          <span className="font-bold">Aperçu terminé</span>
+          <span className="font-bold">{en ? "Preview complete" : "Aperçu terminé"}</span>
         )}
       </footer>
     </section>

@@ -103,7 +103,7 @@ export function AdminChallengeManager({ challenges }: { challenges: Challenge[] 
         <label className="grid gap-1.5 text-sm font-bold">Titre<input className={fieldClass} minLength={3} name="title" required /></label>
         <label className="grid gap-1.5 text-sm font-bold">Description<textarea className={`${fieldClass} min-h-24 py-3`} minLength={10} name="description" required /></label>
         <label className="grid gap-1.5 text-sm font-bold">Instructions<textarea className={`${fieldClass} min-h-28 py-3`} minLength={10} name="instructions" placeholder="Une instruction par ligne" required /></label>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid gap-3 sm:grid-cols-2">
           <label className="grid gap-1.5 text-sm font-bold">XP<input className={fieldClass} defaultValue={50} min={1} name="points" required type="number" /></label>
           <label className="grid gap-1.5 text-sm font-bold">Date de debut<input className={fieldClass} defaultValue={new Date().toISOString().slice(0, 10)} name="weekStart" required type="date" /></label>
         </div>
@@ -118,22 +118,26 @@ export function AdminChallengeManager({ challenges }: { challenges: Challenge[] 
         <h2 className="font-display text-2xl font-extrabold text-brand-ink">Defis existants</h2>
         {challenges.length === 0 ? <p className="rounded-xl bg-white p-5 text-sm font-semibold text-slate-500">Aucun defi cree.</p> : null}
         {challenges.map((challenge) => (
-          <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm" key={challenge.id}>
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <div className="flex flex-wrap gap-2">
+          <article className="min-w-0 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5" key={challenge.id}>
+            <div className="grid min-w-0 gap-4">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="flex min-w-0 flex-wrap gap-2">
                   <span className={`rounded-full px-3 py-1 text-xs font-extrabold ${challenge.is_active && !challenge.archived_at ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-500"}`}>{challenge.archived_at ? "Archive" : challenge.is_active ? "Visible aux eleves" : "Brouillon"}</span>
                   <span className="rounded-full bg-cyan-50 px-3 py-1 text-xs font-extrabold text-cyan-900">{challenge.points} XP</span>
                 </div>
-                <h3 className="mt-3 font-display text-xl font-extrabold text-brand-blue">{challenge.title}</h3>
-                <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">{challenge.description}</p>
-                <p className="mt-3 text-xs font-bold text-slate-500">Debut: {challenge.week_start} · {challenge.registrations} inscription(s) · {challenge.activeRegistrations} en cours · {challenge.submittedRegistrations} rapport(s)</p>
-                <details className="mt-3 rounded-lg bg-slate-50 p-3 text-sm text-slate-700"><summary className="cursor-pointer font-extrabold">Voir les details</summary><p className="mt-2 whitespace-pre-line font-semibold">{challenge.instructions}</p><p className="mt-2 text-xs font-bold">Photo: {challenge.requires_photo ? "requise" : "optionnelle"} · Rapport: {challenge.requires_report ? "requis" : "optionnel"}</p></details>
+                <div className="flex shrink-0 gap-2">
+                  <button aria-label="Modifier le defi" className="grid h-11 w-11 place-items-center rounded-lg border border-slate-200 text-brand-blue hover:bg-slate-50" onClick={() => void editChallenge(challenge)} type="button"><Pencil className="h-4 w-4" /></button>
+                  <button aria-label="Archiver le defi" className="grid h-11 w-11 place-items-center rounded-lg border border-amber-200 text-amber-800 hover:bg-amber-50" disabled={Boolean(challenge.archived_at)} onClick={() => void updateChallenge(challenge.id, { archived: true }, "Defi archive.")} type="button"><Archive className="h-4 w-4" /></button>
+                  <button aria-label="Supprimer le defi" className="grid h-11 w-11 place-items-center rounded-lg border border-red-200 text-red-700 hover:bg-red-50" onClick={() => void deleteChallenge(challenge.id)} type="button"><Trash2 className="h-4 w-4" /></button>
+                </div>
               </div>
-              <div className="flex shrink-0 gap-2">
-                <button aria-label="Modifier le defi" className="rounded-lg border border-slate-200 p-2 text-brand-blue hover:bg-slate-50" onClick={() => void editChallenge(challenge)} type="button"><Pencil className="h-4 w-4" /></button>
-                <button aria-label="Archiver le defi" className="rounded-lg border border-amber-200 p-2 text-amber-800 hover:bg-amber-50" disabled={Boolean(challenge.archived_at)} onClick={() => void updateChallenge(challenge.id, { archived: true }, "Defi archive.")} type="button"><Archive className="h-4 w-4" /></button>
-                <button aria-label="Supprimer le defi" className="rounded-lg border border-red-200 p-2 text-red-700 hover:bg-red-50" onClick={() => void deleteChallenge(challenge.id)} type="button"><Trash2 className="h-4 w-4" /></button>
+              <div className="min-w-0">
+                <h3 className="break-words font-display text-xl font-extrabold leading-tight text-brand-blue">{challenge.title}</h3>
+                <p className="mt-2 break-words text-sm font-semibold leading-6 text-slate-600">{challenge.description}</p>
+                <div className="mt-3 grid gap-1 text-xs font-bold text-slate-500 sm:flex sm:flex-wrap sm:gap-x-2">
+                  <span>Début : {challenge.week_start}</span><span>{challenge.registrations} inscription(s)</span><span>{challenge.activeRegistrations} en cours</span><span>{challenge.submittedRegistrations} rapport(s)</span>
+                </div>
+                <details className="mt-3 min-w-0 rounded-lg bg-slate-50 p-3 text-sm text-slate-700"><summary className="cursor-pointer font-extrabold">Voir les détails</summary><p className="mt-2 break-words whitespace-pre-line font-semibold">{challenge.instructions}</p><p className="mt-2 text-xs font-bold">Photo : {challenge.requires_photo ? "requise" : "optionnelle"} · Rapport : {challenge.requires_report ? "requis" : "optionnel"}</p></details>
               </div>
             </div>
           </article>

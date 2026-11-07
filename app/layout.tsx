@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import { cookies } from "next/headers";
 
 import { AppProviders } from "@/components/providers/AppProviders";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
@@ -29,8 +30,9 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
+  const language = cookies().get("cybera-language")?.value === "en" ? "en" : "fr";
   return (
-    <html lang="fr" suppressHydrationWarning>
+    <html lang={language} suppressHydrationWarning>
       <body suppressHydrationWarning>
         <AppProviders>
           <OfflineSyncListener />

@@ -1,7 +1,7 @@
 import { moduleOne } from "@/lib/curriculum/module-one";
 import { moduleTwo } from "@/lib/curriculum/module-two";
-import { moduleThreeQuiz } from "@/lib/curriculum/module-three-quiz-banks";
-import { moduleFourQuiz } from "@/lib/curriculum/module-four-quiz-banks";
+import { moduleThree } from "@/lib/curriculum/module-three";
+import { moduleFour } from "@/lib/curriculum/module-four";
 
 export type ProgramModuleStatus = "ready" | "next" | "planned";
 
@@ -142,141 +142,11 @@ export type CapstoneSubmission = {
   status: "pending" | "approved" | "rejected";
 };
 
-function lesson(
-  id: string,
-  order: number,
-  title: string,
-  warning: string,
-  checklist: string[]
-): ProgramLesson {
-  const correctIndex = (order - 1) % 4;
-  const options = [
-    "Partager immediatement sans verifier",
-    "Ignorer les signaux d'alerte",
-    "Donner ses informations personnelles",
-    "Attendre qu'un probleme arrive"
-  ];
-  options[correctIndex] = checklist[0];
-
-  return {
-    id,
-    order,
-    title,
-    estimatedMins: 6,
-    content: [
-      {
-        type: "text",
-        content:
-          "Lis la situation, repere les signaux d'alerte, puis choisis une action simple que tu peux expliquer a un proche."
-      },
-      {
-        type: "warning",
-        content: warning
-      },
-      {
-        type: "checklist",
-        content: checklist
-      },
-      {
-        type: "tip",
-        content:
-          "Avant de partager, ralentis: verifier une source prend moins de temps que reparer une erreur publique."
-      }
-    ],
-    quiz: {
-      question: `Quelle action est recommandee dans la lecon « ${title} » ?`,
-      options,
-      correctIndex,
-      explanation: `${checklist[0]} est le bon reflexe a retenir.`
-    }
-  };
-}
-
 export const programModules: ProgramModule[] = [
   moduleOne,
   moduleTwo,
-  {
-    id: "online-scams-digital-safety",
-    week: 3,
-    title: "Digital Toolbox / Outils & Pratiques",
-    subtitle: "Des capacités pratiques que tu peux réellement utiliser",
-    summary:
-      "Passer de la théorie à l'action avec des méthodes concrètes pour vérifier, protéger, documenter et signaler.",
-    color: "#B7950B",
-    icon: "alert",
-    outcomes: ["Reconnaitre le phishing", "Documenter les faits", "Signaler une arnaque"],
-    status: "planned",
-    progressPercent: 0,
-    lessons: [
-      lesson("scams-cameroun", 1, "Arnaques courantes au Cameroun", "Les fraudeurs utilisent souvent urgence, gain rapide ou relation de confiance.", [
-        "Repere la promesse trop belle",
-        "Verifie le numero ou le compte",
-        "Demande un deuxieme avis"
-      ]),
-      lesson("phishing", 2, "Phishing, sextorsion et fraude financiere", "Ne paie jamais sous menace sans parler a un adulte ou une structure d'aide.", [
-        "Garder les preuves",
-        "Bloquer le contact",
-        "Signaler la tentative"
-      ]),
-      lesson("victime", 3, "Que faire si tu es victime", "La priorite est la securite, pas la honte.", [
-        "Changer le mot de passe",
-        "Prevenir une personne de confiance",
-        "Faire une capture des preuves"
-      ]),
-      lesson("aider-ami", 4, "Aider un ami victime", "Ecouter sans juger aide la victime a agir plus vite.", [
-        "Rester calme",
-        "Ne pas partager les preuves",
-        "Accompagner vers un adulte"
-      ]),
-      lesson("signaler", 5, "Ou signaler les arnaques", "Un signalement utile contient date, plateforme, compte et preuves.", [
-        "Noter la plateforme",
-        "Ajouter le lien ou handle",
-        "Decrire les faits clairement"
-      ])
-    ],
-    quiz: moduleThreeQuiz
-  },
-  {
-    id: "leadership-advocacy",
-    week: 4,
-    title: "Digital Citizenship Leadership / Leadership Citoyen Numérique",
-    subtitle: "Aider les autres à mieux naviguer dans le monde numérique",
-    summary:
-      "Transformer tes compétences en actions utiles pour ta famille, ton école ou ton quartier et devenir un guide responsable.",
-    color: "#6C3483",
-    icon: "trophy",
-    outcomes: ["Animer une sensibilisation", "Signaler collectivement", "Preparer le capstone"],
-    status: "planned",
-    progressPercent: 0,
-    lessons: [
-      lesson("leader", 1, "Etre un leader numerique positif", "Un ambassadeur donne l'exemple avant de donner des conseils.", [
-        "Expliquer simplement",
-        "Respecter la confidentialite",
-        "Agir avec constance"
-      ]),
-      lesson("forum", 2, "Utiliser le forum CyberAmbassador", "Le forum ne doit jamais exposer de donnees sensibles publiquement.", [
-        "Masquer les noms et numeros",
-        "Decrire le risque",
-        "Ajouter une preuve utile"
-      ]),
-      lesson("collectif", 3, "Signaler collectivement", "Une action coordonnee doit rester legale, calme et documentee.", [
-        "Suivre les consignes",
-        "Ne pas harceler",
-        "Marquer l'action faite"
-      ]),
-      lesson("soutenir", 4, "Soutenir les victimes", "La dignite de la personne passe avant la curiosite du groupe.", [
-        "Ecouter",
-        "Orienter",
-        "Proteger les preuves"
-      ]),
-      lesson("capstone", 5, "Concevoir ton projet capstone", "Un bon projet est petit, mesurable et utile localement.", [
-        "Choisir un public",
-        "Definir une action",
-        "Mesurer les personnes touchees"
-      ])
-    ],
-    quiz: moduleFourQuiz
-  }
+  moduleThree,
+  moduleFour
 ];
 
 export const cohorts: Cohort[] = [

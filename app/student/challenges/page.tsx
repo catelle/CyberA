@@ -4,7 +4,7 @@ import { Camera, CheckCircle2, Clock, Target } from "lucide-react";
 import { MascotCoach } from "@/components/gamified/CyberMascot";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { ChallengeRegistrationAction } from "@/components/forms/ChallengeRegistrationAction";
-import { requireRole } from "@/lib/auth/guards";
+import { requireAmbassadorTrack, requireRole } from "@/lib/auth/guards";
 import { listActiveChallengesWithFallback } from "@/lib/db/cybera";
 
 const statusLabels = {
@@ -14,7 +14,7 @@ const statusLabels = {
 };
 
 export default async function ChallengesPage() {
-  const user = await requireRole(["student"]);
+  const user = requireAmbassadorTrack(await requireRole(["student"]));
   const challenges = await listActiveChallengesWithFallback(10, user.supabaseUserId);
   const activeChallenge = challenges[0];
 

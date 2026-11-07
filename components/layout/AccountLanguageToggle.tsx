@@ -21,6 +21,7 @@ export function AccountLanguageToggle({ initialLanguage }: { initialLanguage: La
     if (response.ok) {
       setLanguage(next);
       window.localStorage.setItem("language", next);
+      document.cookie = `cybera-language=${next}; Path=/; Max-Age=31536000; SameSite=Lax`;
       document.documentElement.lang = next;
       router.refresh();
     }

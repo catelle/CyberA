@@ -19,14 +19,14 @@ type QuizPageProps = {
 export default async function QuizPage({ params }: QuizPageProps) {
   const user = await requireRole(["student", "admin", "facilitator"]);
   const isPreview = user.role === "admin" || user.role === "facilitator";
-  const programModule = await getPublishedProgramModuleById(params.id);
+  const programModule = await getPublishedProgramModuleById(params.id, user.language);
 
   if (!programModule) {
     notFound();
   }
 
   if (!isPreview) {
-    if (!(await isModuleUnlockedForStudent(user.supabaseUserId, programModule.week))) {
+    if (!(await isModuleUnlockedForStudent(user.supabaseUserId, programModule.week, user.programTrack))) {
       redirect("/student/modules?locked=1");
     }
 
@@ -48,7 +48,7 @@ export default async function QuizPage({ params }: QuizPageProps) {
         {isPreview ? (
           <LearningSpacePreviewNotice detail="Tu peux repondre a tout le quiz du module pour le relire. Aucun score, aucun point et aucun badge ne sont enregistres." />
         ) : null}
-        <QuizEngine module={programModule} preview={isPreview} userId={user.supabaseUserId} />
+        <QuizEngine language={user.language} module={programModule} preview={isPreview} userId={user.supabaseUserId} />
       </div>
     </DashboardShell>
   );

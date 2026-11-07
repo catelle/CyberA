@@ -1,10 +1,10 @@
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { requireRole } from "@/lib/auth/guards";
+import { requireAmbassadorTrack, requireRole } from "@/lib/auth/guards";
 import { listNotificationsForUser } from "@/lib/db/cybera";
 import { NotificationCards } from "@/components/notifications/NotificationCards";
 
 export default async function NotificationsPage() {
-  const user = await requireRole(["student"]);
+  const user = requireAmbassadorTrack(await requireRole(["student"]));
   const notifications = await listNotificationsForUser(user.supabaseUserId);
 
   return (

@@ -45,6 +45,24 @@ export async function DELETE(_request: Request, { params }: ChallengeRouteProps)
   if (!auth.ok) return auth.response;
 
   const supabase = createSupabaseAdminClient();
+  const [{ count: submissions }, { count: registrations }] = await Promise.all([
+    supabase
+      .from("challenge_submissions")
+      .select("id", { count: "exact", head: true })
+      .eq("challenge_id", params.id),
+    supabase
+      .from("challenge_registrations")
+      .select("id", { count: "exact", head: true })
+      .eq("challenge_id", params.id)
+  ]);
+
+  if ((submissions ?? 0) > 0 || (registrations ?? 0) > 0) {
+    return NextResponse.json(
+      { message: "Ce défi possède déjà une activité. Archive-le pour conserver les rapports et les XP." },
+      { status: 409 }
+    );
+  }
+
   const { error } = await supabase.from("challenges").delete().eq("id", params.id);
   if (error) return jsonError(error, "Impossible de supprimer le defi.");
   return NextResponse.json({ message: "Defi supprime." });

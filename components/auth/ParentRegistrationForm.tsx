@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 
 import { createSupabaseBrowserClient } from "@/lib/auth/supabase-client";
 import { getDictionary } from "@/lib/i18n/dictionary";
@@ -14,6 +14,17 @@ export function ParentRegistrationForm() {
   const [status, setStatus] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const t = getDictionary(language);
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem("language");
+    if (stored === "fr" || stored === "en") setLanguage(stored);
+    const handleLanguageChange = (event: Event) => {
+      const nextLanguage = (event as CustomEvent<Language>).detail;
+      if (nextLanguage === "fr" || nextLanguage === "en") setLanguage(nextLanguage);
+    };
+    window.addEventListener("cybera-language-change", handleLanguageChange);
+    return () => window.removeEventListener("cybera-language-change", handleLanguageChange);
+  }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -67,13 +78,19 @@ export function ParentRegistrationForm() {
   return (
     <form className="grid gap-5" onSubmit={handleSubmit}>
       <div className="field">
-        <label htmlFor="language">Langue / Language</label>
+        <label htmlFor="language">{language === "fr" ? "Langue" : "Language"}</label>
         <select
           id="language"
           value={language}
-          onChange={(event) => setLanguage(event.target.value as Language)}
+          onChange={(event) => {
+            const nextLanguage = event.target.value as Language;
+            window.localStorage.setItem("language", nextLanguage);
+            document.cookie = `cybera-language=${nextLanguage}; Path=/; Max-Age=31536000; SameSite=Lax`;
+            window.dispatchEvent(new CustomEvent("cybera-language-change", { detail: nextLanguage }));
+            setLanguage(nextLanguage);
+          }}
         >
-          <option value="fr">Francais</option>
+          <option value="fr">{language === "fr" ? "Francais" : "French"}</option>
           <option value="en">English</option>
         </select>
       </div>

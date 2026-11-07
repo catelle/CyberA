@@ -13,8 +13,10 @@ import { LearningSpacePreviewNotice } from "@/components/lesson/LearningSpacePre
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { requireRole } from "@/lib/auth/guards";
 import { getPublishedProgramModuleById, isModuleUnlockedForStudent } from "@/lib/db/cybera";
-import { moduleOneInvestigations } from "@/lib/curriculum/module-one-investigations";
+import { getModuleOneInvestigations } from "@/lib/curriculum/module-one-investigations";
 import { moduleTwoInvestigations } from "@/lib/curriculum/module-two-investigations";
+import { getModuleThreeInvestigations } from "@/lib/curriculum/module-three-investigations";
+import { moduleFourInvestigations } from "@/lib/curriculum/module-four-investigations";
 
 type LessonPageProps = {
   params: {
@@ -26,7 +28,7 @@ type LessonPageProps = {
 export default async function LessonPage({ params }: LessonPageProps) {
   const user = await requireRole(["student", "admin", "facilitator"]);
   const isPreview = user.role === "admin" || user.role === "facilitator";
-  const selectedModule = await getPublishedProgramModuleById(params.id);
+  const selectedModule = await getPublishedProgramModuleById(params.id, user.language);
   const lesson = selectedModule?.lessons.find(
     (item) => item.id === params.lessonId
   );
@@ -35,7 +37,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
     notFound();
   }
 
-  if (user.role === "student" && !(await isModuleUnlockedForStudent(user.supabaseUserId, selectedModule.week))) {
+  if (user.role === "student" && !(await isModuleUnlockedForStudent(user.supabaseUserId, selectedModule.week, user.programTrack))) {
     redirect("/student/modules?locked=1");
   }
 
@@ -51,7 +53,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
     return (
       <DashboardShell user={user} title={lesson.title}>
         {previewNotice}
-        <WelcomeBehindScreen canComplete={user.role === "student"} lessonId={lesson.id} moduleId={selectedModule.id} />
+              <WelcomeBehindScreen canComplete={user.role === "student"} language={user.language} lessonId={lesson.id} moduleId={selectedModule.id} />
       </DashboardShell>
     );
   }
@@ -60,17 +62,17 @@ export default async function LessonPage({ params }: LessonPageProps) {
     return (
       <DashboardShell user={user} title="Inside TikTok">
         {previewNotice}
-        <InsideTikTokLesson canComplete={user.role === "student"} lessonId={lesson.id} moduleId={selectedModule.id} />
+        <InsideTikTokLesson canComplete={user.role === "student"} language={user.language} lessonId={lesson.id} moduleId={selectedModule.id} />
       </DashboardShell>
     );
   }
 
-  const investigation = moduleOneInvestigations[lesson.id];
+  const investigation = getModuleOneInvestigations(user.language)[lesson.id];
   if (investigation) {
     return (
       <DashboardShell user={user} title={investigation.title}>
         {previewNotice}
-        <ModuleOneInvestigationLesson canComplete={user.role === "student"} lesson={investigation} moduleId={selectedModule.id} />
+        <ModuleOneInvestigationLesson canComplete={user.role === "student"} language={user.language} lesson={investigation} moduleId={selectedModule.id} />
       </DashboardShell>
     );
   }
@@ -80,7 +82,27 @@ export default async function LessonPage({ params }: LessonPageProps) {
     return (
       <DashboardShell user={user} title={survivalInvestigation.title}>
         {previewNotice}
-        <ModuleTwoInvestigationLesson canComplete={user.role === "student"} lesson={survivalInvestigation} moduleId={selectedModule.id} />
+        <ModuleTwoInvestigationLesson canComplete={user.role === "student"} language={user.language} lesson={survivalInvestigation} moduleId={selectedModule.id} />
+      </DashboardShell>
+    );
+  }
+
+  const academyInvestigation = getModuleThreeInvestigations(user.language)[lesson.id];
+  if (selectedModule.week === 3 && academyInvestigation) {
+    return (
+      <DashboardShell user={user} title={academyInvestigation.title}>
+        {previewNotice}
+        <ModuleTwoInvestigationLesson canComplete={user.role === "student"} language={user.language} lesson={academyInvestigation} moduleId={selectedModule.id} theme="toolbox" />
+      </DashboardShell>
+    );
+  }
+
+  const ambassadorInvestigation = moduleFourInvestigations[lesson.id];
+  if (selectedModule.week === 4 && ambassadorInvestigation) {
+    return (
+      <DashboardShell user={user} title={ambassadorInvestigation.title}>
+        {previewNotice}
+        <ModuleTwoInvestigationLesson canComplete={user.role === "student"} language={user.language} lesson={ambassadorInvestigation} moduleId={selectedModule.id} theme="ambassador" />
       </DashboardShell>
     );
   }
@@ -93,14 +115,14 @@ export default async function LessonPage({ params }: LessonPageProps) {
         <div className="grid gap-4 lg:grid-cols-[1fr_21rem] lg:items-center">
           <div className="min-w-0">
             <p className="text-sm font-black uppercase text-tertiary">
-              {selectedModule.title} / Lecon {lesson.order}
+              {selectedModule.title} / {user.language === "en" ? "Lesson" : "Lecon"} {lesson.order}
             </p>
             <h2 className="mt-2 break-words font-display text-2xl font-black leading-tight text-brand-ink sm:text-3xl">
               {lesson.title}
             </h2>
           </div>
           <MascotCoach mascotMood="focus">
-            Lis, repere le signal important, puis garde une action simple en tete.
+            {user.language === "en" ? "Read, identify the important signal, then keep one simple action in mind." : "Lis, repere le signal important, puis garde une action simple en tete."}
           </MascotCoach>
         </div>
 
@@ -175,7 +197,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
             className="inline-flex min-h-12 w-full items-center justify-center rounded-lg border-2 border-secondary bg-white px-4 font-black text-brand-blue shadow-[0_4px_0_0_rgba(88,96,98,1)] transition hover:bg-brand-sky sm:w-fit"
             href={`/student/modules/${selectedModule.id}`}
           >
-            Retour au module
+            {user.language === "en" ? "Back to module" : "Retour au module"}
           </Link>
           <Link
             className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border-2 border-secondary bg-brand-blue px-4 font-black text-white shadow-[0_4px_0_0_rgba(88,96,98,1)] transition hover:bg-brand-ink sm:w-fit"

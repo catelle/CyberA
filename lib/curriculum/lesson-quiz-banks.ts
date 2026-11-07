@@ -1,8 +1,8 @@
 import type { LessonQuizQuestion } from "@/lib/program";
 import { moduleOneLessonQuizBanks } from "@/lib/curriculum/module-one-quiz-banks";
 import { moduleTwoLessonQuizBanks } from "@/lib/curriculum/module-two-quiz-banks";
-import { moduleThreeLessonQuizBanks } from "@/lib/curriculum/module-three-quiz-banks";
-import { moduleFourLessonQuizBanks } from "@/lib/curriculum/module-four-quiz-banks";
+import { moduleThreeLessonQuizBanks } from "@/lib/curriculum/module-three";
+import { moduleFourLessonQuizBanks } from "@/lib/curriculum/module-four";
 import { moduleTwo } from "@/lib/curriculum/module-two";
 
 const digitalSurvivorQuizBanks = Object.fromEntries(

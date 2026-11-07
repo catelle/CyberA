@@ -1,45 +1,18 @@
-import { createReadStream } from "fs";
 import { join } from "path";
 import * as PImage from "pureimage";
 import { PassThrough } from "stream";
 
 const BRAND_RED = "#BD0F43";
+const BRAND_RED_DARK = "#8F0B32";
 const BRAND_PINK = "#F7C8D4";
 const BRAND_INK = "#111827";
-const BRAND_MUTED = "#667085";
 
-const regularFont = PImage.registerFont(
-  join(process.cwd(), "public/fonts/DejaVuSans.ttf"),
-  "CyberA Regular"
-);
-const boldFont = PImage.registerFont(
-  join(process.cwd(), "public/fonts/DejaVuSans-Bold.ttf"),
-  "CyberA Bold"
-);
+const regularFont = PImage.registerFont(join(process.cwd(), "public/fonts/DejaVuSans.ttf"), "CyberA Regular");
+const boldFont = PImage.registerFont(join(process.cwd(), "public/fonts/DejaVuSans-Bold.ttf"), "CyberA Bold");
 regularFont.loadSync();
 boldFont.loadSync();
 
-function circle(
-  ctx: PImage.Context,
-  x: number,
-  y: number,
-  radius: number,
-  color: string
-) {
-  ctx.beginPath();
-  ctx.arc(x, y, radius, 0, Math.PI * 2);
-  ctx.fillStyle = color;
-  ctx.fill();
-}
-
-function centeredText(
-  ctx: PImage.Context,
-  text: string,
-  y: number,
-  size: number,
-  color: string,
-  family = "CyberA Bold"
-) {
+function centeredText(ctx: PImage.Context, text: string, y: number, size: number, color: string, family = "CyberA Bold") {
   ctx.font = `${size}px '${family}'`;
   ctx.fillStyle = color;
   ctx.textAlign = "center";
@@ -50,12 +23,10 @@ function wrapText(ctx: PImage.Context, text: string, maxWidth: number) {
   const words = text.trim().split(/\s+/);
   const lines: string[] = [];
   let current = "";
-
   for (const word of words) {
     const candidate = current ? `${current} ${word}` : word;
-    if (ctx.measureText(candidate).width <= maxWidth || !current) {
-      current = candidate;
-    } else {
+    if (ctx.measureText(candidate).width <= maxWidth || !current) current = candidate;
+    else {
       lines.push(current);
       current = word;
     }
@@ -64,52 +35,81 @@ function wrapText(ctx: PImage.Context, text: string, maxWidth: number) {
   return lines;
 }
 
-export async function createBadgePng({
-  badgeName,
-  moduleTitle
-}: {
-  badgeName: string;
-  moduleTitle: string;
-}) {
+function shieldPath(ctx: PImage.Context, inset = 0) {
+  const left = 68 + inset;
+  const right = 732 - inset;
+  const top = 45 + inset;
+  const shoulder = 196 + inset * 0.45;
+  const bottom = 755 - inset;
+  ctx.beginPath();
+  ctx.moveTo(400, top);
+  ctx.lineTo(right, shoulder);
+  ctx.lineTo(right, 391);
+  ctx.bezierCurveTo(right, 570, 620, 690, 400, bottom);
+  ctx.bezierCurveTo(180, 690, left, 570, left, 391);
+  ctx.lineTo(left, shoulder);
+  ctx.closePath();
+}
+
+function star(ctx: PImage.Context, x: number, y: number, outer: number, inner: number) {
+  ctx.beginPath();
+  for (let point = 0; point < 10; point += 1) {
+    const radius = point % 2 === 0 ? outer : inner;
+    const angle = -Math.PI / 2 + (point * Math.PI) / 5;
+    const px = x + Math.cos(angle) * radius;
+    const py = y + Math.sin(angle) * radius;
+    if (point === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+  ctx.fill();
+}
+
+export async function createBadgePng({ badgeName: _badgeName, moduleTitle }: { badgeName: string; moduleTitle: string }) {
   const image = PImage.make(800, 800);
   const ctx = image.getContext("2d");
 
-  // Minimal round badge: white remains dominant, with restrained brand accents.
-  circle(ctx, 400, 400, 382, BRAND_RED);
-  circle(ctx, 400, 400, 366, "#FFFFFF");
-  circle(ctx, 400, 400, 346, "#FFF8FA");
+  shieldPath(ctx);
+  ctx.fillStyle = BRAND_RED;
+  ctx.fill();
+  shieldPath(ctx, 21);
+  ctx.strokeStyle = "#FFFFFF";
+  ctx.lineWidth = 13;
+  ctx.stroke();
 
-  centeredText(ctx, "SYKOTI · CYBERA", 92, 25, BRAND_RED);
-  centeredText(ctx, "MODULE VALIDÉ", 132, 18, BRAND_MUTED, "CyberA Regular");
+  centeredText(ctx, "SYKOTI", 190, 63, "#FFFFFF");
+  centeredText(ctx, "C E N T E R", 235, 27, "#FFFFFF", "CyberA Regular");
 
-  const logo = await PImage.decodePNGFromStream(
-    createReadStream(
-      join(process.cwd(), "public/images/brand/sykoti-awareness-center-logo.png")
-    )
-  );
-  ctx.drawImage(logo, 315, 158, 170, 170);
+  ctx.beginPath();
+  ctx.moveTo(38, 306);
+  ctx.lineTo(762, 306);
+  ctx.lineTo(762, 400);
+  ctx.bezierCurveTo(760, 454, 746, 500, 720, 546);
+  ctx.lineTo(80, 546);
+  ctx.bezierCurveTo(54, 500, 40, 454, 38, 400);
+  ctx.closePath();
+  ctx.fillStyle = "#FFFFFF";
+  ctx.fill();
+  ctx.strokeStyle = BRAND_RED_DARK;
+  ctx.lineWidth = 8;
+  ctx.stroke();
 
-  ctx.fillStyle = BRAND_PINK;
-  ctx.fillRect(180, 354, 440, 4);
-
-  ctx.font = "38px 'CyberA Bold'";
-  const moduleLines = wrapText(ctx, moduleTitle, 560).slice(0, 4);
-  const lineHeight = 47;
-  const firstLineY = 420 - ((moduleLines.length - 1) * lineHeight) / 2;
-  moduleLines.forEach((line, index) => {
-    centeredText(ctx, line, firstLineY + index * lineHeight, 38, BRAND_INK);
-  });
-
-  const cleanedBadgeName = badgeName
-    .replace(/^badge\s+/i, "")
-    .trim();
-  if (cleanedBadgeName && cleanedBadgeName !== moduleTitle) {
-    centeredText(ctx, cleanedBadgeName, 590, 22, BRAND_RED);
+  ctx.font = "42px 'CyberA Bold'";
+  let moduleLines = wrapText(ctx, moduleTitle.toLocaleUpperCase("fr"), 610).slice(0, 3);
+  let moduleSize = 42;
+  if (moduleLines.length > 2) {
+    moduleSize = 34;
+    ctx.font = `${moduleSize}px 'CyberA Bold'`;
+    moduleLines = wrapText(ctx, moduleTitle.toLocaleUpperCase("fr"), 610).slice(0, 3);
   }
+  const lineHeight = moduleSize + 9;
+  const firstLineY = 415 - ((moduleLines.length - 1) * lineHeight) / 2;
+  moduleLines.forEach((line, index) => centeredText(ctx, line, firstLineY + index * lineHeight, moduleSize, BRAND_INK));
 
-  circle(ctx, 400, 646, 7, BRAND_RED);
-  centeredText(ctx, "CYBERAMBASSADEURS", 690, 23, BRAND_RED);
-  centeredText(ctx, "LEARN · ACT · LEAD", 725, 17, BRAND_MUTED, "CyberA Regular");
+  centeredText(ctx, "CERTIFICATE OF", 610, 29, "#FFFFFF", "CyberA Regular");
+  centeredText(ctx, "COMPLETION", 648, 35, "#FFFFFF");
+  ctx.fillStyle = BRAND_PINK;
+  star(ctx, 400, 700, 24, 11);
 
   const stream = new PassThrough();
   const chunks: Buffer[] = [];

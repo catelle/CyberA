@@ -26,12 +26,14 @@ import {
   startAmbientLoop,
   stopAmbientLoop,
 } from "@/lib/sounds";
+import type { Language } from "@/types/auth";
 
 type Props = {
   lesson: InvestigationLesson;
   moduleId: string;
   canComplete: boolean;
   startImmediately?: boolean;
+  language?: Language;
 };
 const MIN_SCENE_SECONDS = 15;
 
@@ -94,7 +96,9 @@ export function ModuleOneInvestigationLesson({
   moduleId,
   canComplete,
   startImmediately = false,
+  language = "fr",
 }: Props) {
+  const en = language === "en";
   const [started, setStarted] = useState(startImmediately);
   const [sceneIndex, setSceneIndex] = useState(0);
   const [choice, setChoice] = useState<number | null>(null);
@@ -112,11 +116,11 @@ export function ModuleOneInvestigationLesson({
   const newWords = glossary
     .filter(([term]) => sceneCopy.includes(term.toLocaleLowerCase("fr")))
     .slice(0, 3);
-  const phase = scene.eyebrow.includes("Observer")
+  const phase = scene.eyebrow.includes(en ? "Observe" : "Observer")
     ? "observe"
-    : scene.eyebrow.includes("Comprendre")
+    : scene.eyebrow.includes(en ? "Understand" : "Comprendre")
       ? "understand"
-      : scene.eyebrow.includes("Vérifier")
+      : scene.eyebrow.includes(en ? "Verify" : "Vérifier")
         ? "verify"
         : "other";
   const evidence = scene.evidence.replace(/^Point de départ\s*:\s*/i, "");
@@ -186,7 +190,7 @@ export function ModuleOneInvestigationLesson({
             className="text-xs font-black uppercase tracking-[.25em]"
             style={{ color: lesson.accent }}
           >
-            {lesson.atmosphere} · nouvelle enquête
+            {lesson.atmosphere} · {en ? "new investigation" : "nouvelle enquête"}
           </p>
           <h1 className="mt-4 font-display text-4xl font-black sm:text-6xl">
             {lesson.title}
@@ -197,9 +201,9 @@ export function ModuleOneInvestigationLesson({
           <div className="mx-auto mt-7 flex max-w-xl items-center gap-3 rounded-2xl border border-white/15 bg-white/10 p-4 text-left backdrop-blur">
             <CyberMascot mood="focus" size="sm" />
             <p className="font-bold text-white/85">
-              Coach Cyber va t'accompagner scène par scène. Lis, attends,
-              réponds quand il y a une question, puis avance seulement quand
-              l'idée est claire.
+              {en
+                ? "Coach Cyber will guide you scene by scene. Read carefully, answer when a question appears, and move on only when the idea is clear."
+                : "Coach Cyber va t'accompagner scène par scène. Lis, attends, réponds quand il y a une question, puis avance seulement quand l'idée est claire."}
             </p>
           </div>
           <button
@@ -208,7 +212,7 @@ export function ModuleOneInvestigationLesson({
             style={{ backgroundColor: lesson.accent }}
             type="button"
           >
-            Ouvrir l'enquête <ArrowRight className="ml-2 inline h-4 w-4" />
+            {en ? "Open investigation" : "Ouvrir l'enquête"} <ArrowRight className="ml-2 inline h-4 w-4" />
           </button>
         </div>
       </section>
@@ -224,10 +228,10 @@ export function ModuleOneInvestigationLesson({
           <CyberMascot mood={toast === "bad" ? "sad" : "celebrate"} size="sm" />
           <span>
             {toast === "bad"
-              ? "Pas encore. Relis l'idée principale et essaie autrement."
+              ? en ? "Not yet. Re-read the main idea and try again." : "Pas encore. Relis l'idée principale et essaie autrement."
               : toast === "done"
-                ? "Congratulations. Tu as reconstruit le mécanisme."
-                : "Yeah. La piste est bonne, continue."}
+                ? en ? "Congratulations. You rebuilt the mechanism." : "Congratulations. Tu as reconstruit le mécanisme."
+                : en ? "Good lead. Continue the investigation." : "Yeah. La piste est bonne, continue."}
           </span>
         </div>
       ) : null}
@@ -251,7 +255,7 @@ export function ModuleOneInvestigationLesson({
       <div className="mx-auto grid max-w-5xl gap-6 p-4 sm:p-6 lg:p-8">
         <figure className="relative h-[220px] overflow-hidden rounded-2xl bg-[#070b18] shadow-[0_16px_45px_rgba(7,11,24,.22)] sm:h-[280px] lg:h-[320px]">
           <Image
-            alt={`Illustration de ${lesson.title}`}
+            alt={en ? `Illustration of ${lesson.title}` : `Illustration de ${lesson.title}`}
             className="investigation-camera object-cover opacity-65"
             fill
             priority={sceneIndex === 0}
@@ -306,7 +310,7 @@ export function ModuleOneInvestigationLesson({
           </h2>
           <div
             className="mt-5"
-            aria-label={`Scène ${sceneIndex + 1} sur ${lesson.scenes.length}`}
+            aria-label={en ? `Scene ${sceneIndex + 1} of ${lesson.scenes.length}` : `Scène ${sceneIndex + 1} sur ${lesson.scenes.length}`}
           >
             <div className="flex gap-1">
               {lesson.scenes.map((item, index) => (
@@ -322,29 +326,29 @@ export function ModuleOneInvestigationLesson({
               ))}
             </div>
             <p className="mt-2 text-right text-[10px] font-black uppercase tracking-widest text-slate-400">
-              Scène {sceneIndex + 1} sur {lesson.scenes.length}
+              {en ? "Scene" : "Scène"} {sceneIndex + 1} {en ? "of" : "sur"} {lesson.scenes.length}
             </p>
           </div>
           <div className="mt-5 rounded-2xl border-2 border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-            <p className="flex items-center gap-2 text-xs font-black uppercase tracking-widest" style={{ color: lesson.accent }}><Sparkles className="h-4 w-4" />{phase === "observe" ? "Observe la situation" : phase === "verify" ? "Prépare ta réponse" : "Comprendre la scène"}</p>
+            <p className="flex items-center gap-2 text-xs font-black uppercase tracking-widest" style={{ color: lesson.accent }}><Sparkles className="h-4 w-4" />{en ? phase === "observe" ? "Observe the situation" : phase === "verify" ? "Prepare your answer" : "Understand the scene" : phase === "observe" ? "Observe la situation" : phase === "verify" ? "Prépare ta réponse" : "Comprendre la scène"}</p>
             <div className="mt-3 text-lg font-semibold leading-8 text-slate-700">
               <p>{scene.narration}</p>
-              {phase === "observe" ? <p className="mt-3">Cette situation révèle une première idée : <strong className="text-slate-950">{evidence}</strong></p> : null}
-              {phase === "understand" ? <p className="mt-3"><strong className="text-slate-950">Autrement dit : {evidence}</strong></p> : null}
-              {phase === "verify" ? <p className="mt-3">Pour répondre, appuie-toi sur cette idée : <strong className="text-slate-950">{evidence}</strong></p> : null}
+              {phase === "observe" ? <p className="mt-3">{en ? "This situation reveals a first idea:" : "Cette situation révèle une première idée :"} <strong className="text-slate-950">{evidence}</strong></p> : null}
+              {phase === "understand" ? <p className="mt-3"><strong className="text-slate-950">{en ? "In other words: " : "Autrement dit : "}{evidence}</strong></p> : null}
+              {phase === "verify" ? <p className="mt-3">{en ? "Use this idea to answer:" : "Pour répondre, appuie-toi sur cette idée :"} <strong className="text-slate-950">{evidence}</strong></p> : null}
               {phase === "other" && evidence !== scene.narration ? <p className="mt-3"><strong className="text-slate-950">{evidence}</strong></p> : null}
             </div>
           </div>
           <div className="mt-4 rounded-2xl border border-[#f1b7c8] bg-[#fff7f9] p-4 sm:p-5">
             <p className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[#a90f3c]">
-              <ShieldCheck className="h-4 w-4" /> Preuve collectée
+              <ShieldCheck className="h-4 w-4" /> {en ? "Evidence collected" : "Preuve collectée"}
             </p>
             <p className="mt-2 font-bold leading-7 text-slate-700">{evidence}</p>
           </div>
           {newWords.length ? (
             <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-4">
               <p className="text-xs font-black uppercase tracking-widest text-amber-800">
-                Mots utiles
+                {en ? "Useful words" : "Mots utiles"}
               </p>
               <dl className="mt-3 grid gap-2">
                 {newWords.map(([term, meaning]) => (
@@ -382,7 +386,7 @@ export function ModuleOneInvestigationLesson({
             <div className="mt-5 rounded-2xl bg-emerald-50 p-5">
               <p className="flex items-center gap-2 font-black text-emerald-800">
                 <ShieldCheck className="h-5 w-5" />
-                Mission réelle
+                {en ? "Real-world mission" : "Mission réelle"}
               </p>
               <ul className="mt-3 grid gap-2">
                 {lesson.mission.map((item) => (
@@ -409,14 +413,14 @@ export function ModuleOneInvestigationLesson({
           onClick={() => { setSceneIndex((value) => value - 1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
         >
           <ArrowLeft className="mr-2 inline h-4 w-4" />
-          Retour
+          {en ? "Back" : "Retour"}
         </button>
         <span className="rounded-full bg-slate-100 px-4 py-2 text-sm font-black text-slate-600">
           {sceneIndex === 0
-            ? "Prends connaissance de la mission"
+            ? (en ? "Review the mission" : "Prends connaissance de la mission")
             : timeReady
-            ? "Temps d'observation validé"
-            : `Observe encore 0:${String(remaining).padStart(2, "0")}`}
+            ? (en ? "Observation time complete" : "Temps d'observation validé")
+            : en ? `Observe for 0:${String(remaining).padStart(2, "0")} more` : `Observe encore 0:${String(remaining).padStart(2, "0")}`}
         </span>
         {!complete ? (
           <button
@@ -425,7 +429,7 @@ export function ModuleOneInvestigationLesson({
             onClick={goNext}
             style={{ backgroundColor: lesson.accent }}
           >
-            Continuer <ArrowRight className="ml-2 inline h-4 w-4" />
+            {en ? "Continue" : "Continuer"} <ArrowRight className="ml-2 inline h-4 w-4" />
           </button>
         ) : canComplete ? (
           <Link
@@ -433,13 +437,12 @@ export function ModuleOneInvestigationLesson({
             href={`/student/modules/${moduleId}/lesson/${lesson.id}/quiz`}
             style={{ backgroundColor: lesson.accent }}
           >
-            Quiz final <ArrowRight className="ml-2 inline h-4 w-4" />
+            {en ? "Final quiz" : "Quiz final"} <ArrowRight className="ml-2 inline h-4 w-4" />
           </Link>
         ) : (
-          <span className="font-bold">Aperçu terminé</span>
+          <span className="font-bold">{en ? "Preview complete" : "Aperçu terminé"}</span>
         )}
       </footer>
     </section>
   );
 }
-

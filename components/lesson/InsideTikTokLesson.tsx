@@ -28,8 +28,9 @@ import {
   startAmbientLoop,
   stopAmbientLoop,
 } from "@/lib/sounds";
+import type { Language } from "@/types/auth";
 
-type Props = { moduleId: string; lessonId: string; canComplete: boolean };
+type Props = { moduleId: string; lessonId: string; canComplete: boolean; language?: Language };
 type Scene = {
   eyebrow: string;
   title: string;
@@ -79,6 +80,20 @@ const backstageByMission = [
   "La plateforme compare plusieurs vidéos possibles et estime, pour chacune, la réaction la plus probable. Elle les met ensuite dans un ordre et affiche d'abord celles qui semblent avoir le plus de chances de t'intéresser. Ta réaction produit de nouveaux signaux, et le classement suivant peut déjà être différent.",
   "Le profil utilisé par la recommandation est une hypothèse construite à partir de régularités. Il ne contient ni tes pensées ni ton intention réelle. Une curiosité passagère peut donc être prise pour un intérêt durable, tandis que des recherches et des choix variés peuvent progressivement ouvrir d'autres directions.",
   "Le défilement continu, la lecture automatique et l'arrivée imprévisible d'une vidéo très intéressante suppriment les pauses naturelles. Cette conception facilite la continuation sans t'obliger à choisir consciemment. Une intention précise, une minuterie et un point d'arrêt décidé avant d'ouvrir l'application redonnent une limite claire.",
+];
+
+const missionsEn = [
+  { title: "Mission 1 · From your gesture to a signal", goal: "Start from zero: understand a personalized feed and see how a simple action becomes a measurable signal.", win: "You can distinguish an action, its measurement and the signal it creates." },
+  { title: "Mission 2 · From signal to recommendation", goal: "Follow several signals through prediction, video ranking and the loop that restarts after every reaction.", win: "You can rebuild the recommendation engine step by step." },
+  { title: "Mission 3 · What the algorithm can—and cannot—know", goal: "See how repetition shapes your feed, why predictions can be wrong and how to deliberately broaden recommendations.", win: "You can distinguish a useful prediction from a truth about you." },
+  { title: "Mission 4 · Protect your attention", goal: "Connect infinite scrolling, autoplay and surprise, then create a stopping point the app does not provide.", win: "You can recognize the attention loop and set your own limit." },
+];
+
+const backstageByMissionEn = [
+  "The player records visible events such as start, finish, quick skip, replay, like and share. These events become signals linked to the video and account. Alone they say little; repeated and combined, they help estimate which content may hold your attention.",
+  "The platform compares possible videos and estimates the most likely reaction to each one. It ranks them and shows the videos most likely to interest you. Your reaction creates new signals, so the next ranking may already be different.",
+  "The recommendation profile is a hypothesis built from patterns. It contains neither your thoughts nor your true intention. A passing curiosity can look like a lasting interest, while varied choices can gradually open new directions.",
+  "Continuous scrolling, autoplay and the unpredictable arrival of an interesting video remove natural pauses. A clear intention, an outside timer and a stopping point chosen before opening the app restore a boundary.",
 ];
 
 const s = (
@@ -390,9 +405,36 @@ const scenes: Scene[] = [
   ),
 ];
 
+const scenesEn: Scene[] = [
+  s("Step 1 · Starting point", "Your TikTok feed is not a fixed list.", "When you open TikTok, the app selects a small set from millions of available videos. This For You feed is personalized for each account, even when two friends open the app at the same moment.", "First idea: TikTok builds a personalized feed for every account.", "We know what TikTok builds. Now let us look at the information it uses.", images.feeds),
+  s("Step 2 · An action becomes data", "TikTok observes what you do, not what you think.", "Imagine a 20-second video. If you watch all of it, TikTok does not know whether you found it funny or touching; it only knows that you watched 20 seconds out of 20. This measurable fact becomes a signal.", "A measurable action becomes data called a signal.", "Before discussing algorithms, check that you can recognize a signal.", images.signals, "Which piece of information is a measurable signal?", ["You found the video funny", "You watched 20 seconds out of 20", "You were thinking about a friend", "You were in a good mood"], 1),
+  s("Step 3 · Essential signals", "Watching, replaying, liking and skipping do not mean the same thing.", "Watching for a long time sends an attention signal. Replaying strengthens it. A like or share is a deliberate confirmation, while skipping in a fraction of a second suggests that the video did not hold you.", "TikTok compares several signals instead of reading one button.", "Let us start with the quietest signal: time.", images.signals),
+  s("Step 4 · Watch time", "The longer you stay, the more precise the signal becomes.", "Watching for one second proves very little. Finishing a football video and replaying it provides stronger evidence. That is why watch time matters so much in the signal calculation.", "Finishing and replaying usually create a stronger signal than a brief appearance.", "Apply this rule to a concrete case.", images.signals, "Which behaviour shows the strongest attention?", ["Skip after one second", "Finish the video and replay it", "Open TikTok", "Lower the brightness"], 1),
+  s("Checkpoint 1 · From action to signal", "Check the first part of the mechanism.", "You have seen your feed become personalized and each action turn into a measurable signal. Remember: none of these signals directly reveals what you truly think; they only record what you do.", "Learned chain: action → measurement → signal.", "Now see how several signals become a recommendation.", images.signals, "What does TikTok know when you finish a video?", ["The exact reason you were interested", "That the video held your attention", "All your thoughts", "That you want to buy it"], 1),
+  s("Step 5 · Gathering clues", "One signal is not enough.", "You may finish a video out of curiosity without wanting to replay or like it. TikTok therefore combines watch time, replays, likes, shares, comments and quick skips to build a more reliable picture of what interests you.", "A repeated combination is more informative than one isolated action.", "See how the system uses that combination.", images.train),
+  s("Step 6 · Making a prediction", "The algorithm tries to predict your next reaction.", "Using the signals you left in the past, the system estimates how you might react to several candidate videos: will you stay, skip, like, ignore, share or forget?", "A recommendation is a prediction, not a certainty.", "The system still has to choose between predictions.", images.train),
+  s("Step 7 · Ranking videos", "The highest predicted score comes first.", "Imagine football, cooking and dance videos competing for the next place in your feed. If football receives the highest predicted attention score, that video appears first.", "TikTok ranks videos according to the reaction it predicts.", "Then it checks its prediction against your reaction.", images.train),
+  s("Step 8 · The learning loop", "TikTok shows, you react, TikTok adjusts.", "The system shows a video. Your reaction—watching, skipping or sharing—creates new signals. Those signals change the ranking of the next video. The loop restarts with every gesture.", "Loop: recommendation → action → signal → new recommendation.", "Who supplies the new signals each time?", images.train, "Who provides the new signals on each turn?", ["Only creators", "You, through your actions", "The battery", "Chance"], 1),
+  s("Checkpoint 2 · Building a recommendation", "Put the mechanism in the right order.", "An action becomes a signal. The signal helps rank videos. The selected video causes another action, which restarts the cycle.", "You can explain the engine without saying that it reads minds.", "See what this loop changes in your feed.", images.train, "Which order is correct?", ["Thought → magic → video", "Action → signal → prediction → video", "Video → battery → chance", "Like → absolute truth"], 1),
+  s("Step 9 · Repetition strengthens a topic", "Your habits give your feed a direction.", "If you finish several football videos in a row, the system sees a pattern rather than a coincidence. It offers more football content to test whether your attention continues.", "Repeated signals strengthen a hypothesis about your interests.", "But that hypothesis can still be wrong.", images.feeds),
+  s("Step 10 · A prediction can be wrong", "Watching does not always mean liking.", "You might finish a recipe to help your mother, or replay a video because you did not understand it. TikTok records the same actions in both cases without knowing the real reason.", "The calculated profile is an evolving estimate, not your identity.", "What happens if the same estimate grows for too long?", images.limits),
+  s("Step 11 · The feed can narrow", "One topic can hide the others.", "When one topic repeatedly receives strong signals, TikTok shows more of it. Your screen becomes less varied—not because other topics disappeared, but because they are shown to you less often.", "A recommendation loop can limit what you encounter.", "Fortunately, you can send new signals.", images.limits),
+  s("Step 12 · Correcting the direction", "You can train your feed deliberately.", "Search for another topic, watch useful new content and quickly skip what you no longer want. Repeated actions gradually change the predictions made about you.", "Changing your actions changes the data used by the system.", "Choose the action that truly broadens a feed.", images.limits, "Which action best diversifies your feed?", ["Always watch the same topic", "Deliberately search for different sources and topics", "Never use the controls", "Believe every recommendation"], 1),
+  s("Checkpoint 3 · Prediction is not understanding", "Set a clear limit for the algorithm.", "TikTok detects patterns and predicts reactions, but it can be wrong because it never fully knows your context or intention.", "A good prediction is not an understanding of your thoughts.", "Now see why stopping the loop can be difficult.", images.limits, "Which statement is correct?", ["TikTok always knows your reason", "TikTok predicts from signals and can make mistakes", "TikTok reads all your thoughts", "TikTok uses no data"], 1),
+  s("Step 13 · An endless sequence", "Infinite scrolling removes the stopping point.", "A book has a last page. In your feed, another video appears whenever you swipe up. Nothing naturally tells you that you are finished.", "Without a visible ending, stopping requires a deliberate decision.", "Another mechanism makes continuation even easier.", images.scroll),
+  s("Step 14 · The next video starts automatically", "Autoplay reduces effort.", "When one video ends, the next starts without you asking. Continuing takes almost no effort; leaving requires a deliberate gesture to interrupt the motion.", "Autoplay makes continuing easier than stopping.", "Why stay after several average videos?", images.scroll),
+  s("Step 15 · Surprise keeps you waiting", "The next video could be excellent.", "After two ordinary videos, a hilarious one may appear. Because you cannot predict when the good surprise will arrive, your thumb keeps moving to check once more.", "Infinite scroll, autoplay and unpredictable reward work together.", "Check that you recognize this combination.", images.scroll, "Which combination can prolong a session?", ["Infinite scroll, autoplay and an unpredictable reward", "A dark screen and airplane mode", "A timer and a break", "A closed app"], 0),
+  s("Step 16 · Create your stopping point", "Add the limit the app removed.", "Before opening TikTok, choose a clear intention and time limit. Set a timer outside the app. When it rings, close the app before deciding calmly whether you really want to continue.", "A prepared limit protects you better than a decision made while scrolling.", "Let us gather the journey into one simple method.", images.scroll),
+  s("Final checkpoint · Algorithm Investigator", "You no longer see only videos. You see the loop.", "You now know that a feed is personal, each gesture becomes a signal, design choices can hold your attention and the machine can still be wrong. Choose the reflex that makes you independent.", "A CyberAmbassador asks how the system works, what it learns and how to use it intentionally.", "Answer, then join Coach Cyber in the final quiz to unlock the next investigation.", images.limits, "Which reflex shows that you are taking back control?", ["Watch without questioning the feed", "Believe every recommendation is true", "Observe signals, set an intention and explore other sources", "Memorize every video"], 2),
+].map((copy, index) => ({ ...scenes[index], ...copy }));
+
 const MIN_SECONDS = 15;
 
-export function InsideTikTokLesson({ moduleId, lessonId, canComplete }: Props) {
+export function InsideTikTokLesson({ moduleId, lessonId, canComplete, language = "fr" }: Props) {
+  const en = language === "en";
+  const activeScenes = en ? scenesEn : scenes;
+  const activeMissions = en ? missionsEn : missions;
+  const activeBackstage = en ? backstageByMissionEn : backstageByMission;
   const [welcomed, setWelcomed] = useState(false);
   const [index, setIndex] = useState(0);
   const [briefed, setBriefed] = useState<number[]>([]);
@@ -401,7 +443,7 @@ export function InsideTikTokLesson({ moduleId, lessonId, canComplete }: Props) {
   const [toast, setToast] = useState<"good" | "bad" | null>(null);
   const [watchSeconds, setWatchSeconds] = useState(20);
   const group = Math.floor(index / 5);
-  const scene = scenes[index];
+  const scene = activeScenes[index];
   const showBriefing = !briefed.includes(group);
   const answered = scene.correct === undefined || choice === scene.correct;
   const timeReady = seconds >= MIN_SECONDS;
@@ -437,7 +479,7 @@ export function InsideTikTokLesson({ moduleId, lessonId, canComplete }: Props) {
     window.setTimeout(() => setToast(null), 2800);
   };
   const next = () => {
-    if (index < scenes.length - 1 && answered && timeReady)
+    if (index < activeScenes.length - 1 && answered && timeReady)
       setIndex((v) => v + 1);
   };
 
@@ -446,15 +488,15 @@ export function InsideTikTokLesson({ moduleId, lessonId, canComplete }: Props) {
       <SoundToggleButton />
       <header className="border-b border-[#8f1237] bg-[#bf1645] px-5 py-4 text-white">
         <div className="flex items-center justify-between gap-4 text-xs font-black uppercase tracking-[0.14em]">
-          <span>Inside TikTok · enquête approfondie</span>
+          <span>{en ? "Inside TikTok · deep investigation" : "Inside TikTok · enquête approfondie"}</span>
           <span>
-            {index + 1}/{scenes.length}
+            {index + 1}/{activeScenes.length}
           </span>
         </div>
         <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#730e2c]/60">
           <div
             className="h-full rounded-full bg-[#ffd4dc] transition-all duration-500 after:block after:h-full after:w-1/3 after:animate-[progress-sheen_2s_ease-in-out_infinite] after:bg-gradient-to-r after:from-transparent after:via-white/80 after:to-transparent"
-            style={{ width: `${((index + 1) / scenes.length) * 100}%` }}
+            style={{ width: `${((index + 1) / activeScenes.length) * 100}%` }}
           />
         </div>
       </header>
@@ -475,54 +517,45 @@ export function InsideTikTokLesson({ moduleId, lessonId, canComplete }: Props) {
             <div className="mx-auto mb-5 flex w-fit items-center gap-3 rounded-full border border-[#ff9bae]/40 bg-[#080d22]/70 px-4 py-2 backdrop-blur-md">
               <CyberMascot mood="cheer" size="sm" />
               <span className="text-xs font-black uppercase tracking-[0.2em] text-[#ffb3c1]">
-                Bienvenue dans ta formation CyberAmbassador
+                {en ? "Welcome to your CyberAmbassador training" : "Bienvenue dans ta formation CyberAmbassador"}
               </span>
             </div>
             <h2 className="text-shadow mt-3 font-display text-4xl font-black uppercase leading-none sm:text-6xl">
-              Entre dans
+              {en ? "Enter" : "Entre dans"}
               <br />
               <span className="text-[#ff9bae]">TikTok</span>
             </h2>
             <p className="mx-auto mt-6 max-w-2xl text-lg font-semibold leading-8 text-white/90 drop-shadow-md">
-              Tu ouvres TikTok et une vidéo apparaît immédiatement. Elle n'est
-              pas arrivée là par hasard. Pendant cette leçon, tu vas découvrir
-              comment TikTok choisit cette vidéo, ce qu'il déduit de tes gestes
-              et comment ses choix peuvent influencer ton attention, tes envies
-              et même ta vision du monde.
+              {en ? "You open TikTok and a video appears immediately. It did not arrive by chance. In this lesson, you will discover how TikTok chooses it, what it infers from your actions and how its choices can influence your attention, desires and even your view of the world." : "Tu ouvres TikTok et une vidéo apparaît immédiatement. Elle n'est pas arrivée là par hasard. Pendant cette leçon, tu vas découvrir comment TikTok choisit cette vidéo, ce qu'il déduit de tes gestes et comment ses choix peuvent influencer ton attention, tes envies et même ta vision du monde."}
             </p>
             <div className="mx-auto mt-6 grid max-w-3xl gap-3 text-left sm:grid-cols-3">
               <div className="rounded-xl border border-[#ff9bae]/35 bg-[#080d22]/75 p-4 backdrop-blur-md">
                 <span className="text-xs font-black uppercase tracking-wider text-[#ff9bae]">
-                  1 · La sélection
+                  {en ? "1 · Selection" : "1 · La sélection"}
                 </span>
                 <p className="mt-2 font-bold">
-                  Tu découvriras comment TikTok choisit ta prochaine vidéo.
+                  {en ? "You will discover how TikTok chooses your next video." : "Tu découvriras comment TikTok choisit ta prochaine vidéo."}
                 </p>
               </div>
               <div className="rounded-xl border border-[#ff9bae]/35 bg-[#080d22]/75 p-4 backdrop-blur-md">
                 <span className="text-xs font-black uppercase tracking-wider text-[#ff9bae]">
-                  2 · L'apprentissage
+                  {en ? "2 · Learning" : "2 · L'apprentissage"}
                 </span>
                 <p className="mt-2 font-bold">
-                  Tu verras comment chaque geste entraîne ses prédictions.
+                  {en ? "You will see how every action trains its predictions." : "Tu verras comment chaque geste entraîne ses prédictions."}
                 </p>
               </div>
               <div className="rounded-xl border border-[#ff9bae]/35 bg-[#080d22]/75 p-4 backdrop-blur-md">
                 <span className="text-xs font-black uppercase tracking-wider text-[#ff9bae]">
-                  3 · Ton pouvoir
+                  {en ? "3 · Your power" : "3 · Ton pouvoir"}
                 </span>
                 <p className="mt-2 font-bold">
-                  Tu apprendras à protéger ton attention et élargir ce que tu
-                  vois.
+                  {en ? "You will learn to protect your attention and broaden what you see." : "Tu apprendras à protéger ton attention et élargir ce que tu vois."}
                 </p>
               </div>
             </div>
             <p className="mx-auto mt-6 max-w-2xl rounded-xl border border-[#ff9bae]/30 bg-[#080d22]/70 p-4 font-bold leading-7 text-white/90 backdrop-blur-md">
-              Cette enquête avance en quatre missions de cinq scènes. À la fin,
-              TikTok ne te semblera plus magique : tu pourras expliquer son
-              moteur de recommandation, reconnaître ce qui cherche à retenir ton
-              attention et envoyer des signaux plus volontaires au lieu de
-              laisser ton pouce décider seul.
+              {en ? "This investigation moves through four missions of five scenes. By the end, TikTok will feel less magical: you will be able to explain its recommendation engine, recognize what tries to hold your attention and send more deliberate signals instead of letting your thumb decide alone." : "Cette enquête avance en quatre missions de cinq scènes. À la fin, TikTok ne te semblera plus magique : tu pourras expliquer son moteur de recommandation, reconnaître ce qui cherche à retenir ton attention et envoyer des signaux plus volontaires au lieu de laisser ton pouce décider seul."}
             </p>
             <button
               className="mt-8 rounded-xl border-2 border-white bg-[#bf1645] px-7 py-4 font-black text-white shadow-[0_4px_0_#fff] transition hover:-translate-y-1"
@@ -532,7 +565,7 @@ export function InsideTikTokLesson({ moduleId, lessonId, canComplete }: Props) {
                 setWelcomed(true);
               }}
             >
-              Entre dans TikTok <ArrowRight className="ml-2 inline h-4 w-4" />
+              {en ? "Enter TikTok" : "Entre dans TikTok"} <ArrowRight className="ml-2 inline h-4 w-4" />
             </button>
           </div>
         </div>
@@ -545,19 +578,19 @@ export function InsideTikTokLesson({ moduleId, lessonId, canComplete }: Props) {
               size="lg"
             />
             <p className="mt-6 text-xs font-black uppercase tracking-[0.2em] text-[#bf1645]">
-              Briefing de Coach Cyber
+              {en ? "Cyber Coach briefing" : "Briefing de Coach Cyber"}
             </p>
             <h2 className="mt-3 font-display text-3xl font-black text-[#19222d] sm:text-5xl">
-              {missions[group].title}
+              {activeMissions[group].title}
             </h2>
             <p className="mx-auto mt-5 max-w-xl text-lg font-semibold leading-8 text-[#4d5968]">
-              {missions[group].goal}
+              {activeMissions[group].goal}
             </p>
             <button
               className="mt-8 rounded-xl border-2 border-white bg-[#bf1645] px-7 py-4 font-black text-white shadow-[0_4px_0_#a33] transition hover:-translate-y-1"
               onClick={() => setBriefed((v) => [...v, group])}
             >
-              Je suis prêt <ArrowRight className="ml-2 inline h-4 w-4" />
+              {en ? "I am ready" : "Je suis prêt"} <ArrowRight className="ml-2 inline h-4 w-4" />
             </button>
           </div>
         </div>
@@ -573,8 +606,8 @@ export function InsideTikTokLesson({ moduleId, lessonId, canComplete }: Props) {
               />
               <span>
                 {toast === "good"
-                  ? `${missions[group].win} La piste suivante est ouverte.`
-                  : "Pas encore. Reviens aux indices de cette scène et essaie autrement."}
+                  ? `${activeMissions[group].win} ${en ? "The next clue is open." : "La piste suivante est ouverte."}`
+                  : en ? "Not yet. Return to this scene's clues and try again." : "Pas encore. Reviens aux indices de cette scène et essaie autrement."}
               </span>
             </div>
           ) : null}
@@ -616,39 +649,38 @@ export function InsideTikTokLesson({ moduleId, lessonId, canComplete }: Props) {
                   <i />
                 </div>
                 <div className="tiktok-hud is-visible left-[6%] top-[8%]">
-                  <Play className="h-3.5 w-3.5" /> Vidéo affichée
+                  <Play className="h-3.5 w-3.5" /> {en ? "Video shown" : "Vidéo affichée"}
                 </div>
                 <div className="tiktok-hud is-visible left-[8%] top-[18%]">
                   <Eye className="h-3.5 w-3.5 text-[#38bdf8]" />{" "}
-                  {index === 1 ? `${watchSeconds}/20 s` : "Attention mesurée"}
+                  {index === 1 ? `${watchSeconds}/20 s` : en ? "Measured attention" : "Attention mesurée"}
                 </div>
                 <div className="tiktok-hud is-visible right-[6%] top-[10%]">
-                  <RotateCcw className="h-3.5 w-3.5 text-[#c084fc]" /> Relecture
+                  <RotateCcw className="h-3.5 w-3.5 text-[#c084fc]" /> {en ? "Replay" : "Relecture"}
                 </div>
                 <div className="tiktok-hud is-visible bottom-[12%] right-[6%]">
-                  <Sparkles className="h-3.5 w-3.5 text-[#facc15]" /> Hypothèse
-                  affinée
+                  <Sparkles className="h-3.5 w-3.5 text-[#facc15]" /> {en ? "Refined hypothesis" : "Hypothèse affinée"}
                 </div>
               </div>
               <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-3">
                 <span className="rounded-full border border-white/25 bg-[#080d22]/75 px-3 py-1.5 text-xs font-black text-white shadow-sm backdrop-blur">
-                  Indice vivant · observe le réseau
+                  {en ? "Live clue · observe the network" : "Indice vivant · observe le réseau"}
                 </span>
                 <span className="hidden text-[10px] font-black uppercase tracking-[.18em] text-white/60 sm:block">
-                  Données en mouvement
+                  {en ? "Data in motion" : "Données en mouvement"}
                 </span>
               </div>
             </figure>
             <div className="min-w-0 animate-[mission-card-in_.45s_ease-out] rounded-2xl border border-[#ead0d6] bg-white/70 p-4 shadow-[0_12px_35px_rgba(79,9,32,.06)] sm:p-6 lg:p-8">
               <p className="text-xs font-black uppercase tracking-[0.2em] text-[#bf1645]">
-                Scène {index + 1} · {scene.eyebrow}
+                {en ? "Scene" : "Scène"} {index + 1} · {scene.eyebrow}
               </p>
               <h2 className="mt-3 font-display text-3xl font-black leading-tight text-[#111827] sm:text-4xl">
                 {scene.title}
               </h2>
               <div className="relative mt-5 overflow-hidden rounded-2xl border border-[#d9c3ca] bg-white/90 p-5 shadow-[0_12px_35px_rgba(79,9,32,.08)]">
                 <p className="mb-3 text-[10px] font-black uppercase tracking-[.2em] text-[#9b1c43]">
-                  Rapport d'observation
+                {en ? "Observation report" : "Rapport d'observation"}
                 </p>
                 <p
                   className="lesson-beat-enter text-base font-bold leading-7 text-[#3f4855] sm:text-lg sm:leading-8"
@@ -661,7 +693,7 @@ export function InsideTikTokLesson({ moduleId, lessonId, canComplete }: Props) {
                 <div className="mt-4 rounded-2xl border border-[#38bdf8]/35 bg-[#081329] p-4 text-white shadow-lg">
                   <div className="flex items-center justify-between gap-4">
                     <span className="text-xs font-black uppercase tracking-widest text-[#7dd3fc]">
-                      Teste le temps de visionnage
+                      {en ? "Test watch time" : "Teste le temps de visionnage"}
                     </span>
                     <strong className="text-xl">{watchSeconds} s</strong>
                   </div>
@@ -677,26 +709,26 @@ export function InsideTikTokLesson({ moduleId, lessonId, canComplete }: Props) {
                     value={watchSeconds}
                   />
                   <div className="mt-2 flex items-center justify-between text-xs font-bold text-white/65">
-                    <span>Signal faible</span>
-                    <span>Confiance {signalStrength}%</span>
-                    <span>Signal fort</span>
+                    <span>{en ? "Weak signal" : "Signal faible"}</span>
+                    <span>{en ? "Confidence" : "Confiance"} {signalStrength}%</span>
+                    <span>{en ? "Strong signal" : "Signal fort"}</span>
                   </div>
                 </div>
               ) : null}
               <div className="evidence-card mt-4 rounded-2xl border border-[#f4c95d] bg-[#161323] p-5 text-white shadow-[0_10px_35px_rgba(91,62,0,.18)]">
                 <p className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[#f4c95d]">
                   <Sparkles className="h-4 w-4" />
-                  Preuve collectée
+                  {en ? "Evidence collected" : "Preuve collectée"}
                 </p>
                 <p className="mt-2 font-bold leading-7 text-white/90">
                   {scene.reveal}
                 </p>
                 <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] font-black uppercase tracking-wider">
                   <span className="rounded-full bg-[#38bdf8]/15 px-3 py-1 text-[#7dd3fc]">
-                    Visionnage
+                    {en ? "Watch time" : "Visionnage"}
                   </span>
                   <span className="rounded-full bg-[#c084fc]/15 px-3 py-1 text-[#d8b4fe]">
-                    Relecture
+                    {en ? "Replay" : "Relecture"}
                   </span>
                   <span className="rounded-full bg-[#fb7185]/15 px-3 py-1 text-[#fda4af]">
                     <Heart className="mr-1 inline h-3 w-3" />
@@ -752,13 +784,13 @@ export function InsideTikTokLesson({ moduleId, lessonId, canComplete }: Props) {
             <div className="mx-auto max-w-5xl">
               <p className="flex items-center gap-2 text-xs font-black uppercase tracking-[.18em] text-[#6d28d9]">
                 <BrainCircuit className="h-5 w-5" />
-                En coulisses
+                {en ? "Behind the scenes" : "En coulisses"}
               </p>
-              <h3 className="mt-2 font-display text-xl font-black text-[#17112b]" id={`behind-scene-${index}`}>Ce que fait l'application</h3>
-              <p className="mt-3 text-base font-semibold leading-7 text-[#493f62]">{backstageByMission[Math.min(group, backstageByMission.length - 1)]}</p>
+              <h3 className="mt-2 font-display text-xl font-black text-[#17112b]" id={`behind-scene-${index}`}>{en ? "What the app does" : "Ce que fait l'application"}</h3>
+              <p className="mt-3 text-base font-semibold leading-7 text-[#493f62]">{activeBackstage[Math.min(group, activeBackstage.length - 1)]}</p>
               <div className="mt-4 grid gap-3 border-t border-violet-200 pt-4 sm:grid-cols-2">
-                <div><p className="text-xs font-black uppercase tracking-widest text-violet-700">Ce que le système peut savoir</p><p className="mt-1 font-semibold leading-6 text-slate-700">{scene.reveal}</p></div>
-                <div><p className="text-xs font-black uppercase tracking-widest text-violet-700">Ce qu'il faut en faire</p><p className="mt-1 font-semibold leading-6 text-slate-700">{scene.bridge}</p></div>
+                <div><p className="text-xs font-black uppercase tracking-widest text-violet-700">{en ? "What the system can know" : "Ce que le système peut savoir"}</p><p className="mt-1 font-semibold leading-6 text-slate-700">{scene.reveal}</p></div>
+                <div><p className="text-xs font-black uppercase tracking-widest text-violet-700">{en ? "What to do with it" : "Ce qu'il faut en faire"}</p><p className="mt-1 font-semibold leading-6 text-slate-700">{scene.bridge}</p></div>
               </div>
             </div>
           </section>
@@ -769,21 +801,21 @@ export function InsideTikTokLesson({ moduleId, lessonId, canComplete }: Props) {
               onClick={() => setIndex((v) => Math.max(0, v - 1))}
             >
               <ArrowLeft className="mr-2 inline h-4 w-4" />
-              Retour
+              {en ? "Back" : "Retour"}
             </button>
             <span className="flex items-center gap-2 rounded-full bg-[#fff0f3] px-4 py-2 text-sm font-bold text-[#8f1237]">
               <Clock3 className="h-4 w-4 animate-pulse" />
               {timeReady
-                ? "Temps d'observation validé"
-                : `Observe encore ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")}`}
+                ? (en ? "Observation time complete" : "Temps d'observation validé")
+                : en ? `Observe for ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")} more` : `Observe encore ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")}`}
             </span>
-            {index < scenes.length - 1 ? (
+            {index < activeScenes.length - 1 ? (
               <button
                 className="rounded-lg bg-[#bf1645] px-5 py-3 font-black text-white shadow-[0_4px_0_#790d2d] disabled:cursor-not-allowed disabled:bg-[#a7acb3] disabled:shadow-[0_4px_0_#737983]"
                 disabled={!answered || !timeReady}
                 onClick={next}
               >
-                Investigation suivante{" "}
+                {en ? "Next investigation" : "Investigation suivante"}{" "}
                 <ArrowRight className="ml-2 inline h-4 w-4" />
               </button>
             ) : canComplete ? (
@@ -791,11 +823,11 @@ export function InsideTikTokLesson({ moduleId, lessonId, canComplete }: Props) {
                 className={`rounded-lg bg-[#bf1645] px-5 py-3 font-black text-white ${timeReady ? "" : "pointer-events-none opacity-35"}`}
                 href={`/student/modules/${moduleId}/lesson/${lessonId}/quiz`}
               >
-                Passer au quiz <Sparkles className="ml-2 inline h-4 w-4" />
+                {en ? "Go to quiz" : "Passer au quiz"} <Sparkles className="ml-2 inline h-4 w-4" />
               </Link>
             ) : (
               <span className="rounded-lg border border-[#68717c] px-5 py-3 font-bold">
-                Aperçu terminé
+                {en ? "Preview complete" : "Aperçu terminé"}
               </span>
             )}
           </footer>

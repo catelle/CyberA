@@ -8,6 +8,8 @@ import {
   type WeeklyChallenge
 } from "@/lib/program";
 import { lessonQuizBanks } from "@/lib/curriculum/lesson-quiz-banks";
+import { localizeProgramModule } from "@/lib/i18n/curriculum";
+import type { Language, ProgramTrack } from "@/types/auth";
 
 async function listTestAuthUserIds() {
   const supabase = createSupabaseAdminClient();
@@ -72,6 +74,26 @@ export type ParentChildSummary = {
   linkedAt: string | null;
 };
 
+export type AdminParentSummary = {
+  id: string;
+  fullName: string;
+  phone: string | null;
+  city: string | null;
+  joinedAt: string | null;
+  children: Array<{ id: string; fullName: string }>;
+};
+
+export type AdminParentDetail = AdminParentSummary & {
+  challengeReports: Array<{
+    id: string;
+    title: string;
+    childName: string;
+    status: string;
+    pointsAwarded: number;
+    submittedAt: string | null;
+  }>;
+};
+
 export type ActiveChallengeRow = {
   id: string;
   title: string;
@@ -106,6 +128,12 @@ export type AdminStudentActivityDetail = {
     modulesCompleted: number;
     certifiedAt: string | null;
     parentalConsentGiven: boolean;
+    programTrack: ProgramTrack;
+    certificate: {
+      number: string;
+      type: "ambassador" | "scholarship";
+      issuedAt: string;
+    } | null;
   };
   totals: {
     lessonsCompleted: number;
@@ -171,64 +199,46 @@ function joinedValue<T>(value: T | T[] | null | undefined): T | null {
 
 async function calculateVerifiedXp(userIds?: string[], sinceIso?: string) {
   const supabase = createSupabaseAdminClient();
-  let moduleQuery = supabase
-    .from("module_progress")
-    .select("user_id, points_earned")
-    .eq("status", "completed");
-  let challengeQuery = supabase
-    .from("challenge_submissions")
-    .select("user_id, points_awarded")
-    .eq("status", "approved");
-  let capstoneQuery = supabase
-    .from("capstone_projects")
-    .select("user_id")
-    .eq("status", "approved");
-  let parentChallengeQuery = supabase
-    .from("parent_challenges")
-    .select("child_id, points_awarded")
-    .eq("status", "approved");
-  let strikeQuery = supabase
-    .from("strike_attempts")
-    .select("user_id, points_awarded")
-    .eq("status", "submitted")
-    .eq("passed", true);
-
-  if (userIds?.length) {
-    moduleQuery = moduleQuery.in("user_id", userIds);
-    challengeQuery = challengeQuery.in("user_id", userIds);
-    capstoneQuery = capstoneQuery.in("user_id", userIds);
-    parentChallengeQuery = parentChallengeQuery.in("child_id", userIds);
-    strikeQuery = strikeQuery.in("user_id", userIds);
-  }
-
-  if (sinceIso) {
-    moduleQuery = moduleQuery.gte("completed_at", sinceIso);
-    challengeQuery = challengeQuery.gte("reviewed_at", sinceIso);
-    capstoneQuery = capstoneQuery.gte("reviewed_at", sinceIso);
-    parentChallengeQuery = parentChallengeQuery.gte("reviewed_at", sinceIso);
-    strikeQuery = strikeQuery.gte("submitted_at", sinceIso);
-  }
-
-  const [{ data: modules }, { data: challenges }, { data: capstones }, { data: parentChallenges }, { data: strikes }] =
-    await Promise.all([moduleQuery, challengeQuery, capstoneQuery, parentChallengeQuery, strikeQuery]);
+  const { data, error } = await supabase.rpc("get_verified_ambassador_xp", {
+    p_user_ids: userIds?.length ? userIds : null,
+    p_since: sinceIso ?? null
+  });
   const totals = new Map<string, number>();
-  const add = (userId: string | null, points: number) => {
-    if (!userId) return;
-    totals.set(userId, (totals.get(userId) ?? 0) + Math.max(points, 0));
-  };
-
-  (modules ?? []).forEach((row) => add(row.user_id, row.points_earned ?? 0));
-  (challenges ?? []).forEach((row) => add(row.user_id, row.points_awarded ?? 0));
-  (capstones ?? []).forEach((row) => add(row.user_id, 500));
-  (parentChallenges ?? []).forEach((row) => add(row.child_id, row.points_awarded ?? 0));
-  (strikes ?? []).forEach((row) => add(row.user_id, row.points_awarded ?? 0));
+  if (error) {
+    console.error("Unable to calculate verified XP", error);
+    return totals;
+  }
+  (data ?? []).forEach((row: { user_id: string; total_points: number | string }) => {
+    totals.set(row.user_id, Math.max(Number(row.total_points) || 0, 0));
+  });
   return totals;
 }
 
-export async function isModuleUnlockedForStudent(userId: string, moduleWeek: number): Promise<boolean> {
-  if (moduleWeek <= 1) return true;
-
+export async function isModuleUnlockedForStudent(
+  userId: string,
+  moduleWeek: number,
+  programTrack: ProgramTrack = "ambassador"
+): Promise<boolean> {
   const supabase = createSupabaseAdminClient();
+  if (programTrack === "scholarship") {
+    const { data: assignedRows, error: assignmentError } = await supabase
+      .from("scholarship_module_access")
+      .select("module_id, modules(order_index)")
+      .eq("user_id", userId);
+    if (assignmentError) return false;
+    const assigned = (assignedRows ?? []).map((row: any) => ({ id: row.module_id as string, order: joinedValue(row.modules)?.order_index as number }));
+    if (!assigned.some((module) => module.order === moduleWeek)) return false;
+    const previousAssigned = assigned.filter((module) => module.order < moduleWeek).sort((a, b) => a.order - b.order);
+    if (!previousAssigned.length) return true;
+    const { data: progressRows } = await supabase.from("module_progress").select("module_id, status").eq("user_id", userId).in("module_id", previousAssigned.map((module) => module.id));
+    const completedIds = new Set((progressRows ?? []).filter((row) => row.status === "completed").map((row) => row.module_id));
+    if (!previousAssigned.every((module) => completedIds.has(module.id))) return false;
+    const lastPrevious = previousAssigned[previousAssigned.length - 1];
+    const { data: feedback } = await supabase.from("module_feedback").select("id").eq("user_id", userId).eq("module_id", lastPrevious.id).maybeSingle<{ id: string }>();
+    return Boolean(feedback);
+  }
+
+  if (moduleWeek <= 1) return true;
   const { data: previousModules } = await supabase
     .from("modules")
     .select("id, order_index")
@@ -339,7 +349,7 @@ export async function getAdminStudentActivityDetail(
   studentId: string
 ): Promise<AdminStudentActivityDetail | null> {
   const supabase = createSupabaseAdminClient();
-  const [{ data: student, error: studentError }, { data: profile }, verifiedXp] = await Promise.all([
+  const [studentResult, profileResult, certificateResult, trackResult, verifiedXp] = await Promise.all([
     supabase
       .from("users")
       .select("id, full_name, phone, city, role, created_at")
@@ -353,8 +363,19 @@ export async function getAdminStudentActivityDetail(
       )
       .eq("user_id", studentId)
       .maybeSingle(),
+    supabase.from("training_certificates").select("certificate_number, certificate_type, issued_at").eq("user_id", studentId).maybeSingle(),
+    supabase.from("users").select("program_track").eq("id", studentId).maybeSingle(),
     calculateVerifiedXp([studentId])
   ]);
+
+  const { data: student, error: studentError } = studentResult;
+  const { data: profile } = profileResult;
+  let certificate: any = certificateResult.data;
+  if (certificateResult.error?.message.includes("does not exist")) {
+    const fallback = await supabase.from("training_certificates").select("certificate_number, issued_at").eq("user_id", studentId).maybeSingle();
+    certificate = fallback.data ? { ...fallback.data, certificate_type: "ambassador" } : null;
+  }
+  const programTrack = trackResult.data?.program_track === "scholarship" ? "scholarship" : "ambassador";
 
   if (studentError || !student) {
     return null;
@@ -546,7 +567,13 @@ export async function getAdminStudentActivityDetail(
       totalPoints: verifiedXp.get(studentId) ?? 0,
       modulesCompleted: (profile as any)?.modules_completed ?? 0,
       certifiedAt: (profile as any)?.certified_at ?? null,
-      parentalConsentGiven: (profile as any)?.parental_consent_given === true
+      parentalConsentGiven: (profile as any)?.parental_consent_given === true,
+      programTrack,
+      certificate: certificate ? {
+        number: certificate.certificate_number,
+        type: certificate.certificate_type === "scholarship" ? "scholarship" : "ambassador",
+        issuedAt: certificate.issued_at
+      } : null
     },
     totals: {
       lessonsCompleted: lessons?.length ?? 0,
@@ -571,7 +598,8 @@ export async function listAdminStudents() {
     verifiedXp,
     { data: presenceRows },
     { data: moduleTime },
-    { data: completedModules }
+    { data: completedModules },
+    { data: programTracks }
   ] = await Promise.all([
     supabase
       .from("users")
@@ -596,7 +624,8 @@ export async function listAdminStudents() {
       .from("module_progress")
       .select("user_id, modules!inner(is_published)")
       .eq("status", "completed")
-      .eq("modules.is_published", true)
+      .eq("modules.is_published", true),
+    supabase.from("users").select("id, program_track").eq("role", "ambassador")
   ]);
 
   if (error || !data) return [];
@@ -623,6 +652,7 @@ export async function listAdminStudents() {
   (completedModules ?? []).forEach((row: any) => {
     completedByStudent.set(row.user_id, (completedByStudent.get(row.user_id) ?? 0) + 1);
   });
+  const programTrackByStudent = new Map((programTracks ?? []).map((row: any) => [row.id as string, row.program_track as string]));
 
   return data.filter((student: any) => !testUserIds.has(student.id)).map((student: any) => {
     const profile = joinedValue(student.ambassador_profiles) as {
@@ -650,9 +680,83 @@ export async function listAdminStudents() {
       modulesCompleted: completedByStudent.get(student.id) ?? 0,
       publishedModules: publishedModuleCount ?? 0,
       learningSeconds: learningSecondsByStudent.get(student.id) ?? 0,
-      presence: buildPresence(presenceByStudent.get(student.id))
+      presence: buildPresence(presenceByStudent.get(student.id)),
+      programTrack: (programTrackByStudent.get(student.id) === "scholarship" ? "scholarship" : "ambassador") as ProgramTrack
     };
   });
+}
+
+export async function listAdminParents(): Promise<AdminParentSummary[]> {
+  const supabase = createSupabaseAdminClient();
+  const [{ data: parents, error }, { data: links }] = await Promise.all([
+    supabase
+      .from("users")
+      .select("id, full_name, phone, city, created_at")
+      .eq("role", "parent")
+      .order("full_name", { ascending: true }),
+    supabase
+      .from("family_links")
+      .select("parent_id, child_id, users!family_links_child_id_fkey(full_name)")
+  ]);
+
+  if (error || !parents) return [];
+
+  return parents.map((parent: any) => ({
+    id: parent.id,
+    fullName: parent.full_name ?? "Parent",
+    phone: parent.phone ?? null,
+    city: parent.city ?? null,
+    joinedAt: parent.created_at ?? null,
+    children: (links ?? [])
+      .filter((link: any) => link.parent_id === parent.id && link.child_id)
+      .map((link: any) => ({
+        id: link.child_id,
+        fullName: joinedValue(link.users)?.full_name ?? "Eleve"
+      }))
+  }));
+}
+
+export async function getAdminParentDetail(parentId: string): Promise<AdminParentDetail | null> {
+  const supabase = createSupabaseAdminClient();
+  const [{ data: parent, error }, { data: links }, { data: reports }] = await Promise.all([
+    supabase
+      .from("users")
+      .select("id, full_name, phone, city, created_at")
+      .eq("id", parentId)
+      .eq("role", "parent")
+      .maybeSingle(),
+    supabase
+      .from("family_links")
+      .select("child_id, users!family_links_child_id_fkey(full_name)")
+      .eq("parent_id", parentId),
+    supabase
+      .from("parent_challenges")
+      .select("id, child_id, status, points_awarded, submitted_at, challenges(title), users!parent_challenges_child_id_fkey(full_name)")
+      .eq("parent_id", parentId)
+      .order("submitted_at", { ascending: false })
+  ]);
+
+  if (error || !parent) return null;
+
+  return {
+    id: parent.id,
+    fullName: parent.full_name ?? "Parent",
+    phone: parent.phone ?? null,
+    city: parent.city ?? null,
+    joinedAt: parent.created_at ?? null,
+    children: (links ?? []).map((link: any) => ({
+      id: link.child_id,
+      fullName: joinedValue(link.users)?.full_name ?? "Eleve"
+    })),
+    challengeReports: (reports ?? []).map((report: any) => ({
+      id: report.id,
+      title: joinedValue(report.challenges)?.title ?? "Defi familial",
+      childName: joinedValue(report.users)?.full_name ?? "Eleve",
+      status: report.status ?? "invited",
+      pointsAwarded: report.points_awarded ?? 0,
+      submittedAt: report.submitted_at ?? null
+    }))
+  };
 }
 
 export async function getSupabaseUserRoleCounts() {
@@ -784,11 +888,11 @@ function calculateLearningStreak(values: Array<string | null>) {
   return streak;
 }
 
-export async function getStudentStatusSummary(userId: string) {
+export async function getStudentStatusSummary(userId: string, programTrack: ProgramTrack = "ambassador") {
   const supabase = createSupabaseAdminClient();
   const [profile, modules, leaderboard, activity] = await Promise.all([
     getStudentProfileStats(userId),
-    listProgramModulesForStudent(userId),
+    listProgramModulesForStudent(userId, "fr", programTrack),
     listLeaderboard(),
     Promise.all([
       supabase
@@ -876,6 +980,7 @@ export async function getStudentStatusSummary(userId: string) {
     performanceScore: ranking?.performanceScore ?? 0,
     participantCount: leaderboard.length,
     badgeTarget: modules.length,
+    modulesCompleted: modules.filter((module) => module.progressPercent >= 100).length,
     pendingTasks: tasks,
     completionPercent: getProgramCompletionPercent(modules)
   };
@@ -1172,7 +1277,9 @@ async function loadPublishedDatabaseCurriculum() {
 }
 
 export async function listProgramModulesForStudent(
-  userId: string
+  userId: string,
+  language: Language = "fr",
+  programTrack: ProgramTrack = "ambassador"
 ): Promise<ProgramModule[]> {
   const supabase = createSupabaseAdminClient();
   const databaseCurriculum = await loadPublishedDatabaseCurriculum();
@@ -1180,7 +1287,7 @@ export async function listProgramModulesForStudent(
     ? databaseCurriculum.modules.map((databaseModule) => {
         const converted = databaseModuleToProgramModule(databaseModule);
         const curated = programModules.find((module) => module.week === converted.week);
-        if ((converted.week === 1 || converted.week === 2) && curated) {
+        if (converted.week <= 4 && curated) {
           return { ...curated, id: converted.id };
         }
         return curated
@@ -1197,6 +1304,15 @@ export async function listProgramModulesForStudent(
           : converted;
       })
     : programModules;
+  let learnerModules = baseModules;
+  if (programTrack === "scholarship") {
+    const { data: assignments, error: assignmentError } = await supabase
+      .from("scholarship_module_access")
+      .select("module_id")
+      .eq("user_id", userId);
+    const assignedIds = new Set((assignments ?? []).map((assignment) => assignment.module_id));
+    learnerModules = assignmentError ? [] : baseModules.filter((module) => assignedIds.has(module.id));
+  }
   const [
     { data, error },
     { data: lessonProgress, error: lessonProgressError }
@@ -1214,7 +1330,7 @@ export async function listProgramModulesForStudent(
   ]);
 
   if (error || !data) {
-    return baseModules;
+    return learnerModules.map((module) => localizeProgramModule(module, language));
   }
 
   const progressByModuleId = new Map(data.map((row) => [row.module_id, row]));
@@ -1242,7 +1358,7 @@ export async function listProgramModulesForStudent(
     }
   });
 
-  return baseModules.map((module) => {
+  return learnerModules.map((module) => {
     const row = progressByModuleId.get(module.id) ?? progressByOrder.get(module.week);
     const recordedLessons =
       completedLessonsByModuleId.get(module.id) ?? completedLessonsByOrder.get(module.week);
@@ -1257,21 +1373,22 @@ export async function listProgramModulesForStudent(
       .forEach((lesson) => completedLessonIds.add(lesson.id));
     const completedLessons = completedLessonIds.size;
 
-    return {
+    return localizeProgramModule({
       ...module,
       progressPercent: calculateModuleProgressPercent(
         module.lessons.length,
         completedLessons
       )
-    };
+    }, language);
   });
 }
 
-export async function getPublishedProgramModuleById(moduleId: string) {
+export async function getPublishedProgramModuleById(moduleId: string, language: Language = "fr") {
   const databaseCurriculum = await loadPublishedDatabaseCurriculum();
 
   if (!databaseCurriculum.cmsInitialized) {
-    return getModuleById(moduleId) ?? null;
+    const fallbackModule = getModuleById(moduleId);
+    return fallbackModule ? localizeProgramModule(fallbackModule, language) : null;
   }
 
   const selectedModule = databaseCurriculum.modules.find(
@@ -1280,10 +1397,10 @@ export async function getPublishedProgramModuleById(moduleId: string) {
   if (!selectedModule) return null;
   const converted = databaseModuleToProgramModule(selectedModule);
   const curated = programModules.find((module) => module.week === converted.week);
-  if ((converted.week === 1 || converted.week === 2) && curated) {
-    return { ...curated, id: converted.id };
+  if (converted.week <= 4 && curated) {
+    return localizeProgramModule({ ...curated, id: converted.id }, language);
   }
-  return curated
+  return localizeProgramModule(curated
     ? {
         ...converted,
         id: converted.id,
@@ -1294,7 +1411,7 @@ export async function getPublishedProgramModuleById(moduleId: string) {
         icon: curated.icon,
         outcomes: curated.outcomes
       }
-    : converted;
+    : converted, language);
 }
 
 export async function listCompletedLessonIdsForStudent(
@@ -1696,14 +1813,20 @@ export async function listChallengeSubmissionsWithFallback() {
         .filter((userId): userId is string => Boolean(userId))
     )
   );
-  const { data: profiles } = userIds.length > 0
-    ? await supabase
-        .from("ambassador_profiles")
-        .select("user_id, total_points, level")
-        .in("user_id", userIds)
-    : { data: [] };
+  const [{ data: profiles }, verifiedXp] = userIds.length > 0
+    ? await Promise.all([
+        supabase
+          .from("ambassador_profiles")
+          .select("user_id, total_points, level")
+          .in("user_id", userIds),
+        calculateVerifiedXp(userIds)
+      ])
+    : [{ data: [] }, new Map<string, number>()];
   const profileByUserId = new Map(
-    (profiles ?? []).map((profile) => [profile.user_id, profile])
+    (profiles ?? []).map((profile) => [
+      profile.user_id,
+      { ...profile, total_points: verifiedXp.get(profile.user_id) ?? 0 }
+    ])
   );
   const photoPaths = Array.from(
     new Set(

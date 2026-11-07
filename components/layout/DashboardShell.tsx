@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import {
+  Award,
   BookOpen,
   ClipboardCheck,
   FileText,
@@ -50,11 +51,14 @@ export async function DashboardShell({ user, title, children }: DashboardShellPr
           { href: "/admin/dashboard", label: "Dashboard", Icon: Home },
           { href: "/admin/challenges", label: "Defis", Icon: Trophy },
           { href: "/admin/ambassadors", label: "Eleves", Icon: UsersRound },
+          { href: "/admin/parents", label: "Parents", Icon: User },
           { href: "/admin/submissions", label: "Soumissions", Icon: ClipboardCheck },
           { href: "/admin/forum", label: "Forum", Icon: ShieldAlert },
           { href: "/admin/capstone", label: "Capstone", Icon: GraduationCap },
+          { href: "/admin/certificates", label: "Certificats", Icon: Award },
           { href: "/admin/cohorts", label: "Cohortes", Icon: UsersRound },
           { href: "/admin/modules", label: "Modules", Icon: Layers },
+          { href: "/admin/badges", label: "Badges", Icon: Award },
           { href: "/student/modules", label: "Espace eleve", Icon: BookOpen },
           { href: "/admin/notifications", label: "Notifications", Icon: Megaphone },
           { href: "/admin/feedback", label: "Temoignages", Icon: MessageCircle }
@@ -63,6 +67,7 @@ export async function DashboardShell({ user, title, children }: DashboardShellPr
         ? [
             { href: "/admin/dashboard", label: "Dashboard", Icon: Home },
             { href: "/admin/ambassadors", label: "Eleves", Icon: UsersRound },
+            { href: "/admin/badges", label: "Badges", Icon: Award },
             { href: "/student/modules", label: "Espace eleve", Icon: BookOpen }
           ]
       : user.role === "parent"
@@ -75,24 +80,28 @@ export async function DashboardShell({ user, title, children }: DashboardShellPr
           ]
         : [
             { href: "/student/dashboard", label: en ? "Home" : "Accueil", Icon: Home },
-            { href: "/student/kit", label: en ? "My Kit" : "Mon Kit", Icon: PackageOpen },
-            { href: "/student/modules", label: "Modules", Icon: BookOpen },
-            { href: "/student/challenges", label: en ? "Challenges" : "Défis", Icon: ClipboardCheck },
-            { href: "/student/leaderboard", label: en ? "Leaderboard" : "Classement", Icon: Trophy },
-            { href: "/student/forum", label: "Forum", Icon: MessageCircle },
-            { href: "/student/notifications", label: "Notifications", Icon: Megaphone },
+            ...(user.programTrack === "ambassador" || user.programTrack === "scholarship"
+              ? [
+                  { href: "/student/kit", label: en ? "My Kit" : "Mon Kit", Icon: PackageOpen },
+                  { href: "/student/modules", label: "Modules", Icon: BookOpen },
+                  { href: "/student/challenges", label: en ? "Challenges" : "Défis", Icon: ClipboardCheck },
+                  { href: "/student/leaderboard", label: en ? "Leaderboard" : "Classement", Icon: Trophy },
+                  { href: "/student/forum", label: "Forum", Icon: MessageCircle },
+                  { href: "/student/notifications", label: "Notifications", Icon: Megaphone }
+                ]
+              : [{ href: "/student/modules", label: en ? "Learning modules" : "Modules d'apprentissage", Icon: BookOpen }]),
             { href: "/student/profile", label: en ? "Profile" : "Profil", Icon: User }
           ];
   const roleLabel =
     user.role === "admin"
       ? "Admin LVL 99"
       : user.role === "facilitator"
-        ? "Facilitateur"
+        ? (en ? "Facilitator" : "Facilitateur")
       : user.role === "parent"
-        ? "Parent allié"
-        : "Cyber-Éclaireur";
+        ? (en ? "Parent ally" : "Parent allié")
+        : (en ? "Cyber Scout" : "Cyber-Éclaireur");
   const isStudent = user.role === "student";
-  if (isStudent) await ensureModuleFeedbackNotifications(user.supabaseUserId);
+  if (isStudent && user.programTrack === "ambassador") await ensureModuleFeedbackNotifications(user.supabaseUserId);
   const unreadNotifications = await countUnreadNotificationsForUser(user.supabaseUserId);
 
   const notificationBadge = (href: string) =>
@@ -178,7 +187,7 @@ export async function DashboardShell({ user, title, children }: DashboardShellPr
               </div>
               <div className="col-span-2 flex flex-wrap items-center gap-2 lg:col-span-1 lg:justify-end">
                 <AccountLanguageToggle initialLanguage={user.language} />
-                {isStudent ? (
+                {isStudent && user.programTrack === "ambassador" ? (
                   <>
                     <Link className="flex min-h-9 items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 text-xs font-extrabold text-amber-950 transition hover:border-primary" href="/student/status">
                       <Flame aria-hidden className="h-4 w-4 text-primary" />
@@ -193,7 +202,7 @@ export async function DashboardShell({ user, title, children }: DashboardShellPr
                   <div className="flex w-fit items-center gap-2 rounded-full border-2 border-secondary bg-secondary-container px-4 py-2 shadow-[0_2px_0_0_rgba(88,96,98,1)]">
                     <Sparkles aria-hidden className="h-4 w-4 text-primary" />
                     <span className="text-sm font-black text-on-secondary-container">
-                      Protocole actif
+                      {en ? "Active protocol" : "Protocole actif"}
                     </span>
                   </div>
                 )}
@@ -207,11 +216,11 @@ export async function DashboardShell({ user, title, children }: DashboardShellPr
 
       <PresenceHeartbeat />
 
-      {user.role !== "admin" && user.role !== "facilitator" ? (
+      {user.role !== "admin" && user.role !== "facilitator" && (!isStudent || user.programTrack === "ambassador") ? (
         <DashboardTour role={user.role} userId={user.id} />
       ) : null}
 
-      {isStudent ? <RewardPopup userId={user.supabaseUserId} /> : null}
+      {isStudent && user.programTrack === "ambassador" ? <RewardPopup language={user.language} userId={user.supabaseUserId} /> : null}
 
         <nav className="dashboard-mobile-nav fixed inset-x-3 bottom-3 z-40 flex gap-1 overflow-x-auto rounded-2xl border border-slate-200 bg-white/95 p-1.5 shadow-[0_14px_36px_rgba(15,23,42,0.16)] backdrop-blur lg:hidden">
           {navItems.map(({ Icon, ...item }) => (

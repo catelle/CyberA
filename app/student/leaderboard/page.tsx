@@ -2,11 +2,11 @@ import Link from "next/link";
 import { ArrowRight, Zap } from "lucide-react";
 
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { requireRole } from "@/lib/auth/guards";
+import { requireAmbassadorTrack, requireRole } from "@/lib/auth/guards";
 import { getStrikeEligibility, listLeaderboard } from "@/lib/db/cybera";
 
 export default async function LeaderboardPage() {
-  const user = await requireRole(["student"]);
+  const user = requireAmbassadorTrack(await requireRole(["student"]));
   const en = user.language === "en";
   const [leaderboardEntries, strikeEligibility] = await Promise.all([
     listLeaderboard(user.supabaseUserId),

@@ -10,12 +10,12 @@ import {
 } from "lucide-react";
 
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { requireRole } from "@/lib/auth/guards";
+import { requireAmbassadorTrack, requireRole } from "@/lib/auth/guards";
 import { getStudentStatusSummary } from "@/lib/db/cybera";
 
 export default async function StudentStatusPage() {
-  const user = await requireRole(["student"]);
-  const status = await getStudentStatusSummary(user.supabaseUserId);
+  const user = requireAmbassadorTrack(await requireRole(["student"]));
+  const status = await getStudentStatusSummary(user.supabaseUserId, user.programTrack);
 
   const metrics = [
     { label: "Serie", value: `${status.streakDays} jour${status.streakDays > 1 ? "s" : ""}`, Icon: Flame, tone: "bg-amber-50 text-amber-950" },
@@ -74,7 +74,7 @@ export default async function StudentStatusPage() {
                 Telecharger le certificat
               </a>
             ) : (
-              <p className="mt-5 rounded-lg bg-white/10 p-3 text-sm font-bold text-white/75">Le certificat sera disponible apres tous les modules.</p>
+              <p className="mt-5 rounded-lg bg-white/10 p-3 text-sm font-bold text-white/75">{user.programTrack === "scholarship" ? "Le certificat Bourse des 100 sera disponible apres tous les modules qui t'ont ete attribues." : "Le certificat sera disponible apres les modules 1, 2 et 3 et le capstone soumis, ou apres validation exceptionnelle d'un admin."}</p>
             )}
           </aside>
         </section>
@@ -93,7 +93,7 @@ export default async function StudentStatusPage() {
             <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {status.badges.map((badge) => (
                 <article className="flex flex-col items-center rounded-2xl border border-primary/15 bg-white p-4 text-center" key={badge.id}>
-                  <img alt={`${badge.name} — ${badge.focus}`} className="aspect-square w-full max-w-44 rounded-full object-contain" src={`/api/student/badges/${badge.id}/download?inline=1`} />
+                  <img alt={`${badge.name} — ${badge.focus}`} className="aspect-square w-full max-w-52 object-contain" src={`/api/student/badges/${badge.id}/download?inline=1`} />
                   <p className="mt-3 text-sm font-black text-brand-ink">{badge.focus}</p>
                   <a className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 text-sm font-extrabold text-primary transition hover:bg-primary-fixed" href={`/api/student/badges/${badge.id}/download`}>
                     <Download aria-hidden className="h-4 w-4" />

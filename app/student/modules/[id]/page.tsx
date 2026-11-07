@@ -7,6 +7,7 @@ import { MascotCoach } from "@/components/gamified/CyberMascot";
 import { LearningSpacePreviewNotice } from "@/components/lesson/LearningSpacePreviewNotice";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { requireRole } from "@/lib/auth/guards";
+import { createSupabaseAdminClient } from "@/lib/auth/supabase-server";
 import {
   getPublishedProgramModuleById,
   isModuleUnlockedForStudent,
@@ -22,7 +23,7 @@ type ModulePageProps = {
 export default async function StudentModuleDetailPage({ params }: ModulePageProps) {
   const user = await requireRole(["student", "admin", "facilitator"]);
   const en = user.language === "en";
-  const programModule = await getPublishedProgramModuleById(params.id);
+  const programModule = await getPublishedProgramModuleById(params.id, user.language);
   const selectedModule = programModule
     ? {
         id: programModule.id,
@@ -39,11 +40,18 @@ export default async function StudentModuleDetailPage({ params }: ModulePageProp
     notFound();
   }
 
-  if (user.role === "student" && !(await isModuleUnlockedForStudent(user.supabaseUserId, selectedModule.order))) {
+  if (user.role === "student" && !(await isModuleUnlockedForStudent(user.supabaseUserId, selectedModule.order, user.programTrack))) {
     redirect("/student/modules?locked=1");
   }
 
   const isPreview = user.role === "admin" || user.role === "facilitator";
+  const supabase = createSupabaseAdminClient();
+  const [{ data: moduleProgress }, { data: moduleFeedback }] = user.role === "student"
+    ? await Promise.all([
+        supabase.from("module_progress").select("status").eq("user_id", user.supabaseUserId).eq("module_id", selectedModule.id).eq("status", "completed").maybeSingle(),
+        supabase.from("module_feedback").select("id").eq("user_id", user.supabaseUserId).eq("module_id", selectedModule.id).maybeSingle()
+      ])
+    : [{ data: null }, { data: null }];
   const completedLessonIds = new Set(
     user.role === "student"
       ? await listCompletedLessonIdsForStudent(
@@ -108,6 +116,20 @@ export default async function StudentModuleDetailPage({ params }: ModulePageProp
                   <Lock aria-hidden className="h-4 w-4" />
                   {en ? "Quiz after the lessons" : "Quiz après les leçons"}
                 </span>
+              ) : null}
+              {moduleProgress && (user.programTrack === "scholarship" || selectedModule.order <= 2) ? (
+                moduleFeedback ? (
+                  <span className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border-2 border-emerald-200 bg-emerald-50 px-4 font-black text-emerald-800 sm:w-fit">
+                    {en ? "Feedback submitted" : "Avis envoyé"}
+                  </span>
+                ) : (
+                  <Link
+                    className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border-2 border-secondary bg-white px-4 font-black text-primary shadow-[0_4px_0_0_rgba(88,96,98,1)] transition hover:bg-primary-fixed sm:w-fit"
+                    href={`/student/modules/${selectedModule.id}/feedback`}
+                  >
+                    {en ? "Give module feedback" : "Donner ton avis sur le module"}
+                  </Link>
+                )
               ) : null}
             </div>
           </div>
@@ -178,7 +200,7 @@ export default async function StudentModuleDetailPage({ params }: ModulePageProp
           ) : (
             <div className="grid aspect-[4/3] place-items-center rounded-lg border-2 border-primary bg-white text-primary"><Trophy className="h-20 w-20" /></div>
           )}
-          <p className="mt-5 font-display text-xl font-black text-brand-ink">{completedCount} sur {selectedModule.lessons.length} leçons terminées</p>
+          <p className="mt-5 font-display text-xl font-black text-brand-ink">{completedCount} {en ? "of" : "sur"} {selectedModule.lessons.length} {en ? "lessons completed" : "leçons terminées"}</p>
           <div className="mt-4 h-2 overflow-hidden rounded-full border border-rose-200 bg-rose-50"><div className="h-full rounded-full bg-primary" style={{ width: `${completionPercent}%` }} /></div>
           <p className="mt-2 text-right text-sm font-black text-slate-500">{completionPercent}%</p>
           <div className="mt-5 border-t border-slate-200 pt-5"><MascotCoach mascotMood="focus">Une leçon à la fois. Chaque étape validée te rapproche du module suivant.</MascotCoach></div>

@@ -9,7 +9,8 @@ const schema = z.object({
   email: z.string().trim().email("Adresse email invalide."),
   fullName: z.string().trim().min(2, "Le nom est requis."),
   city: z.string().trim().optional().or(z.literal("")),
-  language: z.enum(["fr", "en"]).default("fr")
+  language: z.enum(["fr", "en"]).default("fr"),
+  programTrack: z.enum(["ambassador", "scholarship"]).default("ambassador")
 });
 
 export async function POST(request: NextRequest) {
@@ -44,12 +45,12 @@ export async function POST(request: NextRequest) {
 
   try {
     const { error: metadataError } = await supabase.auth.admin.updateUserById(data.user.id, {
-      app_metadata: { role: "ambassador", invited_by_admin: true }
+      app_metadata: { role: "ambassador", program_track: parsed.data.programTrack, invited_by_admin: true }
     });
     if (metadataError) throw metadataError;
     const refreshed = await supabase.auth.admin.getUserById(data.user.id);
     if (refreshed.error || !refreshed.data.user) throw refreshed.error ?? new Error("Utilisateur introuvable.");
-    await ensureSupabaseProfileForAuthUser(refreshed.data.user, { role: "ambassador" });
+    await ensureSupabaseProfileForAuthUser(refreshed.data.user, { role: "ambassador", programTrack: parsed.data.programTrack });
 
     const setupUrl = new URL("/auth/confirm", request.nextUrl.origin);
     setupUrl.searchParams.set("token_hash", data.properties.hashed_token);

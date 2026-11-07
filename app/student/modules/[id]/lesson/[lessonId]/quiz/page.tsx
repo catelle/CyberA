@@ -19,7 +19,7 @@ type LessonQuizPageProps = {
 export default async function LessonQuizPage({ params }: LessonQuizPageProps) {
   const user = await requireRole(["student", "admin", "facilitator"]);
   const isPreview = user.role === "admin" || user.role === "facilitator";
-  const programModule = await getPublishedProgramModuleById(params.id);
+  const programModule = await getPublishedProgramModuleById(params.id, user.language);
   const lesson = programModule?.lessons.find((item) => item.id === params.lessonId);
   const nextLesson = programModule?.lessons
     .filter((item) => item.order > (lesson?.order ?? Number.MAX_SAFE_INTEGER))
@@ -30,7 +30,7 @@ export default async function LessonQuizPage({ params }: LessonQuizPageProps) {
     notFound();
   }
 
-  if (!isPreview && !(await isModuleUnlockedForStudent(user.supabaseUserId, programModule.week))) {
+    if (!isPreview && !(await isModuleUnlockedForStudent(user.supabaseUserId, programModule.week, user.programTrack))) {
     redirect("/student/modules?locked=1");
   }
 

@@ -43,6 +43,7 @@ export function AdminStudentInvitationForm() {
         <div className="field"><label htmlFor="invite-email">Email de candidature</label><input autoComplete="email" id="invite-email" name="email" required type="email" /></div>
         <div className="field"><label htmlFor="invite-city">Ville</label><input id="invite-city" name="city" /></div>
         <div className="field"><label htmlFor="invite-language">Langue</label><select defaultValue="fr" id="invite-language" name="language"><option value="fr">Francais</option><option value="en">English</option></select></div>
+        <div className="field"><label htmlFor="invite-program-track">Parcours</label><select defaultValue="ambassador" id="invite-program-track" name="programTrack"><option value="ambassador">CyberAmbassador</option><option value="scholarship">Bourse des 100 (modules choisis par admin)</option></select></div>
         <button className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-primary px-5 font-black text-white disabled:opacity-50 md:col-span-2" disabled={isSubmitting} type="submit"><Link2 size={18} />{isSubmitting ? "Generation..." : "Generer le lien unique"}</button>
       </form>
       {status ? <p className="mt-4 rounded-lg bg-brand-sky p-3 text-sm font-bold text-brand-blue">{status}</p> : null}

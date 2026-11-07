@@ -3,19 +3,21 @@ import { ArrowRight } from "lucide-react";
 
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { requireRole } from "@/lib/auth/guards";
-import { listAdminStudents } from "@/lib/db/cybera";
+import { listAdminStudents, listModulesFromDatabase } from "@/lib/db/cybera";
 import { formatDuration, formatRelativeTime } from "@/lib/format/duration";
 import { AdminStudentInvitationForm } from "@/components/forms/AdminStudentInvitationForm";
+import { ScholarshipAssignmentManager } from "@/components/forms/ScholarshipAssignmentManager";
 
 export default async function AdminAmbassadorsPage() {
   const user = await requireRole(["admin", "facilitator"]);
-  const students = await listAdminStudents();
+  const [students, modules] = await Promise.all([listAdminStudents(), listModulesFromDatabase()]);
   const onlineCount = students.filter((student) => student.presence.isOnline).length;
 
   return (
     <DashboardShell user={user} title="Eleves">
       <div className="grid gap-6">
       {user.role === "admin" ? <AdminStudentInvitationForm /> : null}
+      {user.role === "admin" ? <ScholarshipAssignmentManager modules={modules} students={students} /> : null}
 
       <section className="rounded-lg bg-white p-4 shadow-sm">
         <p className="text-sm font-bold text-slate-500">
@@ -50,6 +52,7 @@ export default async function AdminAmbassadorsPage() {
               <p className="text-sm text-slate-600">
                 {student.city} / {student.cohort}
               </p>
+              {student.programTrack === "scholarship" ? <span className="mt-1 inline-flex rounded-full bg-rose-100 px-2 py-1 text-[10px] font-black uppercase text-primary">100 Scholar</span> : null}
               <p className="text-xs font-bold text-slate-500">
                 {student.presence.isOnline
                   ? "En ligne"

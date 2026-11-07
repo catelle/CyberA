@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { createSupabaseAdminClient, createSupabaseServerClient } from "@/lib/auth/supabase-server";
+import { createSupabaseServerClient } from "@/lib/auth/supabase-server";
 
 const payloadSchema = z.object({ language: z.enum(["fr", "en"]) });
 
@@ -13,11 +13,17 @@ export async function PATCH(request: Request) {
   const { data: { user }, error } = await supabase.auth.getUser();
   if (error || !user) return NextResponse.json({ message: "Session required." }, { status: 401 });
 
-  const admin = createSupabaseAdminClient();
-  const { error: updateError } = await admin.auth.admin.updateUserById(user.id, {
-    user_metadata: { ...user.user_metadata, language: parsed.data.language }
+  const { error: updateError } = await supabase.auth.updateUser({
+    data: { ...user.user_metadata, language: parsed.data.language }
   });
   if (updateError) return NextResponse.json({ message: updateError.message }, { status: 500 });
 
-  return NextResponse.json({ language: parsed.data.language });
+  const response = NextResponse.json({ language: parsed.data.language });
+  response.cookies.set("cybera-language", parsed.data.language, {
+    httpOnly: false,
+    sameSite: "lax",
+    maxAge: 60 * 60 * 24 * 365,
+    path: "/"
+  });
+  return response;
 }

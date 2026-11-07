@@ -8,12 +8,6 @@ import { getStrikeEligibility, getStudentStatusSummary, listProgramModulesForStu
 import { getDictionary } from "@/lib/i18n/dictionary";
 import { getProgramCompletionPercent } from "@/lib/program";
 
-const statusLabels = {
-  ready: "Disponible",
-  next: "Bientot",
-  planned: "Verrouille"
-};
-
 const statusStyles = {
   ready: "bg-[#d9fbe8] text-[#075f3f]",
   next: "bg-tertiary-fixed text-tertiary",
@@ -22,14 +16,20 @@ const statusStyles = {
 
 export default async function StudentDashboardPage() {
   const user = await requireRole(["student"]);
+  const en = user.language === "en";
   const t = getDictionary(user.language);
   const [modules, studentStatus, strikeEligibility] = await Promise.all([
-    listProgramModulesForStudent(user.supabaseUserId),
+    listProgramModulesForStudent(user.supabaseUserId, user.language, user.programTrack),
     getStudentStatusSummary(user.supabaseUserId),
     getStrikeEligibility(user.supabaseUserId)
   ]);
   const completion = getProgramCompletionPercent(modules);
   const readyModule = modules.find((module) => module.status === "ready");
+  const statusLabels = {
+    ready: en ? "Available" : "Disponible",
+    next: en ? "Coming soon" : "Bientôt",
+    planned: en ? "Locked" : "Verrouillé"
+  };
 
   return (
     <DashboardShell user={user} title={t.studentDashboard}>
@@ -37,18 +37,19 @@ export default async function StudentDashboardPage() {
         <section className="grid gap-6 overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.07)] sm:p-7 lg:grid-cols-[1fr_17rem]">
           <div className="min-w-0">
             <MascotCoach mascotMood="cheer">
-              Mission du jour: avance dans {readyModule?.title ?? "ton parcours"} et
-              gagne assez d&apos;XP pour garder ta serie.
+              {user.programTrack === "scholarship"
+                ? (en ? <>Today&apos;s learning: continue with {readyModule?.title ?? "your path"}.</> : <>Ton apprentissage du jour : continue avec {readyModule?.title ?? "ton parcours"}.</>)
+                : (en ? <>Today&apos;s mission: keep moving through {readyModule?.title ?? "your path"} and earn enough XP to keep your streak.</> : <>Mission du jour: avance dans {readyModule?.title ?? "ton parcours"} et gagne assez d&apos;XP pour garder ta série.</>)}
             </MascotCoach>
 
             <div className="mt-5">
               <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-tertiary">{t.nextStep}</p>
               <h2 className="mt-2 break-words font-display text-2xl font-extrabold leading-tight tracking-[-0.025em] text-on-surface sm:text-3xl">
-                {readyModule ? readyModule.title : "Programme CyberAmbassadeur"}
+                {readyModule ? readyModule.title : (user.programTrack === "scholarship" ? (en ? "Your scholarship learning path" : "Ton parcours d'apprentissage") : (en ? "CyberAmbassador programme" : "Programme CyberAmbassadeur"))}
               </h2>
               <p className="mt-3 max-w-2xl text-sm font-medium leading-7 text-slate-600 sm:text-base">
                 {readyModule?.summary ??
-                  "Les modules seront actives progressivement par l'equipe programme."}
+                  (en ? "Modules will be activated progressively by the programme team." : "Les modules seront activés progressivement par l&apos;équipe programme.")}
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 {(readyModule?.outcomes ?? []).map((outcome) => (
@@ -65,7 +66,7 @@ export default async function StudentDashboardPage() {
                   className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-extrabold text-white shadow-[0_10px_24px_rgba(181,18,63,0.2)] transition hover:bg-[#981137] sm:w-fit"
                   href={`/student/modules/${readyModule.id}`}
                 >
-                  Continuer
+                  {en ? "Continue" : "Continuer"}
                   <ArrowRight aria-hidden className="h-4 w-4" />
                 </Link>
               ) : null}
@@ -74,7 +75,7 @@ export default async function StudentDashboardPage() {
 
           <div className="relative overflow-hidden rounded-xl bg-[linear-gradient(145deg,#991238,#b5123f)] p-6 text-white shadow-[0_16px_32px_rgba(136,19,55,0.2)]">
             <div className="absolute -bottom-10 -right-9 h-36 w-36 rounded-full border-[24px] border-white/5" />
-            <p className="relative text-xs font-extrabold uppercase tracking-[0.12em] text-white/70">Progression globale</p>
+            <p className="relative text-xs font-extrabold uppercase tracking-[0.12em] text-white/70">{en ? "Overall progress" : "Progression globale"}</p>
             <p className="relative mt-3 text-5xl font-extrabold tracking-[-0.04em]">{completion}%</p>
             <div className="relative mt-5 h-2 overflow-hidden rounded-full bg-white/20">
               <div
@@ -84,8 +85,8 @@ export default async function StudentDashboardPage() {
             </div>
             <p className="relative mt-4 text-xs font-semibold leading-5 text-white/75">
               {user.consentGiven
-                ? "Consentement parent confirme."
-                : "Consentement parent a confirmer."}
+                ? (en ? "Parent consent confirmed." : "Consentement parent confirmé.")
+                : (en ? "Parent consent to be confirmed." : "Consentement parent à confirmer.")}
             </p>
           </div>
         </section>
@@ -93,16 +94,16 @@ export default async function StudentDashboardPage() {
         <section className="grid gap-4">
           <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
             <div>
-              <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-tertiary">Parcours</p>
+              <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-tertiary">{en ? "Path" : "Parcours"}</p>
               <h2 className="mt-1.5 font-display text-2xl font-extrabold tracking-[-0.025em] text-on-surface">
-                Tes missions de certification
+                {user.programTrack === "scholarship" ? (en ? "Your learning modules" : "Tes modules d'apprentissage") : (en ? "Your certification missions" : "Tes missions de certification")}
               </h2>
             </div>
             <Link
               className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-bold text-primary shadow-sm transition hover:border-rose-200 hover:bg-primary-fixed sm:w-fit"
               href="/student/modules"
             >
-              Voir tout
+              {en ? "View all" : "Voir tout"}
               <ArrowRight aria-hidden className="h-4 w-4" />
             </Link>
           </div>
@@ -148,7 +149,7 @@ export default async function StudentDashboardPage() {
 
                   <div className="relative z-10 mt-5 min-w-0">
                     <p className="text-xs font-extrabold uppercase tracking-[0.08em] text-primary">
-                      Semaine {module.week}
+                      {en ? "Week" : "Semaine"} {module.week}
                     </p>
                     <h3 className="mt-2 break-words font-display text-lg font-extrabold leading-tight tracking-[-0.015em] text-brand-ink">
                       {module.title}
@@ -166,7 +167,7 @@ export default async function StudentDashboardPage() {
                       />
                     </div>
                     <p className="mt-2 text-xs font-bold text-slate-500">
-                      {module.progressPercent}% terminé
+                      {module.progressPercent}% {en ? "complete" : "terminé"}
                     </p>
                   </div>
                 </Link>
@@ -175,6 +176,7 @@ export default async function StudentDashboardPage() {
           </div>
         </section>
 
+        {user.programTrack === "ambassador" ? <>
         <section className="grid gap-3 sm:grid-cols-3">
           {[
             ["Serie", `${studentStatus.streakDays} jour${studentStatus.streakDays > 1 ? "s" : ""}`, "bg-[#fff4c2]"],
@@ -218,6 +220,7 @@ export default async function StudentDashboardPage() {
             </span>
           )}
         </section>
+        </> : null}
       </div>
     </DashboardShell>
   );

@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { requireRole } from "@/lib/auth/guards";
+import { requireAmbassadorTrack, requireRole } from "@/lib/auth/guards";
 import { cyberaProgramme } from "@/lib/curriculum/cybera-kit";
 import { getCyberaFellowKit } from "@/lib/db/cybera";
 
@@ -43,7 +43,7 @@ const support = [
 ];
 
 export default async function CyberaKitPage() {
-  const user = await requireRole(["student"]);
+  const user = requireAmbassadorTrack(await requireRole(["student"]));
   const kit = await getCyberaFellowKit(user.supabaseUserId);
   const firstName = user.profile.fullName.trim().split(/\s+/)[0] || "Fellow";
   const fellowship = kit.fellowshipName ?? "Nom de Fellowship à venir";

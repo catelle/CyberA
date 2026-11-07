@@ -10,15 +10,18 @@ import { ModuleFeedbackForm } from "@/components/forms/ModuleFeedbackForm";
 import { cacheModuleForOffline, saveQuizProgress } from "@/lib/offline/db";
 import { playCelebrate, playCorrect, playLessonOpen, playWrong } from "@/lib/sounds";
 import type { ProgramModule } from "@/lib/program";
+import type { Language } from "@/types/auth";
 
 type QuizEngineProps = {
   module: ProgramModule;
   userId: string;
   /** Admin walkthrough: answer everything without recording any progress. */
   preview?: boolean;
+  language?: Language;
 };
 
-export function QuizEngine({ module, userId, preview = false }: QuizEngineProps) {
+export function QuizEngine({ module, userId, preview = false, language = "fr" }: QuizEngineProps) {
+  const en = language === "en";
   const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -145,13 +148,13 @@ export function QuizEngine({ module, userId, preview = false }: QuizEngineProps)
         <section className="grid gap-5 rounded-lg border-2 border-secondary bg-white p-4 shadow-[0_4px_0_0_rgba(88,96,98,1)] sm:p-5">
         <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
           <div className="min-w-0">
-            <p className="text-sm font-black uppercase text-tertiary">Resultat</p>
+            <p className="text-sm font-black uppercase text-tertiary">{en ? "Result" : "Résultat"}</p>
             <h2 className="mt-2 break-words font-display text-3xl font-black leading-tight text-brand-ink">
               {scorePercent}% - {moduleCompleted
-                ? "Module reussi"
+                ? (en ? "Module passed" : "Module réussi")
                 : passed
-                  ? "Quiz reussi"
-                  : "Encore un effort"}
+                  ? (en ? "Quiz passed" : "Quiz réussi")
+                  : (en ? "Keep going" : "Encore un effort")}
             </h2>
             <p className="mt-3 font-semibold leading-7 text-slate-600">
               {correctAnswers}/{module.quiz.length} bonnes reponses.{" "}
@@ -178,13 +181,13 @@ export function QuizEngine({ module, userId, preview = false }: QuizEngineProps)
             type="button"
           >
             <RotateCcw size={18} />
-            Recommencer
+            {en ? "Try again" : "Recommencer"}
           </button>
           <Link
             className="inline-flex min-h-12 w-full items-center justify-center rounded-lg border-2 border-secondary bg-brand-blue px-4 font-black text-white shadow-[0_4px_0_0_rgba(88,96,98,1)] transition hover:bg-brand-ink sm:w-fit"
             href={preview ? `/student/modules/${module.id}` : "/student/challenges"}
           >
-            {preview ? "Retour au module" : "Voir le defi"}
+            {preview ? (en ? "Back to module" : "Retour au module") : (en ? "View challenge" : "Voir le défi")}
           </Link>
         </div>
         </section>
@@ -223,8 +226,8 @@ export function QuizEngine({ module, userId, preview = false }: QuizEngineProps)
         </div>
         <MascotCoach mascotMood={selectedIndex === null ? "focus" : "cheer"}>
           {selectedIndex === null
-            ? "Choisis la meilleure reponse."
-            : "Lis l'explication, puis continue."}
+            ? (en ? "Choose the best answer." : "Choisis la meilleure réponse.")
+            : (en ? "Read the explanation, then continue." : "Lis l'explication, puis continue.")}
         </MascotCoach>
       </div>
 
@@ -273,7 +276,7 @@ export function QuizEngine({ module, userId, preview = false }: QuizEngineProps)
         onClick={handleNext}
         type="button"
       >
-        {currentIndex === module.quiz.length - 1 ? "Terminer" : "Question suivante"}
+        {currentIndex === module.quiz.length - 1 ? (en ? "Finish" : "Terminer") : (en ? "Next question" : "Question suivante")}
       </button>
     </section>
   );

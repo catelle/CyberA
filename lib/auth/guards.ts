@@ -40,3 +40,10 @@ export async function requireRole(roles: UserRole[]): Promise<SafeUser> {
 
   return user;
 }
+
+export function requireAmbassadorTrack(user: SafeUser): SafeUser {
+  if (user.programTrack !== "ambassador") {
+    redirect("/student/access-restricted");
+  }
+  return user;
+}

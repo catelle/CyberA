@@ -4,11 +4,12 @@ import { requireRole } from "@/lib/auth/guards";
 import { getStudentProfileStats, listProgramModulesForStudent } from "@/lib/db/cybera";
 import { getProgramCompletionPercent } from "@/lib/program";
 import { ChangePasswordForm } from "@/components/auth/ChangePasswordForm";
+import { AccountLanguageToggle } from "@/components/layout/AccountLanguageToggle";
 
 export default async function ProfilePage() {
   const user = await requireRole(["student"]);
   const [modules, profileStats] = await Promise.all([
-    listProgramModulesForStudent(user.supabaseUserId),
+    listProgramModulesForStudent(user.supabaseUserId, user.language, user.programTrack),
     getStudentProfileStats(user.supabaseUserId)
   ]);
 
@@ -64,12 +65,12 @@ export default async function ProfilePage() {
         <section className="rounded-lg bg-brand-blue p-5 text-white shadow-sm">
           <p className="text-sm font-black uppercase text-brand-gold">Certification</p>
           <h3 className="mt-2 text-2xl font-black">
-            {profileStats.isGraduated ? "Diplome obtenu" : "Objectif: CyberAmbassadeur"}
+            {profileStats.isGraduated ? "Certificat obtenu" : user.programTrack === "scholarship" ? "Objectif: Bourse des 100" : "Objectif: CyberAmbassadeur"}
           </h3>
           <p className="mt-3 text-sm leading-6 text-white/75">
             {profileStats.isGraduated
-              ? "Tu es maintenant un CyberAmbassadeur certifie."
-              : "Complete tous les modules de la formation pour obtenir ton certificat."}
+              ? (user.programTrack === "scholarship" ? "Tu as obtenu ton certificat d'apprentissage Bourse des 100." : "Tu es maintenant un CyberAmbassadeur certifie.")
+              : (user.programTrack === "scholarship" ? "Complete tous les modules qui te sont attribues pour obtenir ton certificat." : "Complete les modules 1, 2 et 3 et soumets ton capstone pour obtenir ton certificat.")}
           </p>
           {profileStats.certificateNumber ? (
             <div className="mt-5 rounded-lg bg-white/10 p-4">
@@ -85,6 +86,21 @@ export default async function ProfilePage() {
         </section>
 
         <ChangePasswordForm language={user.language} />
+
+        <section className="rounded-lg bg-white p-5 shadow-sm">
+          <p className="text-sm font-black uppercase text-brand-gold">
+            {user.language === "en" ? "Language" : "Langue"}
+          </p>
+          <h3 className="mt-2 text-xl font-black text-brand-ink">
+            {user.language === "en" ? "Platform language" : "Langue de la plateforme"}
+          </h3>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            {user.language === "en"
+              ? "Choose the language used for your dashboard, modules, and lessons."
+              : "Choisis la langue utilisée pour ton tableau de bord, tes modules et tes leçons."}
+          </p>
+          <div className="mt-4"><AccountLanguageToggle initialLanguage={user.language} /></div>
+        </section>
 
         <section className="rounded-lg bg-white p-5 shadow-sm lg:col-span-2">
           <div className="flex items-center gap-3">
@@ -104,7 +120,7 @@ export default async function ProfilePage() {
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {profileStats.badges.map((badge) => (
                 <article className="flex flex-col items-center rounded-2xl border border-primary/15 bg-white p-4 text-center" key={badge.id}>
-                  <img alt={`${badge.name} — ${badge.focus}`} className="aspect-square w-full max-w-44 rounded-full object-contain" src={`/api/student/badges/${badge.id}/download?inline=1`} />
+                  <img alt={`${badge.name} — ${badge.focus}`} className="aspect-square w-full max-w-52 object-contain" src={`/api/student/badges/${badge.id}/download?inline=1`} />
                   <p className="mt-3 text-sm font-black text-brand-ink">{badge.focus}</p>
                   <a className="mt-3 inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-primary/20 bg-white px-4 text-sm font-black text-primary" href={`/api/student/badges/${badge.id}/download`}>
                     <Download aria-hidden className="h-4 w-4" />

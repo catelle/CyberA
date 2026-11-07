@@ -26,6 +26,12 @@ export function LoginForm() {
     if (stored === "fr" || stored === "en") {
       setLanguage(stored);
     }
+    const handleLanguageChange = (event: Event) => {
+      const nextLanguage = (event as CustomEvent<Language>).detail;
+      if (nextLanguage === "fr" || nextLanguage === "en") setLanguage(nextLanguage);
+    };
+    window.addEventListener("cybera-language-change", handleLanguageChange);
+    return () => window.removeEventListener("cybera-language-change", handleLanguageChange);
   }, []);
 
   function goToDashboard(role: string | undefined) {
@@ -45,7 +51,7 @@ export function LoginForm() {
     } | null;
 
     if (!response.ok) {
-      throw new Error(body?.message ?? "Impossible d'initialiser le profil.");
+      throw new Error(body?.message ?? (language === "fr" ? "Impossible d'initialiser le profil." : "Unable to initialize your profile."));
     }
 
     return body;
@@ -74,6 +80,24 @@ export function LoginForm() {
       return;
     }
 
+    // Server-rendered pages read the account language from Supabase. Keep it
+    // in sync with the language selected on the login form.
+    const languageResponse = await fetch("/api/auth/language", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ language })
+    });
+
+    if (!languageResponse.ok) {
+      setStatus(
+        language === "fr"
+          ? "Impossible d'enregistrer la langue choisie."
+          : "Unable to save the selected language."
+      );
+      setIsSubmitting(false);
+      return;
+    }
+
     let profile;
 
     try {
@@ -82,7 +106,7 @@ export function LoginForm() {
       setStatus(
         bootstrapError instanceof Error
           ? bootstrapError.message
-          : "Impossible d'initialiser le profil."
+          : language === "fr" ? "Impossible d'initialiser le profil." : "Unable to initialize your profile."
       );
       return;
     }
@@ -92,18 +116,21 @@ export function LoginForm() {
 
   return (
     <form className="grid gap-5" onSubmit={handleEmailSubmit}>
+      <h2 className="mb-1 text-2xl font-black text-brand-blue">{t.login}</h2>
       <div className="field">
-        <label htmlFor="language">Langue / Language</label>
+        <label htmlFor="language">{language === "fr" ? "Langue" : "Language"}</label>
         <select
           id="language"
           value={language}
           onChange={(event) => {
             const nextLanguage = event.target.value as Language;
             window.localStorage.setItem("language", nextLanguage);
+            document.cookie = `cybera-language=${nextLanguage}; Path=/; Max-Age=31536000; SameSite=Lax`;
+            window.dispatchEvent(new CustomEvent("cybera-language-change", { detail: nextLanguage }));
             setLanguage(nextLanguage);
           }}
         >
-          <option value="fr">Francais</option>
+          <option value="fr">{language === "fr" ? "Francais" : "French"}</option>
           <option value="en">English</option>
         </select>
       </div>
@@ -163,8 +190,8 @@ export function LoginForm() {
       <div className="grid gap-2 text-sm font-semibold text-secondary">
         <Link className="font-bold text-primary" href="/register/ambassador">
           {language === "fr"
-            ? "Inscrire un eleve"
-            : "Register an ambassador"}
+            ? "Créer un compte"
+            : "Register a new account"}
         </Link>
         <Link className="font-bold text-primary" href="/register/parent">
           {language === "fr"

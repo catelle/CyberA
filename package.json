@@ -9,6 +9,8 @@
     "lint": "next lint",
     "seed:admin": "node scripts/seed-admin.mjs",
     "seed:supabase-test": "node scripts/seed-supabase-test-accounts.mjs",
+    "create:test-scholarship": "node scripts/create-scholarship-test-account.mjs",
+    "mark:scholarships": "node scripts/mark-scholarship-accounts.mjs",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {

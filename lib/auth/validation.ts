@@ -38,6 +38,12 @@ export const parentRegistrationSchema = z.object({
   studentEmail: emailSchema.optional().or(z.literal(""))
 });
 
+export const scholarshipRegistrationSchema = z.object({
+  email: emailSchema,
+  password: passwordSchema,
+  language: languageSchema
+});
+
 export const adminBootstrapSchema = z.object({
   token: z.string().min(1),
   fullName: z.string().trim().min(2),

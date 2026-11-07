@@ -81,6 +81,9 @@ export default async function HomePage() {
               <span className="min-w-0 truncate font-display text-sm uppercase text-primary sm:text-base">Cyberambassadeurs</span>
             </Link>
             <nav className="flex items-center gap-3 text-sm font-bold">
+              <Link className="hidden text-secondary hover:text-primary sm:inline" href="/evaluation-m1">
+                Évaluation
+              </Link>
               <Link className="hidden text-secondary hover:text-primary sm:inline" href="#programme">
                 Programme
               </Link>
@@ -132,6 +135,13 @@ export default async function HomePage() {
                   Je suis parent
                   <ArrowRight aria-hidden className="h-4 w-4" />
                 </Link>
+                {/* <Link
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border-2 border-secondary bg-white px-5 py-3 text-center font-black text-primary shadow-[0_4px_0_0_rgba(88,96,98,1)] transition hover:bg-primary-fixed"
+                  href="/evaluation-m1"
+                >
+                  Remplir l&apos;évaluation
+                  <ArrowRight aria-hidden className="h-4 w-4" />
+                </Link> */}
               </div>
             </div>
 
