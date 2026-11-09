@@ -107,8 +107,7 @@ export async function createCertificatePng(input: CertificateArtworkInput) {
     text(ctx, "LEAD  ·  PROTECT  ·  INSPIRE", 800, 797, 16);
   }
 
-  line(ctx, 180, 945, 480, 945, "#172033"); line(ctx, 1120, 945, 1420, 945, "#172033");
-  text(ctx, "Catelle Ningha", 330, 972, 16); text(ctx, "Coordination du programme", 330, 997, 14, "#64748b"); text(ctx, "Sykoti Center", 1270, 972, 16);
+  text(ctx, "Catelle Ningha", 330, 910, 16); text(ctx, "Coordination du programme", 330, 932, 14, "#64748b"); line(ctx, 180, 945, 480, 945, "#172033"); line(ctx, 1120, 945, 1420, 945, "#172033"); text(ctx, "Sykoti Center", 1270, 932, 16);
   drawStamp(ctx, year); text(ctx, month, 800, 1010, 18, accent); text(ctx, input.certificateNumber, 800, 1038, 11, "#94a3b8");
 
   const stream = new PassThrough(); const chunks: Buffer[] = [];
