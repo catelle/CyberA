@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Guide utilisateur CyberAmbassadeurs</title>
+  <style>
+    @page { size: A4; margin: 0; }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: #101828; background: #fff; font-family: Arial, Helvetica, sans-serif; }
+    .page { position: relative; width: 210mm; height: 297mm; padding: 18mm; overflow: hidden; page-break-after: always; background: #fff; }
+    .page:last-child { page-break-after: auto; }
+    .brand { display: flex; align-items: center; gap: 10px; color: #bd0f43; font-weight: 900; letter-spacing: .02em; }
+    .logo { display: grid; place-items: center; width: 38px; height: 38px; color: white; background: #bd0f43; border-radius: 10px; box-shadow: 0 4px 0 #596163; }
+    .eyebrow { margin: 0 0 8px; color: #bd0f43; font-size: 11px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; }
+    h1 { max-width: 160mm; margin: 10mm 0 5mm; font-size: 34px; line-height: 1.02; letter-spacing: -.035em; }
+    h2 { margin: 0 0 5mm; font-size: 25px; line-height: 1.08; letter-spacing: -.025em; }
+    h3 { margin: 0 0 2mm; font-size: 15px; }
+    p, li { font-size: 13px; line-height: 1.55; }
+    .lead { max-width: 155mm; color: #475467; font-size: 17px; line-height: 1.5; }
+    .hero { margin-top: 18mm; padding: 15mm; border: 1px solid #f4b7c8; border-bottom: 6px solid #bd0f43; border-radius: 18px; background: #fff7f9; }
+    .hero strong { color: #bd0f43; }
+    .steps { display: grid; gap: 4mm; margin-top: 7mm; }
+    .step { display: grid; grid-template-columns: 12mm 1fr; gap: 4mm; padding: 5mm; border: 1px solid #d9e2ec; border-radius: 12px; }
+    .number { display: grid; place-items: center; width: 10mm; height: 10mm; color: white; background: #bd0f43; border-radius: 50%; font-size: 14px; font-weight: 900; }
+    .step p { margin: 1mm 0 0; color: #475467; }
+    .shot { width: 100%; margin-top: 5mm; border: 1px solid #ccd5df; border-radius: 10px; box-shadow: 0 4px 0 #596163; }
+    .shot.compact { max-height: 112mm; object-fit: contain; background: #f6f8fb; }
+    .shot.small { max-height: 82mm; object-fit: contain; background: #f6f8fb; }
+    .caption { margin: 3mm 0 0; color: #667085; font-size: 10px; text-align: center; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; }
+    .card { padding: 5mm; border: 1px solid #d9e2ec; border-radius: 12px; background: white; }
+    .card.accent { border-color: #f4b7c8; background: #fff7f9; }
+    .card p { margin: 2mm 0 0; color: #475467; }
+    .pill { display: inline-block; margin: 1mm 1mm 0 0; padding: 2mm 3mm; color: #bd0f43; border: 1px solid #f4b7c8; border-radius: 999px; background: #fff1f4; font-size: 10px; font-weight: 800; }
+    .callout { margin-top: 7mm; padding: 5mm; border-left: 4px solid #bd0f43; background: #fff1f4; }
+    .callout p { margin: 0; }
+    .footer { position: absolute; right: 18mm; bottom: 9mm; left: 18mm; display: flex; justify-content: space-between; padding-top: 3mm; border-top: 1px solid #e4e7ec; color: #667085; font-size: 9px; }
+    .cover { color: white; background: #bd0f43; }
+    .cover .brand { color: white; }
+    .cover .logo { color: #bd0f43; background: white; box-shadow: 0 4px 0 #596163; }
+    .cover h1 { margin-top: 34mm; font-size: 48px; }
+    .cover .lead { color: #fff; }
+    .cover-box { margin-top: 25mm; padding: 10mm; color: #101828; border-radius: 18px; background: white; }
+    .cover-box p { margin: 2mm 0 0; }
+    .cover .footer { color: white; border-color: rgba(255,255,255,.4); }
+    ul { margin: 3mm 0 0; padding-left: 6mm; }
+    a { color: #bd0f43; text-decoration: none; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <section class="page cover">
+    <div class="brand"><span class="logo">C</span> CYBERAMBASSADEURS</div>
+    <p class="eyebrow" style="margin-top:30mm;color:white">Guide de prise en main</p>
+    <h1>Apprendre, pratiquer et devenir CyberAmbassador</h1>
+    <p class="lead">Un guide simple pour se connecter, suivre les modules, comprendre sa progression et utiliser son Kit CyberA.</p>
+    <div class="cover-box">
+      <h3>À qui s’adresse ce guide ?</h3>
+      <p>Aux apprenants CyberA Fellows, à leurs accompagnateurs et aux responsables qui les aident à progresser dans le parcours.</p>
+      <span class="pill">LEARN</span><span class="pill">ACT</span><span class="pill">LEAD</span>
+    </div>
+    <div class="footer"><span>CyberAmbassadeurs · Guide utilisateur</span><span>Édition août 2026</span></div>
+  </section>
+
+  <section class="page">
+    <div class="brand"><span class="logo">C</span> CYBERAMBASSADEURS</div>
+    <p class="eyebrow" style="margin-top:12mm">01 · Accéder à l’application</p>
+    <h2>Se connecter avec son email</h2>
+    <p class="lead">Utilise les identifiants transmis lors de ton inscription. Pour le moment, la connexion se fait uniquement par email et mot de passe.</p>
+    <div class="steps">
+      <div class="step"><span class="number">1</span><div><h3>Ouvre l’application</h3><p>Va sur <a href="https://cyberambassador.sykoticenter.org">cyberambassador.sykoticenter.org</a> avec Chrome, Firefox, Edge ou Safari.</p></div></div>
+      <div class="step"><span class="number">2</span><div><h3>Choisis la langue</h3><p>Sélectionne Français ou English. Tu pourras continuer ton parcours dans la langue choisie.</p></div></div>
+      <div class="step"><span class="number">3</span><div><h3>Saisis tes informations</h3><p>Entre ton adresse email et ton mot de passe, puis clique sur <strong>Connexion</strong>. Ne partage jamais ton mot de passe.</p></div></div>
+      <div class="step"><span class="number">4</span><div><h3>Première inscription</h3><p>Utilise « Inscrire un élève » ou le lien destiné au parent si ton compte n’a pas encore été créé.</p></div></div>
+    </div>
+    <div class="callout"><p><strong>En cas d’erreur :</strong> vérifie les espaces dans l’email, les majuscules du mot de passe et ta connexion Internet. Si le problème continue, demande une réinitialisation à ton responsable CyberA.</p></div>
+    <div class="footer"><span>CyberAmbassadeurs · Guide utilisateur</span><span>2</span></div>
+  </section>
+
+  <section class="page">
+    <div class="brand"><span class="logo">C</span> CYBERAMBASSADEURS</div>
+    <p class="eyebrow" style="margin-top:10mm">02 · Le tableau de bord</p>
+    <h2>Comprendre ta prochaine étape</h2>
+    <p>Après la connexion, l’accueil résume ce que tu dois faire. Le Coach Cyber propose une mission du jour, la grande carte indique le prochain module, et la zone de progression affiche ton avancement global.</p>
+    <img class="shot" src="assets/dashboard-overview.png" alt="Tableau de bord CyberAmbassadeurs">
+    <p class="caption">Le tableau de bord rassemble la prochaine étape, les quatre modules et la progression.</p>
+    <div class="grid2" style="margin-top:7mm">
+      <div class="card accent"><h3>Continuer</h3><p>Reprend exactement le prochain contenu utile sans chercher où tu t’étais arrêté.</p></div>
+      <div class="card"><h3>Progression globale</h3><p>Montre la part du parcours déjà validée. Les leçons terminées alimentent ce chiffre.</p></div>
+      <div class="card"><h3>Ma série</h3><p>Compte les jours d’apprentissage réguliers. Une courte séance régulière vaut mieux qu’un long abandon.</p></div>
+      <div class="card"><h3>XP & badges</h3><p>Récompense les leçons, quiz et défis réussis. Ils montrent tes efforts, pas seulement ton score final.</p></div>
+    </div>
+    <div class="footer"><span>CyberAmbassadeurs · Guide utilisateur</span><span>3</span></div>
+  </section>
+
+  <section class="page">
+    <div class="brand"><span class="logo">C</span> CYBERAMBASSADEURS</div>
+    <p class="eyebrow" style="margin-top:10mm">03 · Naviguer</p>
+    <h2>Utiliser le menu et le guide intégré</h2>
+    <img class="shot" src="assets/dashboard-guide.png" alt="Menu latéral et guide intégré CyberAmbassadeurs">
+    <p class="caption">Le menu reste à gauche sur ordinateur. Le guide intégré apparaît en bas à droite lors de la découverte.</p>
+    <div class="grid2" style="margin-top:7mm">
+      <div class="card"><h3>Accueil</h3><p>Retourne à la mission du jour et à la vue d’ensemble.</p></div>
+      <div class="card"><h3>Mon Kit</h3><p>Retrouve ton identité CyberA Fellow, les étapes du parcours et les raccourcis importants.</p></div>
+      <div class="card"><h3>Modules</h3><p>Affiche les parcours d’apprentissage et les leçons disponibles.</p></div>
+      <div class="card"><h3>Défis</h3><p>Met en pratique les compétences avec des activités concrètes.</p></div>
+      <div class="card"><h3>Classement</h3><p>Présente la progression collective et encourage l’effort positif.</p></div>
+      <div class="card"><h3>Forum & notifications</h3><p>Permettent d’échanger, de demander de l’aide et de voir les nouveautés.</p></div>
+    </div>
+    <div class="callout"><p><strong>Astuce :</strong> le petit guide en bas à droite explique l’interface en quatre étapes. Clique sur « Suivant » ou ferme-le avec × quand tu as compris.</p></div>
+    <div class="footer"><span>CyberAmbassadeurs · Guide utilisateur</span><span>4</span></div>
+  </section>
+
+  <section class="page">
+    <div class="brand"><span class="logo">C</span> CYBERAMBASSADEURS</div>
+    <p class="eyebrow" style="margin-top:12mm">04 · Apprendre</p>
+    <h2>Suivre les modules dans le bon ordre</h2>
+    <p class="lead">Le parcours contient quatre missions complémentaires. Termine le module en cours pour déverrouiller le suivant.</p>
+    <div class="steps">
+      <div class="step"><span class="number">1</span><div><h3>The Digital World / Le Monde Numérique</h3><p>Comprendre ce qui se passe derrière l’écran : données, messages, plateformes, algorithmes et identité numérique.</p></div></div>
+      <div class="step"><span class="number">2</span><div><h3>Digital Survivor / Survivant du Numérique</h3><p>Reconnaître les menaces, les manipulations et les signes d’une attaque avant de devenir une victime.</p></div></div>
+      <div class="step"><span class="number">3</span><div><h3>Digital Toolbox / Outils & Pratiques</h3><p>Acquérir des méthodes concrètes pour vérifier, protéger, sauvegarder et agir avec confiance.</p></div></div>
+      <div class="step"><span class="number">4</span><div><h3>Digital Citizenship Leadership</h3><p>Transformer ses connaissances en actions utiles pour sa famille, son école et sa communauté.</p></div></div>
+    </div>
+    <div class="grid2" style="margin-top:8mm">
+      <div class="card accent"><h3>Dans chaque leçon</h3><p>Observe la scène, lis l’explication, réponds à la question et découvre ce que la technologie fait en coulisses.</p></div>
+      <div class="card"><h3>Pour bien retenir</h3><p>Explique le mécanisme avec tes propres mots. Si tu hésites, relis la preuve et l’explication avant de continuer.</p></div>
+    </div>
+    <div class="callout"><p><strong>Important :</strong> ne clique pas au hasard pour aller vite. Les temps d’observation et les questions servent à construire une compréhension durable.</p></div>
+    <div class="footer"><span>CyberAmbassadeurs · Guide utilisateur</span><span>5</span></div>
+  </section>
+
+  <section class="page">
+    <div class="brand"><span class="logo">C</span> CYBERAMBASSADEURS</div>
+    <p class="eyebrow" style="margin-top:12mm">05 · Ton Kit CyberA</p>
+    <h2>Voir où tu en es et où tu vas</h2>
+    <p class="lead">Le Kit CyberA est ton point de repère personnel. Il relie ta formation à ton évolution de CyberA Fellow vers CyberAmbassador.</p>
+    <div class="grid2" style="margin-top:8mm">
+      <div class="card accent"><h3>Ta carte de parcours</h3><p>Elle affiche ton nom, ta cohorte et ton identité CyberA Fellow. Ce n’est pas encore un certificat officiel.</p></div>
+      <div class="card"><h3>Les sept étapes</h3><p>Onboarding, Learn, Practice, Challenges, Community Action, CyberComp Final et Graduation.</p></div>
+      <div class="card"><h3>Apprendre</h3><p>Accède directement aux modules et aux leçons.</p></div>
+      <div class="card"><h3>Mes challenges</h3><p>Retrouve les activités pratiques et les preuves à soumettre.</p></div>
+      <div class="card"><h3>Ma progression</h3><p>Consulte le nombre de leçons terminées et ce qu’il reste à accomplir.</p></div>
+      <div class="card"><h3>Calendrier et aide</h3><p>Repère les rendez-vous, Weekly Reviews et moyens d’obtenir de l’assistance.</p></div>
+    </div>
+    <div class="hero" style="margin-top:10mm">
+      <p class="eyebrow">La bonne routine</p>
+      <h3>Accueil → Leçon → Question → Défi → Kit</h3>
+      <p>Commence par la mission du jour, termine une leçon avec attention, applique ce que tu as appris dans un défi, puis consulte ton Kit pour voir le chemin parcouru.</p>
+    </div>
+    <div class="footer"><span>CyberAmbassadeurs · Guide utilisateur</span><span>6</span></div>
+  </section>
+
+  <section class="page">
+    <div class="brand"><span class="logo">C</span> CYBERAMBASSADEURS</div>
+    <p class="eyebrow" style="margin-top:10mm">06 · Le Kit en images</p>
+    <h2>Ton identité et ton chemin CyberA</h2>
+    <img class="shot compact" src="assets/kit-overview.png" alt="Vue générale du Kit CyberA">
+    <p class="caption">Le haut du Kit présente ton identité CyberA Fellow et les sept étapes vers la graduation.</p>
+    <div class="grid2" style="margin-top:7mm">
+      <div class="card accent"><h3>Étape actuelle</h3><p>La carte rose indique où tu te trouves. Les étapes vertes sont terminées et les grises restent à venir.</p></div>
+      <div class="card"><h3>Raccourcis</h3><p>Les cartes Apprendre, Challenges, Progression, Calendrier et Aide ouvrent directement les outils utiles.</p></div>
+    </div>
+    <div class="footer"><span>CyberAmbassadeurs · Guide utilisateur</span><span>7</span></div>
+  </section>
+
+  <section class="page">
+    <div class="brand"><span class="logo">C</span> CYBERAMBASSADEURS</div>
+    <p class="eyebrow" style="margin-top:8mm">07 · Calendrier et engagement</p>
+    <h2>Respecter les rendez-vous du programme</h2>
+    <img class="shot small" src="assets/kit-calendar.png" alt="Calendrier de la Fellowship CyberA">
+    <p class="caption">Le calendrier regroupe la Learning Journey, les Weekly Reviews, le Capstone et la graduation.</p>
+    <img class="shot small" src="assets/kit-commitments.png" alt="Engagements du Fellow et de l’équipe CyberA">
+    <p class="caption">Le Fellow et l’équipe programme ont chacun des engagements clairs.</p>
+    <div class="callout"><p><strong>À retenir :</strong> note les dates importantes, participe aux Weekly Reviews, pose des questions tôt et préviens l’équipe lorsque tu es bloqué.</p></div>
+    <div class="footer"><span>CyberAmbassadeurs · Guide utilisateur</span><span>8</span></div>
+  </section>
+
+  <section class="page">
+    <div class="brand"><span class="logo">C</span> CYBERAMBASSADEURS</div>
+    <p class="eyebrow" style="margin-top:10mm">08 · Catalogue des modules</p>
+    <h2>Choisir le contenu disponible</h2>
+    <img class="shot compact" src="assets/modules.png" alt="Liste des modules CyberAmbassadeurs">
+    <p class="caption">Chaque carte indique le statut, la progression, les compétences et le bouton d’ouverture.</p>
+    <div class="grid2" style="margin-top:7mm">
+      <div class="card accent"><h3>Disponible</h3><p>Tu peux ouvrir le module et poursuivre ses leçons.</p></div>
+      <div class="card"><h3>Verrouillé</h3><p>Termine d’abord le module précédent et son évaluation.</p></div>
+    </div>
+    <div class="callout"><p>La barre colorée représente le pourcentage terminé. Clique sur <strong>Ouvrir</strong> pour retrouver les leçons du module.</p></div>
+    <div class="footer"><span>CyberAmbassadeurs · Guide utilisateur</span><span>9</span></div>
+  </section>
+
+  <section class="page">
+    <div class="brand"><span class="logo">C</span> CYBERAMBASSADEURS</div>
+    <p class="eyebrow" style="margin-top:10mm">09 · Détail d’un module</p>
+    <h2>Reprendre une leçon et valider le quiz</h2>
+    <img class="shot compact" src="assets/module-detail.png" alt="Page détaillée du module Le Monde Numérique">
+    <p class="caption">Les leçons terminées apparaissent en vert; le panneau latéral résume l’avancement.</p>
+    <div class="grid2" style="margin-top:7mm">
+      <div class="card accent"><h3>Continuer</h3><p>Ouvre la première leçon encore incomplète.</p></div>
+      <div class="card"><h3>Quiz après les leçons</h3><p>Se déverrouille lorsque les conditions du module sont remplies. Vise au moins 70 %.</p></div>
+    </div>
+    <div class="footer"><span>CyberAmbassadeurs · Guide utilisateur</span><span>10</span></div>
+  </section>
+
+  <section class="page">
+    <div class="brand"><span class="logo">C</span> CYBERAMBASSADEURS</div>
+    <p class="eyebrow" style="margin-top:10mm">10 · Défis pratiques</p>
+    <h2>Transformer l’apprentissage en action</h2>
+    <img class="shot compact" src="assets/challenges.png" alt="Page des défis CyberAmbassadeurs">
+    <p class="caption">Un défi présente l’objectif, les instructions, les points et les retours de validation.</p>
+    <div class="steps" style="margin-top:7mm">
+      <div class="step"><span class="number">1</span><div><h3>Lis toutes les consignes</h3><p>Identifie le résultat attendu et les preuves demandées.</p></div></div>
+      <div class="step"><span class="number">2</span><div><h3>Réalise l’action</h3><p>Documente ce que tu fais sans exposer de données personnelles.</p></div></div>
+      <div class="step"><span class="number">3</span><div><h3>Utilise la révision</h3><p>Si le défi est à améliorer, lis le retour puis renvoie une meilleure version.</p></div></div>
+    </div>
+    <div class="footer"><span>CyberAmbassadeurs · Guide utilisateur</span><span>11</span></div>
+  </section>
+
+  <section class="page">
+    <div class="brand"><span class="logo">C</span> CYBERAMBASSADEURS</div>
+    <p class="eyebrow" style="margin-top:8mm">11 · Progression collective et signalements</p>
+    <h2>Classement et Forum</h2>
+    <img class="shot small" src="assets/ranking.png" alt="Classement des apprenants">
+    <p class="caption">Le classement compare l’activité et la performance; il sert à encourager une progression positive.</p>
+    <img class="shot small" src="assets/forum.png" alt="Espace Forum et signalement">
+    <p class="caption">Le Forum permet de demander de l’aide et, une fois autorisé, de créer des signalements responsables.</p>
+    <div class="callout"><p><strong>Protection :</strong> ne publie jamais de mot de passe, numéro privé, document d’identité ou capture contenant des données sensibles.</p></div>
+    <div class="footer"><span>CyberAmbassadeurs · Guide utilisateur</span><span>12</span></div>
+  </section>
+
+  <section class="page">
+    <div class="brand"><span class="logo">C</span> CYBERAMBASSADEURS</div>
+    <p class="eyebrow" style="margin-top:8mm">12 · Messages et identité</p>
+    <h2>Notifications et Profil</h2>
+    <img class="shot small" src="assets/notifications.png" alt="Notifications CyberAmbassadeurs">
+    <p class="caption">Les notifications annoncent les validations, corrections, badges et messages de l’équipe.</p>
+    <img class="shot small" src="assets/profile.png" alt="Profil de l’apprenant CyberAmbassadeurs">
+    <p class="caption">Le Profil regroupe le code famille, les points, le niveau, la progression et les badges.</p>
+    <div class="callout"><p><strong>Code famille :</strong> partage-le uniquement avec ton parent ou responsable afin de créer le lien familial prévu par l’application.</p></div>
+    <div class="footer"><span>CyberAmbassadeurs · Guide utilisateur</span><span>13</span></div>
+  </section>
+
+  <section class="page">
+    <div class="brand"><span class="logo">C</span> CYBERAMBASSADEURS</div>
+    <p class="eyebrow" style="margin-top:10mm">13 · Mon statut</p>
+    <h2>Voir les tâches restantes</h2>
+    <img class="shot compact" src="assets/status.png" alt="Statut et tâches en attente de l’apprenant">
+    <p class="caption">La page Mon statut rassemble la série, les XP, le classement, la performance, les modules et les badges.</p>
+    <div class="grid2" style="margin-top:7mm">
+      <div class="card accent"><h3>Tâches en attente</h3><p>Ouvre directement les modules dans lesquels il reste des leçons.</p></div>
+      <div class="card"><h3>Formation</h3><p>Montre le pourcentage global et le nombre de modules validés avant le certificat.</p></div>
+    </div>
+    <div class="footer"><span>CyberAmbassadeurs · Guide utilisateur</span><span>14</span></div>
+  </section>
+
+  <section class="page">
+    <div class="brand"><span class="logo">C</span> CYBERAMBASSADEURS</div>
+    <p class="eyebrow" style="margin-top:12mm">14 · Assistance</p>
+    <h2>Résoudre les problèmes courants</h2>
+    <div class="steps">
+      <div class="step"><span class="number">1</span><div><h3>La page ne s’ouvre pas</h3><p>Vérifie l’adresse, ta connexion Internet, puis recharge la page. Essaie une fenêtre privée si le navigateur garde une ancienne erreur.</p></div></div>
+      <div class="step"><span class="number">2</span><div><h3>La connexion échoue</h3><p>Retape l’email et le mot de passe. Vérifie les majuscules et demande de l’aide après plusieurs essais.</p></div></div>
+      <div class="step"><span class="number">3</span><div><h3>Une leçon reste verrouillée</h3><p>Retourne au module précédent et vérifie que toutes ses leçons et son quiz final sont terminés.</p></div></div>
+      <div class="step"><span class="number">4</span><div><h3>Le son dérange</h3><p>Utilise le bouton audio visible dans l’espace de leçon pour couper ou réactiver l’ambiance sonore.</p></div></div>
+      <div class="step"><span class="number">5</span><div><h3>La progression semble incorrecte</h3><p>Actualise la page après quelques secondes. Si elle ne change pas, note la leçon concernée et contacte ton responsable.</p></div></div>
+    </div>
+    <div class="hero" style="margin-top:10mm">
+      <p class="eyebrow">Règle de sécurité</p>
+      <h3>Ne transmets jamais ton mot de passe.</h3>
+      <p>Une personne qui t’aide peut demander une capture d’écran du problème, mais elle ne doit pas te demander ton mot de passe. Déconnecte-toi toujours sur un appareil partagé.</p>
+    </div>
+    <div class="callout"><p><strong>Besoin d’aide ?</strong> Prépare ton nom, la page concernée, une courte description et une capture d’écran sans information sensible.</p></div>
+    <div class="footer"><span>CyberAmbassadeurs · Guide utilisateur</span><span>15</span></div>
+  </section>
+</body>
+</html>

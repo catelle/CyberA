@@ -1,8 +1,13 @@
+"use client";
+
+import { useEffect } from "react";
 import type { ReactNode } from "react";
+
+import { playCoachAppear } from "@/lib/sounds";
 
 type CyberMascotProps = {
   className?: string;
-  mood?: "cheer" | "focus" | "celebrate";
+  mood?: "cheer" | "focus" | "celebrate" | "sad";
   size?: "sm" | "md" | "lg";
 };
 
@@ -40,6 +45,7 @@ export function CyberMascot({
           <span className="cyber-mascot-smile" />
         </div>
         <div className="cyber-mascot-badge">C</div>
+        <div className="cyber-mascot-heart" />
         <div className="cyber-mascot-arm cyber-mascot-arm-left" />
         <div className="cyber-mascot-arm cyber-mascot-arm-right" />
         <div className="cyber-mascot-foot cyber-mascot-foot-left" />
@@ -54,12 +60,16 @@ export function MascotCoach({
   eyebrow = "Coach Cyber",
   mascotMood = "cheer"
 }: MascotCoachProps) {
+  useEffect(() => {
+    playCoachAppear();
+  }, []);
+
   return (
     <aside className="grid gap-3 sm:grid-cols-[auto_1fr] sm:items-center">
       <CyberMascot mood={mascotMood} size="sm" />
       <div className="min-w-0">
-        <p className="text-xs font-black uppercase text-tertiary">{eyebrow}</p>
-        <p className="mt-1 text-sm font-extrabold leading-6 text-on-surface sm:text-base">
+        <p className="text-[0.68rem] font-extrabold uppercase tracking-[0.12em] text-tertiary">{eyebrow}</p>
+        <p className="mt-1 text-sm font-semibold leading-6 text-on-surface sm:text-base">
           {children}
         </p>
       </div>

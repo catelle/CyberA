@@ -45,7 +45,7 @@ export function ParentLinkForm() {
       <div>
         <p className="text-sm font-black uppercase text-brand-gold">Code famille</p>
         <h2 className="mt-2 text-2xl font-black text-brand-ink">
-          Lier un compte ambassadeur
+          Lier le compte d&apos;un eleve
         </h2>
         <p className="mt-3 leading-7 text-slate-600">
           Le code a 6 caracteres est affiche au jeune apres son inscription.

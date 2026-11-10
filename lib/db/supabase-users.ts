@@ -5,7 +5,7 @@ import {
   createSupabaseServerClient
 } from "@/lib/auth/supabase-server";
 import { appRoleFromSupabaseRole, type SupabaseProfileRole } from "@/lib/auth/roles";
-import type { LinkedAccount, SafeUser } from "@/types/auth";
+import type { LinkedAccount, ProgramTrack, SafeUser } from "@/types/auth";
 
 type SupabaseUserRow = {
   id: string;
@@ -15,6 +15,7 @@ type SupabaseUserRow = {
   avatar_url: string | null;
   city: string | null;
   created_at: string | null;
+  program_track: ProgramTrack | null;
 };
 
 type AmbassadorProfileRow = {
@@ -30,6 +31,7 @@ type FamilyLinkRow = {
 
 type ProfileBootstrapOptions = {
   role?: SupabaseProfileRole;
+  programTrack?: ProgramTrack;
 };
 
 export async function findSupabaseAuthUserByEmail(email: string) {
@@ -53,7 +55,7 @@ export async function findSupabaseAuthUserByEmail(email: string) {
 function authUserAppRole(authUser: User): SupabaseProfileRole | undefined {
   const role = authUser.app_metadata?.role;
 
-  return role === "ambassador" || role === "parent" || role === "admin"
+  return role === "ambassador" || role === "parent" || role === "admin" || role === "facilitator"
     ? role
     : undefined;
 }
@@ -61,7 +63,7 @@ function authUserAppRole(authUser: User): SupabaseProfileRole | undefined {
 function normalizeSupabaseProfileRole(
   role: string | null | undefined
 ): SupabaseProfileRole {
-  if (role === "parent" || role === "admin") {
+  if (role === "parent" || role === "admin" || role === "facilitator") {
     return role;
   }
 
@@ -76,6 +78,20 @@ function authUserMetadataString(authUser: User, key: string): string | null {
 
 function authUserLanguage(authUser: User): "fr" | "en" {
   return authUserMetadataString(authUser, "language") === "en" ? "en" : "fr";
+}
+
+function authUserProgramTrack(authUser: User): ProgramTrack {
+  return authUser.app_metadata?.program_track === "scholarship" || authUser.user_metadata?.programTrack === "scholarship"
+    ? "scholarship"
+    : "ambassador";
+}
+
+function isMissingProgramTrackColumn(error: { code?: string; message?: string } | null | undefined) {
+  return Boolean(
+    error &&
+    (error.code === "PGRST204" ||
+      (error.message?.includes("program_track") && error.message.includes("does not exist")))
+  );
 }
 
 function serializeLinkedAccounts(
@@ -118,11 +134,22 @@ function serializeLinkedAccounts(
 
 export async function getSupabaseSafeUser(authUser: User): Promise<SafeUser | null> {
   const supabase = createSupabaseServerClient();
-  const { data: profile, error } = await supabase
+  let { data: profile, error } = await supabase
     .from("users")
-    .select("id, phone, full_name, role, avatar_url, city, created_at")
+    .select("id, phone, full_name, role, avatar_url, city, created_at, program_track")
     .eq("id", authUser.id)
     .maybeSingle<SupabaseUserRow>();
+
+  // Keep auth usable while a deployment is rolling out the program_track migration.
+  if (isMissingProgramTrackColumn(error)) {
+    const fallback = await supabase
+      .from("users")
+      .select("id, phone, full_name, role, avatar_url, city, created_at")
+      .eq("id", authUser.id)
+      .maybeSingle<Omit<SupabaseUserRow, "program_track">>();
+    profile = fallback.data ? { ...fallback.data, program_track: null } : null;
+    error = fallback.error;
+  }
 
   if (error || !profile) {
     return null;
@@ -146,6 +173,7 @@ export async function getSupabaseSafeUser(authUser: User): Promise<SafeUser | nu
     supabaseUserId: profile.id,
     email: authUser.email ?? "",
     role: appRoleFromSupabaseRole(profile.role),
+    programTrack: profile.program_track ?? authUserProgramTrack(authUser),
     profile: {
       fullName: profile.full_name,
       city: profile.city ?? undefined,
@@ -238,16 +266,27 @@ export async function ensureSupabaseProfileForAuthUser(
     authUserMetadataString(authUser, "full_name");
   const metadataCity = authUserMetadataString(authUser, "city");
 
-  const { data: existingProfile, error: existingProfileError } = await admin
+  let { data: existingProfile, error: existingProfileError } = await admin
     .from("users")
-    .select("role, phone, full_name, city")
+    .select("role, phone, full_name, city, program_track")
     .eq("id", authUser.id)
     .maybeSingle<{
       role: string | null;
       phone: string | null;
       full_name: string | null;
       city: string | null;
+      program_track: ProgramTrack | null;
     }>();
+
+  if (isMissingProgramTrackColumn(existingProfileError)) {
+    const fallback = await admin
+      .from("users")
+      .select("role, phone, full_name, city")
+      .eq("id", authUser.id)
+      .maybeSingle<Omit<NonNullable<typeof existingProfile>, "program_track">>();
+    existingProfile = fallback.data ? { ...fallback.data, program_track: null } : null;
+    existingProfileError = fallback.error;
+  }
 
   if (existingProfileError) {
     throw existingProfileError;
@@ -256,6 +295,7 @@ export async function ensureSupabaseProfileForAuthUser(
   const profileRole = normalizeSupabaseProfileRole(
     existingProfile?.role ?? options.role ?? authUserAppRole(authUser)
   );
+  const programTrack = existingProfile?.program_track ?? options.programTrack ?? authUserProgramTrack(authUser);
   const fullName =
     existingProfile?.full_name ??
     metadataFullName ??
@@ -282,16 +322,19 @@ export async function ensureSupabaseProfileForAuthUser(
     }
   }
 
-  const { error: userError } = await admin.from("users").upsert(
-    {
+  const profilePayload = {
       id: authUser.id,
       phone,
       full_name: fullName,
       role: profileRole,
-      city
-    },
-    { onConflict: "id" }
-  );
+      city,
+      program_track: programTrack
+    };
+  let { error: userError } = await admin.from("users").upsert(profilePayload, { onConflict: "id" });
+  if (isMissingProgramTrackColumn(userError)) {
+    const { program_track: _programTrack, ...fallbackPayload } = profilePayload;
+    userError = (await admin.from("users").upsert(fallbackPayload, { onConflict: "id" })).error;
+  }
 
   if (userError) {
     throw userError;

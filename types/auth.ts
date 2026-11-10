@@ -1,6 +1,7 @@
-export type UserRole = "student" | "parent" | "admin";
+export type UserRole = "student" | "parent" | "admin" | "facilitator";
 
 export type Language = "fr" | "en";
+export type ProgramTrack = "ambassador" | "scholarship";
 
 export type LinkedAccount = {
   userId: string;
@@ -22,6 +23,7 @@ export type SafeUser = {
   supabaseUserId: string;
   email: string;
   role: UserRole;
+  programTrack: ProgramTrack;
   profile: UserProfile;
   language: Language;
   consentGiven: boolean;

@@ -3,42 +3,21 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 
 import { createSupabaseBrowserClient } from "@/lib/auth/supabase-client";
 import { dashboardForRole } from "@/lib/auth/roles";
 import { getDictionary } from "@/lib/i18n/dictionary";
 import type { Language } from "@/types/auth";
 
-type LoginMode = "phone" | "email";
-
-const demoAccounts = [
-  {
-    label: "Parent",
-    email: "parent.cybera@example.com",
-    password: "CyberA123!"
-  },
-  {
-    label: "Ambassadeur",
-    email: "amina.ambassador@example.com",
-    password: "CyberA123!"
-  },
-  {
-    label: "Admin",
-    email: "admin.cybera@example.com",
-    password: "CyberA123!"
-  }
-];
-
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [language, setLanguage] = useState<Language>("fr");
-  const [mode, setMode] = useState<LoginMode>("email");
   const [status, setStatus] = useState<string | null>(null);
-  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const t = getDictionary(language);
 
@@ -47,6 +26,12 @@ export function LoginForm() {
     if (stored === "fr" || stored === "en") {
       setLanguage(stored);
     }
+    const handleLanguageChange = (event: Event) => {
+      const nextLanguage = (event as CustomEvent<Language>).detail;
+      if (nextLanguage === "fr" || nextLanguage === "en") setLanguage(nextLanguage);
+    };
+    window.addEventListener("cybera-language-change", handleLanguageChange);
+    return () => window.removeEventListener("cybera-language-change", handleLanguageChange);
   }, []);
 
   function goToDashboard(role: string | undefined) {
@@ -66,7 +51,7 @@ export function LoginForm() {
     } | null;
 
     if (!response.ok) {
-      throw new Error(body?.message ?? "Impossible d'initialiser le profil.");
+      throw new Error(body?.message ?? (language === "fr" ? "Impossible d'initialiser le profil." : "Unable to initialize your profile."));
     }
 
     return body;
@@ -95,6 +80,24 @@ export function LoginForm() {
       return;
     }
 
+    // Server-rendered pages read the account language from Supabase. Keep it
+    // in sync with the language selected on the login form.
+    const languageResponse = await fetch("/api/auth/language", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ language })
+    });
+
+    if (!languageResponse.ok) {
+      setStatus(
+        language === "fr"
+          ? "Impossible d'enregistrer la langue choisie."
+          : "Unable to save the selected language."
+      );
+      setIsSubmitting(false);
+      return;
+    }
+
     let profile;
 
     try {
@@ -103,7 +106,7 @@ export function LoginForm() {
       setStatus(
         bootstrapError instanceof Error
           ? bootstrapError.message
-          : "Impossible d'initialiser le profil."
+          : language === "fr" ? "Impossible d'initialiser le profil." : "Unable to initialize your profile."
       );
       return;
     }
@@ -111,226 +114,62 @@ export function LoginForm() {
     goToDashboard(profile?.role);
   }
 
-  function selectDemoAccount(account: (typeof demoAccounts)[number]) {
-    setMode("email");
-    setOtpSent(false);
-    setStatus(null);
-    setEmail(account.email);
-    setPassword(account.password);
-  }
-
-  async function handlePhoneSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setIsSubmitting(true);
-    setStatus(null);
-
-    const formData = new FormData(event.currentTarget);
-    const supabase = createSupabaseBrowserClient();
-
-    if (!otpSent) {
-      const nextPhone = String(formData.get("phone"));
-      const { error } = await supabase.auth.signInWithOtp({
-        phone: nextPhone,
-        options: {
-          data: {
-            language
-          }
-        }
-      });
-
-      setIsSubmitting(false);
-
-      if (error) {
-        setStatus(error.message);
-        return;
-      }
-
-      setPhone(nextPhone);
-      setOtpSent(true);
-      setStatus(
-        language === "fr"
-          ? "Code envoye par SMS. Entrez le code recu."
-          : "SMS code sent. Enter the received code."
-      );
-      return;
-    }
-
-    const { data, error } = await supabase.auth.verifyOtp({
-      phone,
-      token: String(formData.get("otp")),
-      type: "sms"
-    });
-
-    setIsSubmitting(false);
-
-    if (error || !data.user) {
-      setStatus(
-        language === "fr"
-          ? "Code invalide ou expire."
-          : "Invalid or expired code."
-      );
-      return;
-    }
-
-    try {
-      const profile = await bootstrapProfile();
-      goToDashboard(profile?.role);
-    } catch (bootstrapError) {
-      setStatus(
-        bootstrapError instanceof Error
-          ? bootstrapError.message
-          : "Impossible d'initialiser le profil."
-      );
-      return;
-    }
-  }
-
-  async function handleGoogleLogin() {
-    setIsSubmitting(true);
-    setStatus(null);
-
-    const supabase = createSupabaseBrowserClient();
-    const redirectTo = `${window.location.origin}/auth/callback`;
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo
-      }
-    });
-
-    setIsSubmitting(false);
-
-    if (error) {
-      setStatus(error.message);
-    }
-  }
-
   return (
-    <form
-      className="grid gap-5"
-      onSubmit={mode === "phone" ? handlePhoneSubmit : handleEmailSubmit}
-    >
+    <form className="grid gap-5" onSubmit={handleEmailSubmit}>
+      <h2 className="mb-1 text-2xl font-black text-brand-blue">{t.login}</h2>
       <div className="field">
-        <label htmlFor="language">Langue / Language</label>
+        <label htmlFor="language">{language === "fr" ? "Langue" : "Language"}</label>
         <select
           id="language"
           value={language}
           onChange={(event) => {
             const nextLanguage = event.target.value as Language;
             window.localStorage.setItem("language", nextLanguage);
+            document.cookie = `cybera-language=${nextLanguage}; Path=/; Max-Age=31536000; SameSite=Lax`;
+            window.dispatchEvent(new CustomEvent("cybera-language-change", { detail: nextLanguage }));
             setLanguage(nextLanguage);
           }}
         >
-          <option value="fr">Francais</option>
+          <option value="fr">{language === "fr" ? "Francais" : "French"}</option>
           <option value="en">English</option>
         </select>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 rounded-xl border-2 border-secondary bg-surface-container p-1 shadow-[0_3px_0_0_rgba(88,96,98,1)]">
-        <button
-          className={
-            mode === "phone"
-              ? "min-h-12 rounded-lg bg-primary px-3 text-sm font-black text-white"
-              : "min-h-12 rounded-lg px-3 text-sm font-black text-secondary hover:bg-surface-container-high"
-          }
-          onClick={() => {
-            setMode("phone");
-            setOtpSent(false);
-            setStatus(null);
-          }}
-          type="button"
-        >
-          SMS OTP
-        </button>
-        <button
-          className={
-            mode === "email"
-              ? "min-h-12 rounded-lg bg-primary px-3 text-sm font-black text-white"
-              : "min-h-12 rounded-lg px-3 text-sm font-black text-secondary hover:bg-surface-container-high"
-          }
-          onClick={() => {
-            setMode("email");
-            setOtpSent(false);
-            setStatus(null);
-          }}
-          type="button"
-        >
-          Email
-        </button>
+      <div className="field">
+        <label htmlFor="email">{t.email}</label>
+        <input
+          autoComplete="email"
+          id="email"
+          name="email"
+          required
+          type="email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+        />
       </div>
 
-      {mode === "phone" ? (
-        <>
-          <div className="field">
-            <label htmlFor="phone">Telephone</label>
-            <input
-              disabled={otpSent}
-              id="phone"
-              name="phone"
-              placeholder="+237 6XX XXX XXX"
-              required
-              type="tel"
-            />
-          </div>
-
-          {otpSent ? (
-            <div className="field">
-              <label htmlFor="otp">Code SMS</label>
-              <input
-                autoComplete="one-time-code"
-                id="otp"
-                inputMode="numeric"
-                name="otp"
-                required
-                type="text"
-              />
-            </div>
-          ) : null}
-        </>
-      ) : (
-        <>
-          <div className="field">
-            <label htmlFor="email">{t.email}</label>
-            <input
-              id="email"
-              name="email"
-              required
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-            />
-          </div>
-
-          <div className="field">
-            <label htmlFor="password">{t.password}</label>
-            <input
-              id="password"
-              name="password"
-              required
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-            />
-          </div>
-        </>
-      )}
-
-      <div className="rounded-xl border-2 border-secondary bg-surface-container-low p-3 shadow-[0_3px_0_0_rgba(88,96,98,1)]">
-        <p className="text-xs font-black uppercase tracking-wide text-primary">
-          Comptes demo
-        </p>
-        <div className="mt-3 grid gap-2 sm:grid-cols-3">
-          {demoAccounts.map((account) => (
-            <button
-              className="min-h-11 rounded-lg border-2 border-secondary bg-white px-3 text-sm font-black text-primary shadow-[0_2px_0_0_rgba(88,96,98,1)] transition hover:bg-primary-fixed"
-              disabled={isSubmitting}
-              key={account.email}
-              onClick={() => selectDemoAccount(account)}
-              type="button"
-            >
-              {account.label}
-            </button>
-          ))}
+      <div className="field">
+        <label htmlFor="password">{t.password}</label>
+        <div className="relative">
+          <input
+            autoComplete="current-password"
+            className="w-full pr-12"
+            id="password"
+            name="password"
+            required
+            type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+          />
+          <button
+            aria-label={showPassword ? (language === "fr" ? "Masquer le mot de passe" : "Hide password") : (language === "fr" ? "Afficher le mot de passe" : "Show password")}
+            aria-pressed={showPassword}
+            className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-slate-600 transition hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-primary"
+            onClick={() => setShowPassword((visible) => !visible)}
+            type="button"
+          >
+            {showPassword ? <EyeOff aria-hidden className="h-5 w-5" /> : <Eye aria-hidden className="h-5 w-5" />}
+          </button>
         </div>
       </div>
 
@@ -345,29 +184,14 @@ export function LoginForm() {
         disabled={isSubmitting}
         type="submit"
       >
-        {isSubmitting
-          ? "..."
-          : mode === "phone" && !otpSent
-            ? language === "fr"
-              ? "Recevoir le code"
-              : "Send code"
-            : t.login}
-      </button>
-
-      <button
-        className="min-h-12 rounded-xl border-2 border-secondary bg-white px-5 font-black text-primary shadow-[0_4px_0_0_rgba(88,96,98,1)] transition hover:bg-surface-container-low disabled:cursor-not-allowed disabled:opacity-60"
-        disabled={isSubmitting}
-        onClick={handleGoogleLogin}
-        type="button"
-      >
-        Google
+        {isSubmitting ? "..." : t.login}
       </button>
 
       <div className="grid gap-2 text-sm font-semibold text-secondary">
         <Link className="font-bold text-primary" href="/register/ambassador">
           {language === "fr"
-            ? "Inscrire un ambassadeur"
-            : "Register an ambassador"}
+            ? "Créer un compte"
+            : "Register a new account"}
         </Link>
         <Link className="font-bold text-primary" href="/register/parent">
           {language === "fr"

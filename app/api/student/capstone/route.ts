@@ -35,5 +35,6 @@ export async function POST(request: Request) {
     .single();
 
   if (error) return jsonError(error, "Impossible d'enregistrer le capstone.");
+  await supabase.rpc("issue_training_certificate_if_eligible", { p_user_id: auth.user.supabaseUserId });
   return NextResponse.json({ capstone: data }, { status: 201 });
 }

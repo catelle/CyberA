@@ -1,9 +1,9 @@
 import type { UserRole } from "@/types/auth";
 
-export type SupabaseProfileRole = "ambassador" | "parent" | "admin";
+export type SupabaseProfileRole = "ambassador" | "parent" | "admin" | "facilitator";
 
 export function appRoleFromSupabaseRole(role: string | null | undefined): UserRole {
-  if (role === "parent" || role === "admin") {
+  if (role === "parent" || role === "admin" || role === "facilitator") {
     return role;
   }
 
@@ -17,7 +17,7 @@ export function dashboardForRole(role: string | null | undefined) {
     return "/parent/dashboard";
   }
 
-  if (appRole === "admin") {
+  if (appRole === "admin" || appRole === "facilitator") {
     return "/admin/dashboard";
   }
 

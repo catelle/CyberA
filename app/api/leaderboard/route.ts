@@ -7,7 +7,7 @@ export async function GET() {
   const auth = await requireApiRole(["student", "parent", "admin"]);
   if (!auth.ok) return auth.response;
 
-  const entries = await listLeaderboard();
+  const entries = await listLeaderboard(auth.user.supabaseUserId);
   return NextResponse.json({
     cohort: entries,
     national: entries,

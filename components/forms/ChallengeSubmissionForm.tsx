@@ -3,6 +3,7 @@
 import imageCompression from "browser-image-compression";
 import { AlertTriangle, Camera, CheckCircle2, Save, WifiOff } from "lucide-react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -33,6 +34,7 @@ export function ChallengeSubmissionForm({
   onlineSubmissionsEnabled = true,
   userId
 }: ChallengeSubmissionFormProps) {
+  const router = useRouter();
   const [status, setStatus] = useState<SubmissionStatus | null>(null);
   const [photo, setPhoto] = useState<File | null>(null);
   const [compressedSize, setCompressedSize] = useState<number | null>(null);
@@ -105,12 +107,8 @@ export function ChallengeSubmissionForm({
         } | null;
 
         if (response.ok) {
-          reset();
-          setPhoto(null);
-          setStatus({
-            tone: "success",
-            message: "Soumission envoyee et en attente de revision."
-          });
+          router.replace("/student/challenges");
+          router.refresh();
           return;
         }
 

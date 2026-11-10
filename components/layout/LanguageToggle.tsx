@@ -22,6 +22,8 @@ export function LanguageToggle({ onChange }: LanguageToggleProps) {
   function updateLanguage(nextLanguage: Language) {
     setLanguage(nextLanguage);
     window.localStorage.setItem("language", nextLanguage);
+    document.cookie = `cybera-language=${nextLanguage}; Path=/; Max-Age=31536000; SameSite=Lax`;
+    window.dispatchEvent(new CustomEvent("cybera-language-change", { detail: nextLanguage }));
     onChange?.(nextLanguage);
   }
 

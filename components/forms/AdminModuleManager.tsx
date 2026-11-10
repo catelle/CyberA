@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Plus, Save } from "lucide-react";
+import { Plus, RefreshCw, Save } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -16,6 +16,9 @@ export function AdminModuleManager({ modules }: AdminModuleManagerProps) {
   const [status, setStatus] = useState<string | null>(null);
   const [selectedModuleId, setSelectedModuleId] = useState(modules[0]?.id ?? "");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const usingApplicationFallback = modules.some(
+    (module) => module.is_application_fallback
+  );
 
   useEffect(() => {
     if (modules.length === 0) {
@@ -45,13 +48,14 @@ export function AdminModuleManager({ modules }: AdminModuleManagerProps) {
 
   async function handleCreateModule(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const form = event.currentTarget;
     setIsSubmitting(true);
     setStatus(null);
 
     try {
-      await submitJson("/api/admin/modules", new FormData(event.currentTarget));
+      await submitJson("/api/admin/modules", new FormData(form));
       setStatus("Module cree.");
-      event.currentTarget.reset();
+      form.reset();
       router.refresh();
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Action impossible.");
@@ -62,16 +66,17 @@ export function AdminModuleManager({ modules }: AdminModuleManagerProps) {
 
   async function handleCreateLesson(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const form = event.currentTarget;
     setIsSubmitting(true);
     setStatus(null);
 
     try {
       await submitJson(
         `/api/admin/modules/${selectedModuleId}/lessons`,
-        new FormData(event.currentTarget)
+        new FormData(form)
       );
       setStatus("Lecon ajoutee.");
-      event.currentTarget.reset();
+      form.reset();
       router.refresh();
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Action impossible.");
@@ -102,6 +107,39 @@ export function AdminModuleManager({ modules }: AdminModuleManagerProps) {
     router.refresh();
   }
 
+  async function synchronizeCurriculum() {
+    if (
+      !window.confirm(
+        "Synchroniser le CMS avec le parcours eleve actuel ? Les lecons de test des modules correspondants seront remplacees."
+      )
+    ) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    setStatus(null);
+
+    try {
+      const response = await fetch("/api/admin/modules/sync-curriculum", {
+        method: "POST"
+      });
+      const result = (await response.json().catch(() => null)) as
+        | { message?: string }
+        | null;
+
+      if (!response.ok) {
+        throw new Error(result?.message ?? "Synchronisation impossible.");
+      }
+
+      setStatus(result?.message ?? "Programme synchronise.");
+      router.refresh();
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Synchronisation impossible.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   return (
     <div className="grid gap-5">
       {status ? (
@@ -110,7 +148,32 @@ export function AdminModuleManager({ modules }: AdminModuleManagerProps) {
         </p>
       ) : null}
 
-      <section className="grid gap-4 rounded-lg bg-white p-5 shadow-sm">
+      {usingApplicationFallback ? (
+        <section className="grid gap-4 rounded-lg border-2 border-amber-300 bg-amber-50 p-5 shadow-sm">
+          <div>
+            <p className="text-sm font-black uppercase text-amber-700">Contenu reel de l&apos;application</p>
+            <h2 className="mt-2 text-2xl font-black text-brand-ink">
+              Le CMS contient encore des donnees de test
+            </h2>
+            <p className="mt-2 max-w-3xl font-semibold leading-7 text-slate-600">
+              Les modules affiches ci-dessous sont exactement ceux que les eleves voient.
+              Synchronisez-les pour remplacer les contenus de test et rendre Supabase
+              canonique pour l&apos;administration et les eleves.
+            </p>
+          </div>
+          <button
+            className="inline-flex min-h-12 w-fit items-center justify-center gap-2 rounded-lg bg-brand-blue px-5 font-black text-white disabled:opacity-50"
+            disabled={isSubmitting}
+            onClick={() => void synchronizeCurriculum()}
+            type="button"
+          >
+            <RefreshCw aria-hidden className="h-5 w-5" />
+            {isSubmitting ? "Synchronisation..." : "Synchroniser le CMS"}
+          </button>
+        </section>
+      ) : null}
+
+      <section className={usingApplicationFallback ? "hidden" : "grid gap-4 rounded-lg bg-white p-5 shadow-sm"}>
         <div>
           <p className="text-sm font-black uppercase text-brand-gold">Modules</p>
           <h2 className="mt-2 text-2xl font-black text-brand-ink">
@@ -169,7 +232,7 @@ export function AdminModuleManager({ modules }: AdminModuleManagerProps) {
         </form>
       </section>
 
-      <section className="grid gap-4 rounded-lg bg-white p-5 shadow-sm">
+      <section className={usingApplicationFallback ? "hidden" : "grid gap-4 rounded-lg bg-white p-5 shadow-sm"}>
         <div>
           <p className="text-sm font-black uppercase text-brand-gold">Lecons</p>
           <h2 className="mt-2 text-2xl font-black text-brand-ink">
@@ -264,6 +327,9 @@ export function AdminModuleManager({ modules }: AdminModuleManagerProps) {
                   <span className="rounded-full bg-slate-100 px-3 py-1">
                     {module.lessons.length} lecon(s)
                   </span>
+                  <span className="rounded-full bg-slate-100 px-3 py-1">
+                    {module.quiz_questions?.length ?? 0} question(s) de quiz
+                  </span>
                 </div>
               </div>
               <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-black uppercase text-slate-500">
@@ -301,20 +367,24 @@ export function AdminModuleManager({ modules }: AdminModuleManagerProps) {
               >
                 Ouvrir
               </Link>
-              <button
-                className="min-h-12 rounded-lg border border-slate-200 px-4 font-black text-brand-blue"
-                onClick={() => toggleModule(module)}
-                type="button"
-              >
-                {module.is_published ? "Depublier" : "Publier"}
-              </button>
-              <button
-                className="min-h-12 rounded-lg bg-red-700 px-4 font-black text-white"
-                onClick={() => deleteModule(module.id)}
-                type="button"
-              >
-                Supprimer
-              </button>
+              {!module.is_application_fallback ? (
+                <>
+                  <button
+                    className="min-h-12 rounded-lg border border-slate-200 px-4 font-black text-brand-blue"
+                    onClick={() => toggleModule(module)}
+                    type="button"
+                  >
+                    {module.is_published ? "Depublier" : "Publier"}
+                  </button>
+                  <button
+                    className="min-h-12 rounded-lg bg-red-700 px-4 font-black text-white"
+                    onClick={() => deleteModule(module.id)}
+                    type="button"
+                  >
+                    Supprimer
+                  </button>
+                </>
+              ) : null}
             </div>
           </article>
         ))}

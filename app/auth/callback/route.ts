@@ -6,6 +6,8 @@ import { ensureSupabaseProfileForAuthUser } from "@/lib/db/supabase-users";
 
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code");
+  const requestedNext = request.nextUrl.searchParams.get("next");
+  const next = requestedNext?.startsWith("/") && !requestedNext.startsWith("//") ? requestedNext : null;
 
   if (!code) {
     return NextResponse.redirect(new URL("/login?error=oauth", request.url));
@@ -21,7 +23,7 @@ export async function GET(request: NextRequest) {
   try {
     const profile = await ensureSupabaseProfileForAuthUser(data.user);
     return NextResponse.redirect(
-      new URL(dashboardForRole(profile.role), request.url)
+      new URL(next ?? dashboardForRole(profile.role), request.url)
     );
   } catch {
     await supabase.auth.signOut();

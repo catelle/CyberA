@@ -35,6 +35,7 @@ export function serializeUser(user: HydratedDocument<UserDocument>): SafeUser {
     supabaseUserId: user.supabaseUserId,
     email: user.email,
     role: user.role,
+    programTrack: "ambassador",
     profile: {
       fullName: user.profile.fullName,
       age: optional(user.profile.age),

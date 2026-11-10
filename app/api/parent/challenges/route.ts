@@ -4,43 +4,29 @@ import { z } from "zod";
 import { requireApiRole, jsonError } from "@/lib/api/authz";
 import { createSupabaseAdminClient } from "@/lib/auth/supabase-server";
 
-const parentChallengeSchema = z.object({
-  childId: z.string().uuid(),
-  challengeId: z.string().uuid(),
-  message: z.string().trim().optional().or(z.literal(""))
+const schema = z.object({
+  invitationId: z.string().uuid(),
+  reportText: z.string().trim().min(100, "Le rapport doit contenir au moins 100 caracteres.")
 });
 
 export async function POST(request: Request) {
   const auth = await requireApiRole(["parent"]);
   if (!auth.ok) return auth.response;
-
-  const payload = await request.json().catch(() => null);
-  const parsed = parentChallengeSchema.safeParse(payload);
+  const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json({ message: "Defi parent invalide.", issues: parsed.error.flatten() }, { status: 400 });
-  }
-
-  const childLinked = auth.user.linkedAccounts.some(
-    (account) => account.userId === parsed.data.childId && account.relation === "child"
-  );
-
-  if (!childLinked) {
-    return NextResponse.json({ message: "Cet enfant n'est pas lie a votre compte." }, { status: 403 });
+    return NextResponse.json({ message: parsed.error.issues[0]?.message ?? "Rapport invalide." }, { status: 400 });
   }
 
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase
     .from("parent_challenges")
-    .insert({
-      parent_id: auth.user.supabaseUserId,
-      child_id: parsed.data.childId,
-      challenge_id: parsed.data.challengeId,
-      message: parsed.data.message || null,
-      status: "accepted"
-    })
-    .select("*")
-    .single();
-
-  if (error) return jsonError(error, "Impossible d'accepter le defi parent.");
-  return NextResponse.json({ parentChallenge: data }, { status: 201 });
+    .update({ status: "submitted", report_text: parsed.data.reportText, submitted_at: new Date().toISOString() })
+    .eq("id", parsed.data.invitationId)
+    .eq("parent_id", auth.user.supabaseUserId)
+    .in("status", ["invited", "rejected"])
+    .select("id")
+    .maybeSingle();
+  if (error) return jsonError(error, "Impossible d'envoyer le rapport.");
+  if (!data) return NextResponse.json({ message: "Cette invitation ne peut plus etre soumise." }, { status: 409 });
+  return NextResponse.json({ message: "Rapport envoye pour validation." });
 }

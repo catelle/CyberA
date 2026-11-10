@@ -26,7 +26,7 @@ export async function POST() {
           body: `${link.users?.full_name ?? "Votre enfant"} poursuit sa progression CyberAmbassador.`,
           data: {
             child_id: link.child_id,
-            child_name: link.users?.full_name ?? "Ambassadeur",
+            child_name: link.users?.full_name ?? "Eleve",
             week_period: "Semaine courante",
             points_earned_this_week: 0,
             challenges_completed: 0,

@@ -1,12 +1,22 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import Image from "next/image";
+import { notFound, redirect } from "next/navigation";
 import { ArrowRight, CheckCircle2, ShieldAlert, Sparkles } from "lucide-react";
 
 import { MascotCoach } from "@/components/gamified/CyberMascot";
+import { WelcomeBehindScreen } from "@/components/lesson/WelcomeBehindScreen";
+import { InsideTikTokLesson } from "@/components/lesson/InsideTikTokLesson";
+import { ModuleOneInvestigationLesson } from "@/components/lesson/ModuleOneInvestigationLesson";
+import { ModuleTwoInvestigationLesson } from "@/components/lesson/ModuleTwoInvestigationLesson";
+import { LessonAudio } from "@/components/lesson/LessonAudio";
+import { LearningSpacePreviewNotice } from "@/components/lesson/LearningSpacePreviewNotice";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 import { requireRole } from "@/lib/auth/guards";
-import { getModuleWithLessonsById } from "@/lib/db/cybera";
-import { getLessonById, getModuleById, type LessonContentBlock } from "@/lib/program";
+import { getPublishedProgramModuleById, isModuleUnlockedForStudent } from "@/lib/db/cybera";
+import { getModuleOneInvestigations } from "@/lib/curriculum/module-one-investigations";
+import { moduleTwoInvestigations } from "@/lib/curriculum/module-two-investigations";
+import { getModuleThreeInvestigations } from "@/lib/curriculum/module-three-investigations";
+import { moduleFourInvestigations } from "@/lib/curriculum/module-four-investigations";
 
 type LessonPageProps = {
   params: {
@@ -15,108 +25,123 @@ type LessonPageProps = {
   };
 };
 
-function normalizeLessonContent(content: unknown): LessonContentBlock[] {
-  if (!Array.isArray(content)) {
-    return [];
-  }
-
-  const blocks: LessonContentBlock[] = [];
-
-  content.forEach((block) => {
-    if (!block || typeof block !== "object") {
-      return;
-    }
-
-    const type = "type" in block ? block.type : null;
-    const value = "content" in block ? block.content : null;
-
-    if (
-      type !== "text" &&
-      type !== "tip" &&
-      type !== "warning" &&
-      type !== "checklist"
-    ) {
-      return;
-    }
-
-    if (type === "checklist" && Array.isArray(value)) {
-      const items = value.filter((item): item is string => typeof item === "string");
-      blocks.push({ type, content: items });
-      return;
-    }
-
-    if (typeof value === "string") {
-      blocks.push({ type, content: value });
-    }
-  });
-
-  return blocks;
-}
-
 export default async function LessonPage({ params }: LessonPageProps) {
-  const user = await requireRole(["student", "admin"]);
-  const staticModule = getModuleById(params.id);
-  const staticLesson = getLessonById(params.id, params.lessonId);
-  const databaseModule = staticModule ? null : await getModuleWithLessonsById(params.id);
-  const databaseLesson = databaseModule?.lessons.find(
-    (lesson) => lesson.id === params.lessonId
+  const user = await requireRole(["student", "admin", "facilitator"]);
+  const isPreview = user.role === "admin" || user.role === "facilitator";
+  const selectedModule = await getPublishedProgramModuleById(params.id, user.language);
+  const lesson = selectedModule?.lessons.find(
+    (item) => item.id === params.lessonId
   );
-  const selectedModule = staticModule
-    ? {
-        id: staticModule.id,
-        title: staticModule.title
-      }
-    : databaseModule
-      ? {
-          id: databaseModule.id,
-          title: databaseModule.title
-        }
-      : null;
-  const lesson = staticLesson
-    ? {
-        id: staticLesson.id,
-        order: staticLesson.order,
-        title: staticLesson.title,
-        content: staticLesson.content
-      }
-    : databaseLesson
-      ? {
-          id: databaseLesson.id,
-          order: databaseLesson.order_index,
-          title: databaseLesson.title,
-          content: normalizeLessonContent(databaseLesson.content)
-        }
-      : null;
 
   if (!selectedModule || !lesson) {
     notFound();
   }
 
+  if (user.role === "student" && !(await isModuleUnlockedForStudent(user.supabaseUserId, selectedModule.week, user.programTrack))) {
+    redirect("/student/modules?locked=1");
+  }
+
+  // Published modules use database UUIDs, while lesson slugs remain stable.
+  // Detect this bespoke experience by its lesson slug rather than the module id.
+  const previewNotice = isPreview ? (
+    <div className="mb-5">
+      <LearningSpacePreviewNotice detail="Lecon affichee telle que l'eleve la recoit. Ta lecture n'est pas comptabilisee." />
+    </div>
+  ) : null;
+
+  if (lesson.id === "ou-est-internet") {
+    return (
+      <DashboardShell user={user} title={lesson.title}>
+        {previewNotice}
+              <WelcomeBehindScreen canComplete={user.role === "student"} language={user.language} lessonId={lesson.id} moduleId={selectedModule.id} />
+      </DashboardShell>
+    );
+  }
+
+  if (lesson.id === "apres-envoyer") {
+    return (
+      <DashboardShell user={user} title="Inside TikTok">
+        {previewNotice}
+        <InsideTikTokLesson canComplete={user.role === "student"} language={user.language} lessonId={lesson.id} moduleId={selectedModule.id} />
+      </DashboardShell>
+    );
+  }
+
+  const investigation = getModuleOneInvestigations(user.language)[lesson.id];
+  if (investigation) {
+    return (
+      <DashboardShell user={user} title={investigation.title}>
+        {previewNotice}
+        <ModuleOneInvestigationLesson canComplete={user.role === "student"} language={user.language} lesson={investigation} moduleId={selectedModule.id} />
+      </DashboardShell>
+    );
+  }
+
+  const survivalInvestigation = moduleTwoInvestigations[lesson.id];
+  if (selectedModule.week === 2 && survivalInvestigation) {
+    return (
+      <DashboardShell user={user} title={survivalInvestigation.title}>
+        {previewNotice}
+        <ModuleTwoInvestigationLesson canComplete={user.role === "student"} language={user.language} lesson={survivalInvestigation} moduleId={selectedModule.id} />
+      </DashboardShell>
+    );
+  }
+
+  const academyInvestigation = getModuleThreeInvestigations(user.language)[lesson.id];
+  if (selectedModule.week === 3 && academyInvestigation) {
+    return (
+      <DashboardShell user={user} title={academyInvestigation.title}>
+        {previewNotice}
+        <ModuleTwoInvestigationLesson canComplete={user.role === "student"} language={user.language} lesson={academyInvestigation} moduleId={selectedModule.id} theme="toolbox" />
+      </DashboardShell>
+    );
+  }
+
+  const ambassadorInvestigation = moduleFourInvestigations[lesson.id];
+  if (selectedModule.week === 4 && ambassadorInvestigation) {
+    return (
+      <DashboardShell user={user} title={ambassadorInvestigation.title}>
+        {previewNotice}
+        <ModuleTwoInvestigationLesson canComplete={user.role === "student"} language={user.language} lesson={ambassadorInvestigation} moduleId={selectedModule.id} theme="ambassador" />
+      </DashboardShell>
+    );
+  }
+
   return (
     <DashboardShell user={user} title={lesson.title}>
+      <LessonAudio />
+      {previewNotice}
       <article className="grid gap-5 rounded-lg border-2 border-secondary bg-white p-4 shadow-[0_4px_0_0_rgba(88,96,98,1)] sm:p-5">
         <div className="grid gap-4 lg:grid-cols-[1fr_21rem] lg:items-center">
           <div className="min-w-0">
             <p className="text-sm font-black uppercase text-tertiary">
-              {selectedModule.title} / Lecon {lesson.order}
+              {selectedModule.title} / {user.language === "en" ? "Lesson" : "Lecon"} {lesson.order}
             </p>
             <h2 className="mt-2 break-words font-display text-2xl font-black leading-tight text-brand-ink sm:text-3xl">
               {lesson.title}
             </h2>
           </div>
           <MascotCoach mascotMood="focus">
-            Lis, repere le signal important, puis garde une action simple en tete.
+            {user.language === "en" ? "Read, identify the important signal, then keep one simple action in mind." : "Lis, repere le signal important, puis garde une action simple en tete."}
           </MascotCoach>
         </div>
 
         <div className="grid gap-4">
           {lesson.content.map((block, index) => {
-            if (block.type === "checklist" && Array.isArray(block.content)) {
+            if (block.type === "image" && block.src) {
               return (
-                <ul
-                  className="grid gap-3 rounded-lg border-2 border-secondary bg-[#d9fbe8] p-4 shadow-[0_4px_0_0_rgba(88,96,98,1)]"
-                  key={index}
-                >
+                <figure className="overflow-hidden rounded-xl border-2 border-secondary bg-slate-950 shadow-[0_4px_0_0_rgba(88,96,98,1)]" key={index}>
+                  <Image alt={block.alt ?? String(block.content)} className="h-auto w-full object-cover" height={941} priority={index < 3} sizes="(max-width: 1024px) 100vw, 1050px" src={block.src} width={1672} />
+                  {block.caption ? <figcaption className="bg-brand-ink px-4 py-3 text-sm font-bold text-white/80">{block.caption}</figcaption> : null}
+                </figure>
+              );
+            }
+
+            if ((block.type === "checklist" || block.type === "mission") && Array.isArray(block.content)) {
+              return (
+                <section className={block.type === "mission" ? "rounded-lg border-2 border-secondary bg-[#fff4c2] p-4 shadow-[0_4px_0_0_rgba(88,96,98,1)]" : "rounded-lg border-2 border-secondary bg-[#d9fbe8] p-4 shadow-[0_4px_0_0_rgba(88,96,98,1)]"} key={index}>
+                  {block.type === "mission" ? <h3 className="mb-3 font-display text-lg font-black text-amber-950">Mission d&apos;investigation</h3> : null}
+                <ul className="grid gap-3">
                   {block.content.map((item) => (
                     <li
                       className="grid grid-cols-[auto_1fr] gap-2 text-sm font-extrabold leading-6 text-slate-700"
@@ -130,6 +155,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
                     </li>
                   ))}
                 </ul>
+                </section>
               );
             }
 
@@ -140,6 +166,16 @@ export default async function LessonPage({ params }: LessonPageProps) {
                     ? "grid grid-cols-[auto_1fr] gap-3 rounded-lg border-2 border-secondary bg-red-50 p-4 font-bold leading-7 text-red-800 shadow-[0_4px_0_0_rgba(88,96,98,1)]"
                     : block.type === "tip"
                       ? "grid grid-cols-[auto_1fr] gap-3 rounded-lg border-2 border-secondary bg-tertiary-fixed p-4 font-bold leading-7 text-tertiary shadow-[0_4px_0_0_rgba(88,96,98,1)]"
+                      : block.type === "hook"
+                        ? "rounded-xl border-2 border-secondary bg-brand-blue p-5 font-display text-xl font-black leading-8 text-white shadow-[0_4px_0_0_rgba(88,96,98,1)] sm:text-2xl"
+                        : block.type === "story"
+                          ? "rounded-lg border-l-4 border-primary bg-rose-50 p-5 font-semibold leading-8 text-slate-700"
+                          : block.type === "discovery"
+                            ? "rounded-lg bg-surface-container-low p-5 font-semibold leading-8 text-slate-700"
+                            : block.type === "reflection"
+                              ? "rounded-lg border-2 border-tertiary bg-cyan-50 p-5 font-black leading-8 text-brand-blue"
+                              : block.type === "ability"
+                                ? "rounded-full border-2 border-secondary bg-primary-fixed px-5 py-4 text-center font-black text-primary shadow-[0_3px_0_0_rgba(88,96,98,1)]"
                       : "rounded-lg bg-surface-container-low p-4 font-semibold leading-7 text-slate-700"
                 }
                 key={index}
@@ -161,17 +197,15 @@ export default async function LessonPage({ params }: LessonPageProps) {
             className="inline-flex min-h-12 w-full items-center justify-center rounded-lg border-2 border-secondary bg-white px-4 font-black text-brand-blue shadow-[0_4px_0_0_rgba(88,96,98,1)] transition hover:bg-brand-sky sm:w-fit"
             href={`/student/modules/${selectedModule.id}`}
           >
-            Retour au module
+            {user.language === "en" ? "Back to module" : "Retour au module"}
           </Link>
-          {staticModule ? (
-            <Link
-              className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border-2 border-secondary bg-brand-blue px-4 font-black text-white shadow-[0_4px_0_0_rgba(88,96,98,1)] transition hover:bg-brand-ink sm:w-fit"
-              href={`/student/modules/${selectedModule.id}/quiz`}
-            >
-              Passer au quiz
-              <ArrowRight aria-hidden className="h-4 w-4" />
-            </Link>
-          ) : null}
+          <Link
+            className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border-2 border-secondary bg-brand-blue px-4 font-black text-white shadow-[0_4px_0_0_rgba(88,96,98,1)] transition hover:bg-brand-ink sm:w-fit"
+            href={`/student/modules/${selectedModule.id}/lesson/${lesson.id}/quiz`}
+          >
+            {isPreview ? "Voir le quiz de la lecon" : "J'ai termine la lecon"}
+            <ArrowRight aria-hidden className="h-4 w-4" />
+          </Link>
         </div>
       </article>
     </DashboardShell>

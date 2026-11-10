@@ -1,17 +1,11 @@
 "use client";
 
-import { CheckCircle2 } from "lucide-react";
+import { Send } from "lucide-react";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
-type ParentChallengeFormProps = {
-  challengeId: string;
-  childOptions: Array<{ id: string; fullName: string }>;
-};
-
-export function ParentChallengeForm({ challengeId, childOptions }: ParentChallengeFormProps) {
+export function ParentChallengeForm({ invitationId }: { invitationId: string }) {
   const router = useRouter();
-  const [childId, setChildId] = useState(childOptions[0]?.id ?? "");
   const [status, setStatus] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -19,65 +13,29 @@ export function ParentChallengeForm({ challengeId, childOptions }: ParentChallen
     event.preventDefault();
     setIsSubmitting(true);
     setStatus(null);
-
-    if (!childId) {
-      setIsSubmitting(false);
-      setStatus("Aucun compte enfant n'est encore lie.");
-      return;
-    }
-
     const response = await fetch("/api/parent/challenges", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        childId,
-        challengeId,
-        message: new FormData(event.currentTarget).get("message")
+        invitationId,
+        reportText: new FormData(event.currentTarget).get("reportText")
       })
     });
     const result = (await response.json().catch(() => null)) as { message?: string } | null;
-
     setIsSubmitting(false);
     setStatus(result?.message ?? "Action terminee.");
     if (response.ok) router.refresh();
   }
 
   return (
-    <form className="grid gap-5 rounded-lg bg-white p-5 shadow-sm" onSubmit={handleSubmit}>
+    <form className="mt-4 grid gap-4" onSubmit={handleSubmit}>
       <div className="field">
-        <label htmlFor="childId">Enfant concerne</label>
-        <select
-          id="childId"
-          onChange={(event) => setChildId(event.target.value)}
-          value={childId}
-        >
-          {childOptions.map((child) => (
-            <option key={child.id} value={child.id}>
-              {child.fullName}
-            </option>
-          ))}
-        </select>
+        <label htmlFor={`report-${invitationId}`}>Rapport de votre action</label>
+        <textarea className="min-h-32 rounded-lg border border-slate-200 p-3" id={`report-${invitationId}`} name="reportText" placeholder="Expliquez ce que vous avez fait ensemble et ce que vous avez appris..." required />
       </div>
-      <div className="field">
-        <label htmlFor="message">Message pour l&apos;enfant</label>
-        <textarea
-          className="min-h-32 rounded-lg border border-slate-200 p-3 outline-none focus:border-brand-blue focus:ring-4 focus:ring-blue-100"
-          id="message"
-          name="message"
-        />
-      </div>
-      {status ? (
-        <p className="rounded-lg bg-brand-sky p-4 text-sm font-bold text-brand-blue">
-          {status}
-        </p>
-      ) : null}
-      <button
-        className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-brand-blue px-5 font-black text-white transition hover:bg-brand-ink disabled:opacity-50"
-        disabled={isSubmitting}
-        type="submit"
-      >
-        <CheckCircle2 size={18} />
-        {isSubmitting ? "Validation..." : "Accepter le defi"}
+      {status ? <p className="rounded-lg bg-brand-sky p-3 text-sm font-bold text-brand-blue">{status}</p> : null}
+      <button className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-primary px-5 font-black text-white disabled:opacity-50" disabled={isSubmitting} type="submit">
+        <Send size={18} /> {isSubmitting ? "Envoi..." : "Envoyer le rapport"}
       </button>
     </form>
   );

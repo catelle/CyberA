@@ -9,19 +9,27 @@ export function AdminBroadcastForm() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const form = event.currentTarget;
     setIsSubmitting(true);
     setStatus(null);
 
-    const response = await fetch("/api/admin/notifications", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(Object.fromEntries(new FormData(event.currentTarget).entries()))
-    });
-    const result = (await response.json().catch(() => null)) as { message?: string } | null;
+    try {
+      const response = await fetch("/api/admin/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(Object.fromEntries(new FormData(form).entries()))
+      });
+      const result = (await response.json().catch(() => null)) as
+        | { message?: string }
+        | null;
 
-    setIsSubmitting(false);
-    setStatus(result?.message ?? "Action terminee.");
-    if (response.ok) event.currentTarget.reset();
+      setStatus(result?.message ?? "Action terminee.");
+      if (response.ok) form.reset();
+    } catch {
+      setStatus("Impossible d'envoyer la notification.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -37,7 +45,7 @@ export function AdminBroadcastForm() {
       <div className="field">
         <label htmlFor="audience">Audience</label>
         <select id="audience" name="audience">
-          <option value="ambassadors">Ambassadeurs</option>
+          <option value="students">Eleves</option>
           <option value="parents">Parents</option>
           <option value="all">Tous</option>
         </select>

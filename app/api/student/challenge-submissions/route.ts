@@ -34,6 +34,28 @@ export async function POST(request: Request) {
   }
 
   const supabase = createSupabaseAdminClient();
+  const { data: challenge, error: challengeError } = await supabase
+    .from("challenges")
+    .select("id")
+    .eq("id", challengeId)
+    .eq("is_active", true)
+    .is("archived_at", null)
+    .maybeSingle<{ id: string }>();
+
+  if (challengeError) {
+    return jsonError(challengeError, "Impossible de vérifier le défi.");
+  }
+
+  if (!challenge) {
+    return NextResponse.json(
+      {
+        message:
+          "Ce défi n'est plus actif ou n'existe plus. Retirez cette action de la synchronisation."
+      },
+      { status: 410 }
+    );
+  }
+
   let photoUrl: string | null = null;
 
   if (photo instanceof File && photo.size > 0) {
@@ -50,22 +72,21 @@ export async function POST(request: Request) {
     photoUrl = path;
   }
 
-  const { data, error } = await supabase
-    .from("challenge_submissions")
-    .upsert(
-      {
-        user_id: auth.user.supabaseUserId,
-        challenge_id: challengeId,
-        report_text: reportText,
-        photo_url: photoUrl,
-        status: "pending",
-        reviewer_note: city ? `Ville: ${city}` : null
-      },
-      { onConflict: "user_id,challenge_id" }
-    )
-    .select("*")
-    .single();
+  const { data, error } = await supabase.rpc("submit_registered_challenge", {
+    p_user_id: auth.user.supabaseUserId,
+    p_challenge_id: challengeId,
+    p_report_text: reportText,
+    p_photo_url: photoUrl,
+    p_reviewer_note: city ? `Ville: ${city}` : null
+  });
 
-  if (error) return jsonError(error, "Impossible d'enregistrer la soumission.");
-  return NextResponse.json({ submission: data }, { status: 201 });
+  if (error) {
+    const expired = error.message.includes("expired");
+    return jsonError(
+      new Error(expired ? "Ton delai de 3 jours est termine." : "Inscription active requise avant la soumission."),
+      "Impossible d'enregistrer la soumission.",
+      expired ? 410 : 409
+    );
+  }
+  return NextResponse.json({ submissionId: data }, { status: 201 });
 }
