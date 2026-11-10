@@ -84,6 +84,7 @@ export async function DashboardShell({ user, title, children }: DashboardShellPr
               ? [
                   { href: "/student/kit", label: en ? "My Kit" : "Mon Kit", Icon: PackageOpen },
                   { href: "/student/modules", label: "Modules", Icon: BookOpen },
+                  { href: "/student/status", label: en ? "Badges & certificate" : "Badges et certificat", Icon: Award },
                   { href: "/student/challenges", label: en ? "Challenges" : "Défis", Icon: ClipboardCheck },
                   { href: "/student/leaderboard", label: en ? "Leaderboard" : "Classement", Icon: Trophy },
                   { href: "/student/forum", label: "Forum", Icon: MessageCircle },

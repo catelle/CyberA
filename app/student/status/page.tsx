@@ -95,7 +95,7 @@ export default async function StudentStatusPage() {
                 <article className="flex flex-col items-center rounded-2xl border border-brand-gold/40 bg-amber-50 p-4 text-center sm:col-span-2 xl:col-span-2">
                   <img alt="Certificat de formation" className="w-full rounded-lg border border-brand-gold/30 bg-white object-contain" src="/api/student/certificate/download?inline=1" />
                   <p className="mt-3 text-sm font-black text-brand-ink">Certificat de formation</p>
-                  <a className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg bg-brand-blue px-3 text-sm font-extrabold text-white transition hover:bg-brand-blue/90" href="/api/student/certificate/download">
+                  <a className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-brand-blue px-3 text-sm font-extrabold text-white shadow-sm transition hover:bg-brand-blue/90" download={`certificat-${status.certificateNumber}.png`} href="/api/student/certificate/download">
                     <Download aria-hidden className="h-4 w-4" />
                     Télécharger le certificat
                   </a>
