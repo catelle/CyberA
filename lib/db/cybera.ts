@@ -816,6 +816,10 @@ export async function getAdminOperationalMetrics() {
 
 export async function getStudentProfileStats(userId: string) {
   const supabase = createSupabaseAdminClient();
+  // Re-check eligibility when a learner opens their account. This backfills
+  // certificates for learners who completed their assigned modules before
+  // the scholarship assignment or certificate migration ran.
+  await supabase.rpc("issue_training_certificate_if_eligible", { p_user_id: userId });
   const [{ data }, { data: badges }, { data: certificate }, verifiedXp] = await Promise.all([
     supabase
       .from("ambassador_profiles")

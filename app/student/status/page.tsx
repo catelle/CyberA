@@ -10,11 +10,11 @@ import {
 } from "lucide-react";
 
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { requireAmbassadorTrack, requireRole } from "@/lib/auth/guards";
+import { requireRole } from "@/lib/auth/guards";
 import { getStudentStatusSummary } from "@/lib/db/cybera";
 
 export default async function StudentStatusPage() {
-  const user = requireAmbassadorTrack(await requireRole(["student"]));
+  const user = await requireRole(["student"]);
   const status = await getStudentStatusSummary(user.supabaseUserId, user.programTrack);
 
   const metrics = [
@@ -84,13 +84,23 @@ export default async function StudentStatusPage() {
             <Award aria-hidden className="h-6 w-6 text-brand-gold" />
             <div>
               <p className="text-xs font-extrabold uppercase tracking-[0.1em] text-brand-gold">Collection</p>
-              <h2 className="font-display text-2xl font-extrabold text-brand-ink">Mes badges ({status.badges.length}/{status.badgeTarget})</h2>
+              <h2 className="font-display text-2xl font-extrabold text-brand-ink">Badges et certificat</h2>
             </div>
           </div>
-          {status.badges.length === 0 ? (
+          {status.badges.length === 0 && !status.certificateNumber ? (
             <p className="mt-5 rounded-lg bg-slate-50 p-4 font-semibold text-slate-500">Termine ton premier module pour debloquer un badge.</p>
           ) : (
             <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              {status.certificateNumber ? (
+                <article className="flex flex-col items-center rounded-2xl border border-brand-gold/40 bg-amber-50 p-4 text-center sm:col-span-2 xl:col-span-2">
+                  <img alt="Certificat de formation" className="w-full rounded-lg border border-brand-gold/30 bg-white object-contain" src="/api/student/certificate/download?inline=1" />
+                  <p className="mt-3 text-sm font-black text-brand-ink">Certificat de formation</p>
+                  <a className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg bg-brand-blue px-3 text-sm font-extrabold text-white transition hover:bg-brand-blue/90" href="/api/student/certificate/download">
+                    <Download aria-hidden className="h-4 w-4" />
+                    Télécharger le certificat
+                  </a>
+                </article>
+              ) : null}
               {status.badges.map((badge) => (
                 <article className="flex flex-col items-center rounded-2xl border border-primary/15 bg-white p-4 text-center" key={badge.id}>
                   <img alt={`${badge.name} — ${badge.focus}`} className="aspect-square w-full max-w-52 object-contain" src={`/api/student/badges/${badge.id}/download?inline=1`} />

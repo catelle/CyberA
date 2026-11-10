@@ -20,7 +20,7 @@ export default async function StudentDashboardPage() {
   const t = getDictionary(user.language);
   const [modules, studentStatus, strikeEligibility] = await Promise.all([
     listProgramModulesForStudent(user.supabaseUserId, user.language, user.programTrack),
-    getStudentStatusSummary(user.supabaseUserId),
+    getStudentStatusSummary(user.supabaseUserId, user.programTrack),
     getStrikeEligibility(user.supabaseUserId)
   ]);
   const completion = getProgramCompletionPercent(modules);

@@ -81,6 +81,10 @@ export default async function ProfilePage() {
               <p className="mt-1 break-all font-black text-brand-gold">
                 {profileStats.certificateNumber}
               </p>
+              <a className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-white px-4 font-extrabold text-brand-blue" href="/api/student/certificate/download">
+                <Download aria-hidden className="h-4 w-4" />
+                Télécharger le certificat
+              </a>
             </div>
           ) : null}
         </section>
